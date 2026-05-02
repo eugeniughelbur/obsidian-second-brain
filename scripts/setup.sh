@@ -9,7 +9,8 @@
 #   2. Adds OBSIDIAN_VAULT_PATH to ~/.claude/settings.json
 #   3. Wires the PostCompact background agent hook
 #   4. Makes the hook script executable
-#   5. Configures the MCP server for Claude Code (optional)
+#   5. Registers slash commands in ~/.claude/commands/
+#   6. Configures the MCP server for Claude Code (optional)
 
 set -euo pipefail
 
@@ -108,9 +109,42 @@ else
   green "   PostCompact hook wired"
 fi
 
+# ── register slash commands ──────────────────────────────────────────────────
+
+step "3. Registering slash commands in ~/.claude/commands/..."
+
+COMMANDS_SRC="$SKILL_DIR/commands"
+COMMANDS_DST="$HOME/.claude/commands"
+
+if [[ ! -d "$COMMANDS_SRC" ]]; then
+  yellow "   No commands/ directory in skill — skipping"
+else
+  mkdir -p "$COMMANDS_DST"
+  linked=0
+  skipped=0
+  blocked=0
+  for cmd in "$COMMANDS_SRC"/*.md; do
+    [[ -e "$cmd" ]] || continue
+    name=$(basename "$cmd")
+    target="$COMMANDS_DST/$name"
+    if [[ -L "$target" ]]; then
+      # already a symlink — refresh it (idempotent, handles repo path changes)
+      ln -snf "$cmd" "$target"
+      skipped=$((skipped + 1))
+    elif [[ -e "$target" ]]; then
+      yellow "   Skipped $name — file already exists (not a symlink). Remove it manually if you want the skill version."
+      blocked=$((blocked + 1))
+    else
+      ln -s "$cmd" "$target"
+      linked=$((linked + 1))
+    fi
+  done
+  green "   $linked new, $skipped refreshed, $blocked blocked"
+fi
+
 # ── optional: MCP server (Claude Code only) ───────────────────────────────────
 
-step "3. MCP server (optional — Claude Code only)..."
+step "4. MCP server (optional — Claude Code only)..."
 echo "   The obsidian-vault MCP server gives Claude faster vault access."
 echo "   Without it, Claude reads/writes vault files directly (works fine)."
 echo ""

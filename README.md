@@ -494,7 +494,7 @@ python bootstrap_vault.py --path ~/my-vault --name "Your Name" --style obsidian
 One line:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
 ```
 
 Or two commands:
