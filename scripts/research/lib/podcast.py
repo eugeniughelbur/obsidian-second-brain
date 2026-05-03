@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 import tempfile
 from typing import Any
 from urllib.parse import urlparse, parse_qs
@@ -99,6 +100,11 @@ def _pick_entry(entries: list[Any], episode_id: str | None) -> Any | None:
         for e in entries:
             if str(e.get("id", "")).endswith(episode_id) or episode_id in str(e.get("link", "")):
                 return e
+        print(
+            f"[podcast: episode id '{episode_id}' not found in feed (feed may be paginated "
+            f"and only serve recent episodes); falling back to most recent entry.]",
+            file=sys.stderr,
+        )
     return entries[0]
 
 
@@ -154,7 +160,7 @@ def fetch_transcript_tag(transcript_url: str) -> str | None:
         r = requests.get(transcript_url, timeout=30)
         r.raise_for_status()
     except Exception as e:
-        print(f"[podcast transcript-tag fetch failed: {type(e).__name__}: {e}]")
+        print(f"[podcast transcript-tag fetch failed: {type(e).__name__}: {e}]", file=sys.stderr)
         return None
     ctype = (r.headers.get("Content-Type") or "").lower()
     body = r.text
@@ -170,13 +176,38 @@ def fetch_transcript_tag(transcript_url: str) -> str | None:
 
 
 def _parse_json_transcript(body: str) -> str | None:
+    """Parse a JSON transcript body. Currently supports the Podcast Index
+    `{"segments": [{"body": "..."}]}` schema. Other schemas (Deepgram,
+    AssemblyAI, custom) are not supported and produce a stderr warning so
+    the caller knows a JSON transcript was found but unreadable.
+    """
     import json
     try:
         data = json.loads(body)
     except json.JSONDecodeError:
+        print("[podcast transcript-tag JSON: invalid JSON]", file=sys.stderr)
         return None
     if isinstance(data, dict) and "segments" in data:
-        return " ".join(s.get("body", "") for s in data["segments"] if s.get("body")).strip()
+        segments = data["segments"]
+        joined = " ".join(s.get("body", "") for s in segments if s.get("body")).strip()
+        if joined:
+            return joined
+        sample_keys: list[str] = []
+        if isinstance(segments, list) and segments and isinstance(segments[0], dict):
+            sample_keys = list(segments[0].keys())[:6]
+        print(
+            f"[podcast transcript-tag JSON: `segments` present but no `body` field "
+            f"(segment keys: {sample_keys}). Likely Deepgram/AssemblyAI/custom schema. "
+            f"Only Podcast Index `segments[].body` is supported in v1.]",
+            file=sys.stderr,
+        )
+        return None
+    keys = list(data.keys())[:5] if isinstance(data, dict) else type(data).__name__
+    print(
+        f"[podcast transcript-tag JSON: unsupported schema (top-level keys/type: {keys}). "
+        f"Only Podcast Index `segments[].body` is supported in v1.]",
+        file=sys.stderr,
+    )
     return None
 
 
@@ -203,7 +234,7 @@ def transcribe_via_whisper(audio_url: str, max_bytes: int = 25 * 1024 * 1024) ->
     try:
         from openai import OpenAI
     except ImportError:
-        print("[podcast whisper: openai package not installed]")
+        print("[podcast whisper: openai package not installed]", file=sys.stderr)
         return None
 
     try:
@@ -213,7 +244,8 @@ def transcribe_via_whisper(audio_url: str, max_bytes: int = 25 * 1024 * 1024) ->
             if content_length and content_length > max_bytes:
                 print(
                     f"[podcast whisper: audio is {content_length // (1024*1024)} MB, "
-                    f"exceeds OpenAI {max_bytes // (1024*1024)} MB limit]"
+                    f"exceeds OpenAI {max_bytes // (1024*1024)} MB limit]",
+                    file=sys.stderr,
                 )
                 return None
             suffix = _audio_suffix(audio_url)
@@ -225,13 +257,14 @@ def transcribe_via_whisper(audio_url: str, max_bytes: int = 25 * 1024 * 1024) ->
                         tmp.close()
                         os.unlink(tmp.name)
                         print(
-                            f"[podcast whisper: audio exceeds {max_bytes // (1024*1024)} MB while streaming]"
+                            f"[podcast whisper: audio exceeds {max_bytes // (1024*1024)} MB while streaming]",
+                            file=sys.stderr,
                         )
                         return None
                     tmp.write(chunk)
                 tmp_path = tmp.name
     except Exception as e:
-        print(f"[podcast whisper: audio download failed: {type(e).__name__}: {e}]")
+        print(f"[podcast whisper: audio download failed: {type(e).__name__}: {e}]", file=sys.stderr)
         return None
 
     try:
@@ -242,9 +275,16 @@ def transcribe_via_whisper(audio_url: str, max_bytes: int = 25 * 1024 * 1024) ->
                 file=f,
                 response_format="text",
             )
-        return result.strip() if isinstance(result, str) else None
+        if isinstance(result, str):
+            return result.strip()
+        print(
+            f"[podcast whisper: unexpected response type {type(result).__name__} "
+            f"(expected str via response_format='text'); SDK contract may have changed.]",
+            file=sys.stderr,
+        )
+        return None
     except Exception as e:
-        print(f"[podcast whisper: transcription failed: {type(e).__name__}: {e}]")
+        print(f"[podcast whisper: transcription failed: {type(e).__name__}: {e}]", file=sys.stderr)
         return None
     finally:
         try:

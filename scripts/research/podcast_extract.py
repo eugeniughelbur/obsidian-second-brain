@@ -12,6 +12,7 @@ Then summarizes via Grok and saves an AI-first note to Research/Podcasts/.
 Spotify URLs are not supported in v1 (DRM blocks audio access).
 """
 
+import os
 import sys
 from datetime import datetime
 from .lib import grok, podcast, vault
@@ -46,7 +47,7 @@ Produce EXACTLY this structure (markdown):
 [2-3 sentences naming the broader themes / domains this episode touches]
 
 ## Guests & People Mentioned
-- [Name — short context. List every named person referenced; mark unknowns as [uncertain].]
+- [[Person Name]] — short context. List every named person referenced; mark unknowns as [uncertain].
 
 ## Worth Following Up On
 - [Specific things mentioned that would be worth a deeper /research call later]
@@ -56,22 +57,61 @@ Rules:
 - Don't pad. If a section is genuinely thin, write one bullet and move on.
 - Don't invent quotes. If TRANSCRIPT SOURCE is "show-notes" you have no transcript — leave Notable Quotes empty.
 - Don't add commentary outside this structure.
+- **Wikilinks are mandatory.** Wrap every named person, company, project, product, book, and named concept in `[[Name]]` so future-Claude can traverse the vault graph. Examples: `[[Sam Altman]]`, `[[OpenAI]]`, `[[GPT-5]]`, `[[Attention Is All You Need]]`. This applies in every section — TL;DR, Key Points, Notable Quotes (the speaker attribution), Themes, Guests & People Mentioned, Worth Following Up On.
 """
 
 
+MIN_TRANSCRIPT_CHARS = 200
+
+
 def _resolve_transcript(episode: dict) -> tuple[str | None, str]:
-    """Return (transcript_text_or_None, source_label)."""
+    """Return (transcript_text_or_None, source_label).
+
+    Falls through silently to the next path only when the prior path is unavailable;
+    every rejection (transcript tag too short, Whisper too short, JSON unparseable)
+    is logged so the user knows why a costlier path is being attempted.
+    """
     if episode.get("transcript_url"):
         print(f"[/podcast] Fetching transcript tag: {episode['transcript_url']}", file=sys.stderr)
         text = podcast.fetch_transcript_tag(episode["transcript_url"])
-        if text and len(text) > 200:
+        if text is None:
+            print(
+                "[/podcast] Transcript tag returned no usable text "
+                "(unsupported JSON schema, fetch error, or empty body) — falling through.",
+                file=sys.stderr,
+            )
+        elif len(text) <= MIN_TRANSCRIPT_CHARS:
+            print(
+                f"[/podcast] Transcript tag content too short ({len(text)} chars, "
+                f"minimum {MIN_TRANSCRIPT_CHARS}) — likely a stub or redirect page. Falling through.",
+                file=sys.stderr,
+            )
+        else:
             return text, "rss-transcript-tag"
 
     if episode.get("audio_url"):
-        print("[/podcast] Trying Whisper API (requires OPENAI_API_KEY)...", file=sys.stderr)
-        text = podcast.transcribe_via_whisper(episode["audio_url"])
-        if text and len(text) > 200:
-            return text, "whisper-api"
+        if not os.environ.get("OPENAI_API_KEY", "").strip():
+            print(
+                "[/podcast] Skipping Whisper: OPENAI_API_KEY not set. "
+                "Falling through to show-notes summary.",
+                file=sys.stderr,
+            )
+        else:
+            print("[/podcast] Trying Whisper API...", file=sys.stderr)
+            text = podcast.transcribe_via_whisper(episode["audio_url"])
+            if text and len(text) > MIN_TRANSCRIPT_CHARS:
+                return text, "whisper-api"
+            if text is not None:
+                print(
+                    f"[/podcast] Whisper returned content too short ({len(text)} chars) — falling through to show notes.",
+                    file=sys.stderr,
+                )
+    else:
+        print(
+            "[/podcast] No audio enclosure in feed entry; skipping Whisper. "
+            "Falling through to show-notes summary.",
+            file=sys.stderr,
+        )
 
     return None, "show-notes"
 
@@ -173,11 +213,13 @@ def main(argv: list[str]) -> int:
         "cost-usd": round(result["cost_usd"], 4),
         "ai-first": True,
     }
+    show_link = f"[[{show}]]" if show and show != "(unknown show)" else show
+    host_link = f"[[{host}]]" if host and host != "(unknown)" else host
     note_body = (
         f"## For future Claude\n\n{preamble}\n\n"
         f"## Episode\n\n"
-        f"- **Show:** {show}\n"
-        f"- **Host:** {host}\n"
+        f"- **Show:** {show_link}\n"
+        f"- **Host:** {host_link}\n"
         f"- **Episode:** {title}\n"
         f"- **Published:** {published}\n"
         f"- **Duration:** {duration}\n"
