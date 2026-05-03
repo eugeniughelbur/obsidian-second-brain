@@ -74,7 +74,7 @@
 
 <p align="center">
   <strong>Research toolkit · dual-track</strong><br/>
-  <code>/x-read</code> · <code>/x-pulse</code> · <code>/research</code> · <code>/research-deep</code> · <code>/notebooklm</code> · <code>/youtube</code>
+  <code>/x-read</code> · <code>/x-pulse</code> · <code>/research</code> · <code>/research-deep</code> · <code>/notebooklm</code> · <code>/youtube</code> · <code>/podcast</code>
 </p>
 
 <p align="center">
@@ -307,8 +307,9 @@ Powered by xAI Grok (live X access) + Perplexity Sonar (web research) + YouTube.
 | `/research-deep [topic]` | Vault-first synthesis (open web) — scans your vault, finds gaps, fills them via Perplexity + Grok, propagates updates across people/projects/ideas |
 | `/notebooklm [topic]` | Vault-grounded synthesis via Gemini File Search. Uploads top 12 vault notes, returns a grounded answer with citations. No browser, one HTTP call. Pairs with `/research-deep` for dual-track research. |
 | `/youtube [url]` | Extract transcript + metadata + top comments → AI-first summary |
+| `/podcast [url]` | Apple Podcasts or RSS → transcript (RSS tag / Whisper / show-notes) + AI-first summary |
 
-**Setup:** copy `.env.example` to `~/.config/obsidian-second-brain/.env`, add your keys (xAI, Perplexity, YouTube optional). Run `install.sh` and answer "y" to the research prompt to do this automatically.
+**Setup:** copy `.env.example` to `~/.config/obsidian-second-brain/.env`, add your keys (xAI, Perplexity, YouTube optional, OpenAI optional for podcast Whisper). Run `install.sh` and answer "y" to the research prompt to do this automatically.
 
 <details>
 <summary><strong>See the thinking tools in action</strong></summary>
@@ -453,6 +454,12 @@ Pair with `/research-deep` on the same topic. Open-web view + vault-grounded vie
 **`/youtube https://youtu.be/...`**
 
 Free transcript via youtube-transcript-api + optional metadata + comments via YouTube Data API v3 (free tier). Grok summarizes into TL;DR, Key Points, Notable Quotes (verbatim), Themes, Comment Sentiment, and Worth Following Up On. ~$0.04 for the Grok call. Frontmatter includes view count, channel, published date, like count for Dataview queries.
+
+---
+
+**`/podcast https://podcasts.apple.com/...`** (or paste an RSS feed URL)
+
+Resolves Apple Podcasts URLs to RSS via the free iTunes Lookup API. Picks the best transcript source available: `<podcast:transcript>` tag in the RSS feed (free, high fidelity) → Whisper API if `OPENAI_API_KEY` is set (~$0.006/min) → show-notes fallback. Grok summarizes into TL;DR, Key Points, Notable Quotes, Themes, Guests & People Mentioned, and Worth Following Up On. ~$0.04 for the Grok call (plus Whisper if used). Spotify URLs aren't supported (DRM).
 
 ---
 
@@ -617,6 +624,7 @@ Keys you need:
 | `PERPLEXITY_API_KEY` | [perplexity.ai/settings/api](https://perplexity.ai/settings/api) | `/research`, `/research-deep` | Pay-per-use, ~$0.02-$0.50/call |
 | `GEMINI_API_KEY` | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | `/notebooklm` (vault-grounded synthesis via Gemini File Search) | Free tier covers it. Paid: ~$0.004/call (Flash), ~$0.06/call (Pro). |
 | `YOUTUBE_API_KEY` | [console.cloud.google.com](https://console.cloud.google.com) | `/youtube` metadata + comments (optional, transcripts free without) | Free tier 10k units/day |
+| `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) | `/podcast` Whisper transcription (optional, falls back to show-notes if unset) | ~$0.006/min |
 
 Without keys, the existing 27 vault commands still work fine. Research toolkit just degrades gracefully.
 
@@ -643,7 +651,7 @@ Yes. The repo ships a build script that compiles the platform-neutral source int
 Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, iCloud, Syncthing, and Git-based sync all work without modification.
 
 ### Do I need API keys to use this?
-No. The original 27 vault commands (`/obsidian-save`, `/obsidian-daily`, etc.) work without any API keys. Only the 6 research commands (`/x-read`, `/x-pulse`, `/research`, `/research-deep`, `/notebooklm`, `/youtube`) require API keys for xAI Grok, Perplexity, Google Gemini, and optionally YouTube Data API v3. Without keys, those commands degrade gracefully — they exit with a clear setup message.
+No. The original 27 vault commands (`/obsidian-save`, `/obsidian-daily`, etc.) work without any API keys. Only the 7 research commands (`/x-read`, `/x-pulse`, `/research`, `/research-deep`, `/notebooklm`, `/youtube`, `/podcast`) require API keys for xAI Grok, Perplexity, Google Gemini, and optionally YouTube Data API v3 / OpenAI Whisper. Without keys, those commands degrade gracefully — they exit with a clear setup message.
 
 ### How is this different from Notion AI or Mem?
 Notion AI and Mem are closed-source SaaS products that own your data. This skill stores everything as plain markdown in your local Obsidian vault, with no vendor lock-in. The AI is on top of your data, not behind it. You can switch tools or stop using the skill at any point and still have your full vault.
@@ -658,7 +666,7 @@ Yes. The skill never deletes or modifies notes destructively without explicit co
 `/research` runs a single Perplexity query and returns a dossier with citations. `/research-deep` is vault-first: it scans your existing notes, identifies what you already know about the topic, spawns 3-5 targeted follow-up searches to fill only the gaps, and produces a delta report (what's new, what's confirmed, contradictions to resolve, recommended vault updates). Vault-first means you stop re-researching what's already in your notes.
 
 ### What do the research commands cost?
-Approximate per-call costs as of 2026-04: `/x-read` ~$0.05, `/x-pulse` ~$0.13, `/research` ~$0.04, `/research-deep` ~$0.40-$0.80, `/youtube` ~$0.04. Costs for Grok calls are logged to `~/.research-toolkit/usage.log` for visibility. No hard caps — you're trusted to monitor your own spend.
+Approximate per-call costs as of 2026-04: `/x-read` ~$0.05, `/x-pulse` ~$0.13, `/research` ~$0.04, `/research-deep` ~$0.40-$0.80, `/youtube` ~$0.04, `/podcast` ~$0.04 Grok call (plus ~$0.006/min if Whisper is used; free if RSS provides a `<podcast:transcript>` tag or you accept the show-notes fallback). Costs for Grok calls are logged to `~/.research-toolkit/usage.log` for visibility. No hard caps — you're trusted to monitor your own spend.
 
 ### Can I use this on Windows or Linux?
 The core vault commands work anywhere Claude Code runs. The research toolkit was tested on macOS — `install.sh` and the auto-open behavior assume macOS conventions (`~/.config`, `open` command). Pull requests welcome to add Windows and Linux paths.

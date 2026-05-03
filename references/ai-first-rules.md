@@ -161,8 +161,28 @@ tags: [review, ...]
 ai-first: true
 ```
 
-### `type: research` / `type: research-deep` / `type: x-read` / `type: x-pulse` / `type: youtube`
-See `commands/research*.md` and `commands/x-*.md` and `commands/youtube.md` for the full schemas. All set `ai-first: true` and follow the universal rules.
+### `type: research` / `type: research-deep` / `type: x-read` / `type: x-pulse` / `type: youtube` / `type: podcast`
+See `commands/research*.md`, `commands/x-*.md`, `commands/youtube.md`, and `commands/podcast.md` for the full schemas. All set `ai-first: true` and follow the universal rules.
+
+### `type: podcast`
+```yaml
+date: YYYY-MM-DD
+time: HH:MM
+type: podcast
+show: ""                      # podcast show name
+host: ""                      # show host or author
+episode-title: ""
+episode-url: ""               # link to episode page (publisher-provided)
+feed-url: ""                  # RSS feed URL
+source-url: ""                # the URL the user pasted (Apple, RSS, etc.)
+guid: ""                      # episode GUID from RSS
+published: ""                 # publisher-provided publish date string
+duration: ""                  # publisher-provided duration string
+transcript-source: rss-transcript-tag | whisper-api | show-notes
+tags: [research, podcast, ...]
+cost-usd: 0.0
+ai-first: true
+```
 
 ### `type: adr`
 ```yaml

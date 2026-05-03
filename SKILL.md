@@ -11,8 +11,9 @@ description: >
   tracking deals, or maintaining any vault structure. Also triggers when the user
   wants to bootstrap a new vault from scratch, run a vault health check, or drop
   a _CLAUDE.md into their vault so all Claude surfaces share the same operating rules.
-  Includes a research toolkit (6 commands: /x-read, /x-pulse, /research, /research-deep,
-  /notebooklm, /youtube) for AI-powered research via Grok, Perplexity, NotebookLM, and YouTube — findings save
+  Includes a research toolkit (7 commands: /x-read, /x-pulse, /research, /research-deep,
+  /notebooklm, /youtube, /podcast) for AI-powered research via Grok, Perplexity, NotebookLM,
+  YouTube, and podcast feeds — findings save
   to the vault automatically following the AI-first vault rule. Use proactively whenever
   the conversation produces information worth preserving (decisions, people met, projects
   started, tasks completed, lessons learned, research findings).
@@ -911,9 +912,27 @@ If the video has no captions and no API key set, the script fails with a clear m
 
 ---
 
+### `/podcast [url]`
+
+**Extract and summarize a podcast episode.** Apple Podcasts URL or RSS feed → transcript (RSS `<podcast:transcript>` tag, Whisper API if `OPENAI_API_KEY` set, or show-notes fallback) → summarized via Grok.
+
+Steps:
+1. Parse Apple Podcasts URL (resolved to RSS via free iTunes Lookup API) or RSS feed URL
+2. Run `uv run -m scripts.research.podcast_extract "<url>"`
+3. Fetch episode metadata + audio URL + show notes from RSS
+4. Try transcript sources in order: `<podcast:transcript>` tag → Whisper API (if `OPENAI_API_KEY`) → show-notes-only
+5. Send transcript-or-shownotes to Grok for AI-first summary: TL;DR, Key Points, Notable Quotes, Themes, Guests & People Mentioned, Worth Following Up On
+6. **Default save: auto-saves** to `Research/Podcasts/YYYY-MM-DD — <episode-title-slug>.md`
+
+Plain English: "summarize this podcast", "what's in this episode", or just paste an Apple Podcasts URL.
+
+Spotify URLs are not supported (DRM blocks audio + transcript access). If no transcript path works and show notes are empty, the script fails with a clear message.
+
+---
+
 ### Cost tracking
 
-`/x-read`, `/x-pulse`, and `/youtube` (Grok summarize step) log usage to `~/.research-toolkit/usage.log`. View monthly totals via:
+`/x-read`, `/x-pulse`, `/youtube`, and `/podcast` (Grok summarize step) log usage to `~/.research-toolkit/usage.log`. View monthly totals via:
 ```bash
 uv run python -c "from scripts.research.lib.usage import month_total; t,c = month_total(); print(f'\${t:.2f} across {c} calls')"
 ```

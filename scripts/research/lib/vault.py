@@ -25,6 +25,7 @@ SUBFOLDERS = {
     "research":    Path("Research") / "Web",
     "research-deep": Path("Research") / "Deep",
     "youtube":     Path("Research") / "YouTube",
+    "podcast":     Path("Research") / "Podcasts",
 }
 
 

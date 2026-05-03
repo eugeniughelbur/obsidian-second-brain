@@ -10,6 +10,7 @@ dependencies = [
     "youtube-transcript-api>=0.6.2",
     "google-api-python-client>=2.110.0",
     "google-genai>=2.3.0",
+    "feedparser>=6.0.10",
 ]
 
 [tool.ruff]
