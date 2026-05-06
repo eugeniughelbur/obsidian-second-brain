@@ -8,6 +8,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `/projects` command: live overview of all tracked projects - reads vault notes, git history (`git log --oneline -15`), and local docs in parallel, then rewrites `Projects/Dashboard.md` and prints the result to the conversation
+- `projects:` block support in `_CLAUDE.md`: maps project names to repo paths and vault note paths - required for `/projects` to work
+- `Projects/Dashboard.md` format: AI-first dashboard with per-project status, last session, next action, and blockers; ordered active > stalled > idle
+
+### Removed
+
+- 16 commands not relevant to the project-tracking focus: `/obsidian-daily`, `/obsidian-board`, `/obsidian-recap`, `/obsidian-review`, `/obsidian-decide`, `/obsidian-export`, `/obsidian-ingest`, `/obsidian-visualize`, `/obsidian-synthesize`, `/obsidian-connect`, `/obsidian-emerge`, `/obsidian-graduate`, `/obsidian-challenge`, `/obsidian-learn`, `/obsidian-world`, `/x-pulse`
+- Scheduled agent system (morning/nightly/weekly/health) - removed from SKILL.md; the fork is for interactive AI use, not autonomous vault agents
+
+### Changed
+
+- SKILL.md rewritten to match the 16-command surface; all removed command sections stripped; `/projects` added as the primary command
+- README rewritten to reflect the fork's focus, actual command count, and setup instructions
+- CLAUDE.md updated: skill name, command count, symlink path
+
+---
+
+## [Upstream]
+
+### Added
+
 - `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1)
 - `CONTRIBUTING.md` with full contributor guide
 - `CLAUDE.md` at repo root for contributor-facing operating instructions

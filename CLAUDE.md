@@ -2,15 +2,15 @@
 
 Operating instructions for Claude Code when working inside this repo.
 
-This is the source repo for **obsidian-second-brain**, a Claude Code skill that turns any Obsidian vault into a living AI-first second brain. The skill ships 31 slash commands across 4 layers (vault management, thinking tools, research toolkit, scheduled agents).
+This is the source repo for **obsidian-ai-brain**, a focused fork of obsidian-second-brain. The skill ships 16 slash commands centered on project tracking - a live dashboard, dev session logging, decision records, and a research toolkit (YouTube, web research, deep research, page reading).
 
 If you are Claude operating on a user's vault, you want `_CLAUDE.md` inside their vault, not this file. This file is for working on the skill's source code.
 
 ## Repo layout
 
-- `commands/` — 31 slash command definitions, one `.md` per command. These are what users install.
+- `commands/` — 16 slash command definitions, one `.md` per command. These are what users install.
 - `references/` — shared specs that commands link to. **`ai-first-rules.md` is the canonical vault-write spec** and is non-negotiable.
-- `scripts/` — Python helpers (`bootstrap_vault.py`, `vault_health.py`, the `research/` toolkit invoked by `/research`, `/research-deep`, `/x-read`, `/x-pulse`, `/youtube`).
+- `scripts/` — Python helpers (`bootstrap_vault.py`, `vault_health.py`, the `research/` toolkit invoked by `/research`, `/research-deep`, `/x-read`, `/youtube`).
 - `hooks/` — Claude Code hooks shipped with the skill.
 - `SKILL.md` — full operating manual loaded by Claude when the skill activates.
 - `architecture.md` — how the layers fit together.
@@ -44,7 +44,7 @@ If you are editing a command file in `commands/`, do not rewrite the AI-first pr
 2. If it runs Python, add `scripts/research/<name>.py` (or appropriate subfolder).
 3. **Apply the AI-first rule to every vault write.** Reference `references/ai-first-rules.md` from the command body so future-Claude has the spec inline.
 4. If the command produces a new note type, add its frontmatter schema to `references/ai-first-rules.md`.
-5. Update `SKILL.md` (Layer section + command list) and `README.md` (commands table).
+5. Update `SKILL.md` (commands list) and `README.md` (commands table).
 6. Add a `CHANGELOG.md` entry under "Unreleased".
 
 ## Testing locally
@@ -52,7 +52,7 @@ If you are editing a command file in `commands/`, do not rewrite the AI-first pr
 Symlink the local checkout into Claude Code so slash commands run from this repo:
 
 ```bash
-ln -s "$(pwd)" ~/.claude/skills/obsidian-second-brain
+ln -s "$(pwd)" ~/.claude/skills/obsidian-ai-brain
 ln -s commands/* ~/.claude/commands/
 ```
 
