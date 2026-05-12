@@ -80,4 +80,5 @@ Then restart Claude Code and run the command against a test vault. There is no a
 - Do not strip frontmatter or `## For future Claude` preambles from existing commands.
 - Do not add emojis to command files or vault output (unless explicitly part of a UI element like a kanban column emoji).
 - Do not invent rates, dates, or relationships when writing project notes — mark unknowns as `TBD`.
-- Do not push to `main` directly. Open a PR.
+- **Contributors:** do not push to `main` directly — open a PR.
+- **Maintainer (Eugeniu) and Claude assisting him:** may push to `main` directly when working solo. PRs are optional, not mandatory.
