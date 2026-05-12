@@ -18,3 +18,6 @@ __pycache__/
 
 # Logs
 *.log
+
+# Build output (regenerate with `bash scripts/build.sh`)
+dist/

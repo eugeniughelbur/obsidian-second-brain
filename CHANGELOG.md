@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Multi-platform adapter pattern (Phase 1):** one source, four platforms.
+  - `scripts/build.sh` orchestrator + `scripts/lib.sh` utility helpers
+  - `adapters/lib.sh` shared parsing, path rewriting, tool-name neutralization
+  - `adapters/claude-code/adapter.sh` — identity copy (Claude Code is the canonical platform)
+  - `adapters/codex-cli/adapter.sh` — emits `AGENTS.md` + `.codex/commands/`
+  - `adapters/gemini-cli/adapter.sh` — emits `GEMINI.md` + `.gemini/commands/`
+  - `adapters/opencode/adapter.sh` — emits `AGENTS.md` + `.opencode/commands/`
+  - Auto-generated routing tables (parses each command's `description:` frontmatter)
+  - Tool-name neutralization for non-Claude platforms (`Read tool` → `read files`, etc.)
+  - Per-platform `exclude:` frontmatter field for opt-outs
+  - Build output goes to `dist/<platform>/` (gitignored)
 - `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1)
 - `CONTRIBUTING.md` with full contributor guide
 - `CLAUDE.md` at repo root for contributor-facing operating instructions

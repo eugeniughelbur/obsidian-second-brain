@@ -5,7 +5,17 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Claude_Code-Skill-blueviolet?style=for-the-badge&logo=anthropic" alt="Claude Code Skill" />
+  <img src="https://img.shields.io/badge/Claude_Code-555555?style=for-the-badge" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/Codex_CLI-555555?style=for-the-badge" alt="Codex CLI" />
+  <img src="https://img.shields.io/badge/Gemini_CLI-555555?style=for-the-badge" alt="Gemini CLI" />
+  <img src="https://img.shields.io/badge/OpenCode-555555?style=for-the-badge" alt="OpenCode" />
+</p>
+
+<p align="center">
+  <em>One codebase. Four platforms. Same brain.</em>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Obsidian-Vault-7C3AED?style=for-the-badge&logo=obsidian&logoColor=white" alt="Obsidian Vault" />
   <img src="https://img.shields.io/github/v/release/eugeniughelbur/obsidian-second-brain?style=for-the-badge&color=green" alt="Release" />
   <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License: MIT" />
@@ -522,6 +532,10 @@ python bootstrap_vault.py --path ~/my-vault --name "Your Name" --style obsidian
 
 ## Install
 
+> **One codebase, four platforms.** Pick yours below. The vault behavior is identical across all four — only the install path and the dispatcher file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`) differ.
+
+### Claude Code (default)
+
 One line:
 
 ```bash
@@ -536,6 +550,19 @@ bash ~/.claude/skills/obsidian-second-brain/scripts/setup.sh "/path/to/your/vaul
 ```
 
 Then: `/obsidian-init`
+
+### Codex CLI / Gemini CLI / OpenCode
+
+```bash
+git clone https://github.com/eugeniughelbur/obsidian-second-brain
+cd obsidian-second-brain
+bash scripts/build.sh --platform codex-cli   # or gemini-cli, or opencode
+cp -R dist/codex-cli/. /path/to/your/vault/   # or .gemini-cli / .opencode/
+```
+
+Then start your CLI from the vault root. Each build produces a platform-specific dispatcher (`AGENTS.md` for Codex / OpenCode, `GEMINI.md` for Gemini) with an **auto-generated routing table** mapping natural-language triggers to command files under `.codex/commands/` (or `.gemini/`, `.opencode/`).
+
+Run `bash scripts/build.sh` with no arguments to build all four platforms at once. See [`dist/<platform>/INSTALL.md`](scripts/build.sh) after building for platform-specific notes.
 
 ### Research toolkit (optional)
 
@@ -574,6 +601,9 @@ An Obsidian plugin runs inside Obsidian and is written in TypeScript against Obs
 
 ### How do I add this Obsidian Claude skill to Claude Code?
 Run the one-line installer from the Install section below. It clones the repo to `~/.claude/skills/obsidian-second-brain` and symlinks the slash commands into `~/.claude/commands/` so Claude Code picks them up automatically. Restart Claude Code after install. The skill loads on every session that touches an Obsidian vault.
+
+### Does this work with Codex CLI, Gemini CLI, or OpenCode?
+Yes. The repo ships a build script that compiles the platform-neutral source into four platform-specific outputs: Claude Code (slash commands + `CLAUDE.md`), Codex CLI (`AGENTS.md` + `.codex/commands/`), Gemini CLI (`GEMINI.md` + `.gemini/commands/`), and OpenCode (`AGENTS.md` + `.opencode/commands/`). Run `bash scripts/build.sh --platform codex-cli` (or another platform name), then copy the resulting `dist/<platform>/` tree into your vault. The non-Claude builds auto-generate a routing table that maps natural-language triggers to command files, so the same 31 commands work no matter which CLI you use. The vault rules (AI-first notes, frontmatter, wikilinks, recency markers) are identical across all four platforms.
 
 ### Does this work with Obsidian Sync?
 Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, iCloud, Syncthing, and Git-based sync all work without modification.
