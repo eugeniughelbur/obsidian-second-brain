@@ -1,5 +1,6 @@
 ---
 description: Web research with citations via Perplexity Sonar — deep dossier with summary, facts, timeline, players, contrarian views, open questions
+category: research
 ---
 
 Use the obsidian-second-brain skill. Execute `/research [topic]`:

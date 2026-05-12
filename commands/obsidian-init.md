@@ -1,5 +1,6 @@
 ---
 description: Scan your vault and generate a _CLAUDE.md operating manual, index.md catalog, and log.md
+category: meta
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-init`:

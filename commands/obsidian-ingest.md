@@ -1,5 +1,6 @@
 ---
 description: Ingest a source into the vault — the vault rewrites itself around new knowledge. Every ingest updates entities, rewrites stale claims, synthesizes new concepts, and resolves contradictions.
+category: research
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-ingest $ARGUMENTS`:

@@ -1,5 +1,6 @@
 ---
 description: Export a clean structured snapshot of the vault that any agent or tool can consume — flat JSON or markdown index
+category: meta
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-export $ARGUMENTS`:

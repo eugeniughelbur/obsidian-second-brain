@@ -1,5 +1,6 @@
 ---
 description: Load your identity, values, priorities, and current state in one shot — with progressive context levels to avoid burning tokens
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-world`:

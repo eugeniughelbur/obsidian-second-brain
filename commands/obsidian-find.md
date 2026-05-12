@@ -1,5 +1,6 @@
 ---
 description: Smart vault search — returns results with context, not just filenames
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-find $ARGUMENTS`:

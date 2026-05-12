@@ -1,5 +1,6 @@
 ---
 description: Review vault learnings, prune stale ones, surface active patterns — the vault's lessons compound or expire
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-learn $ARGUMENTS`:

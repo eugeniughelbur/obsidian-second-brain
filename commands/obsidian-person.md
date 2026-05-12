@@ -1,5 +1,6 @@
 ---
 description: Create or update a person note from conversation context
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-person $ARGUMENTS`:

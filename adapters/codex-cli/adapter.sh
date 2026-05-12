@@ -40,7 +40,7 @@ agent) should follow when the user's request matches its trigger phrase.
 
 1. Read `_CLAUDE.md` in the vault root, if it exists, to learn the user's
    vault conventions (folder map, daily note format, naming).
-2. When the user's request matches a trigger in the table below, read the
+2. When the user's request matches a trigger in the tables below, read the
    matching file under `.codex/commands/<name>.md` and follow its
    instructions step by step.
 3. Treat the AI-first vault rule (`references/ai-first-rules.md`) as
@@ -51,22 +51,10 @@ agent) should follow when the user's request matches its trigger phrase.
 4. Do not invent commands. If no command matches, ask the user what they
    want or fall back to plain natural-language help.
 
-## Command routing table
-
-| Command | What it does | Read this file |
-|---|---|---|
+## Command routing tables (grouped by category)
 EOF
 
-    local f name desc
-    for f in "$src/commands"/*.md; do
-      [[ -f "$f" ]] || continue
-      should_include "$f" "$CODEX_PLATFORM" || continue
-      name="$(basename "$f" .md)"
-      desc="$(parse_frontmatter "$f" description)"
-      desc="${desc#\"}"; desc="${desc%\"}"
-      desc="${desc#\'}"; desc="${desc%\'}"
-      printf '| `/%s` | %s | `.codex/commands/%s.md` |\n' "$name" "$desc" "$name"
-    done
+    emit_routing_table_grouped "$src/commands" "$CODEX_PLATFORM" ".codex/commands"
 
     cat <<'EOF'
 

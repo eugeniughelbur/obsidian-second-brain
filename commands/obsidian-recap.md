@@ -1,5 +1,6 @@
 ---
 description: Summarize a time period from the vault — today, week, or month
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-recap $ARGUMENTS`:

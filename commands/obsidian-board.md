@@ -1,5 +1,6 @@
 ---
 description: Show or update a kanban board — flags overdue items, updates from conversation
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-board $ARGUMENTS`:

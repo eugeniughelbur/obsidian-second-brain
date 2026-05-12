@@ -1,5 +1,6 @@
 ---
 description: Bridge two unrelated domains using your vault's link graph — forces creative friction to spark new ideas
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-connect $ARGUMENTS`:

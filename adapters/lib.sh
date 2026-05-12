@@ -67,6 +67,85 @@ enumerate_commands() {
   done
 }
 
+# ── Routing table emission (grouped by category) ────────────────────────────
+
+# Display order + human-readable section titles for known categories.
+# Unknown categories sort alphabetically AFTER these.
+CATEGORY_ORDER="vault thinking research meta"
+
+_category_title() {
+  case "$1" in
+    vault)    echo "Vault — daily writing, capture, find" ;;
+    thinking) echo "Thinking — synthesis, decisions, learning, reviews" ;;
+    research) echo "Research — bring external sources into the vault" ;;
+    meta)     echo "Meta — vault setup, health, structure" ;;
+    *)        echo "${1^}" ;;
+  esac
+}
+
+# emit_routing_table_grouped <commands_dir> <platform> <command_path_prefix>
+# Prints a Markdown routing table grouped by category. One section per
+# category in CATEGORY_ORDER order (skipping empty ones), then any unknown
+# categories alphabetically.
+#
+# Arguments:
+#   commands_dir         - source commands/ directory
+#   platform             - platform name (passed to should_include)
+#   command_path_prefix  - the path prefix used in the "Read this file" column
+#                          (e.g. ".codex/commands" or ".gemini/commands")
+emit_routing_table_grouped() {
+  local src_dir="$1" platform="$2" path_prefix="$3"
+  [[ -d "$src_dir" ]] || return 0
+
+  local tmp_index; tmp_index="$(mktemp)"
+  local f name desc cat
+  for f in "$src_dir"/*.md; do
+    [[ -f "$f" ]] || continue
+    should_include "$f" "$platform" || continue
+    name="$(basename "$f" .md)"
+    desc="$(parse_frontmatter "$f" description)"
+    desc="${desc#\"}"; desc="${desc%\"}"
+    desc="${desc#\'}"; desc="${desc%\'}"
+    cat="$(parse_frontmatter "$f" category)"
+    [[ -z "$cat" ]] && cat="other"
+    printf '%s\t%s\t%s\n' "$cat" "$name" "$desc" >> "$tmp_index"
+  done
+
+  local all_cats; all_cats="$(awk -F '\t' '{print $1}' "$tmp_index" | sort -u)"
+
+  # Emit known categories in fixed order
+  local emitted=""
+  local c
+  for c in $CATEGORY_ORDER; do
+    if echo "$all_cats" | grep -qx "$c"; then
+      _emit_one_category_section "$c" "$tmp_index" "$path_prefix"
+      emitted+=" $c"
+    fi
+  done
+
+  # Then any unknown categories alphabetically
+  for c in $all_cats; do
+    case " $emitted " in *" $c "*) continue ;; esac
+    _emit_one_category_section "$c" "$tmp_index" "$path_prefix"
+  done
+
+  rm -f "$tmp_index"
+}
+
+_emit_one_category_section() {
+  local cat="$1" index_file="$2" path_prefix="$3"
+  local title; title="$(_category_title "$cat")"
+  printf '\n### %s\n\n' "$title"
+  printf '| Command | What it does | Read this file |\n'
+  printf '|---|---|---|\n'
+  # Sort rows in this category by command name
+  awk -F '\t' -v c="$cat" '$1 == c { print $2 "\t" $3 }' "$index_file" \
+    | sort \
+    | while IFS=$'\t' read -r name desc; do
+        printf '| `/%s` | %s | `%s/%s.md` |\n' "$name" "$desc" "$path_prefix" "$name"
+      done
+}
+
 # ── Tool-name neutralization for non-Claude platforms ───────────────────────
 # Rewrites Claude Code tool references to platform-neutral wording so the
 # instructions still make sense in tools that don't have Claude's tool names.

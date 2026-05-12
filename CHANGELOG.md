@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Command categorization (Phase 2):** each command in `commands/` now declares a `category:` (vault, thinking, research, meta). Non-Claude dispatcher tables in `AGENTS.md` / `GEMINI.md` are now emitted as four grouped sections instead of one 31-row blob. Adapters use the shared `emit_routing_table_grouped` helper in `adapters/lib.sh`, so the categorization carries through automatically when a new command is added. No breaking changes — Claude Code build is still a byte-exact identity copy.
 - **Multi-platform adapter pattern (Phase 1):** one source, four platforms.
   - `scripts/build.sh` orchestrator + `scripts/lib.sh` utility helpers
   - `adapters/lib.sh` shared parsing, path rewriting, tool-name neutralization

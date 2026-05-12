@@ -1,5 +1,6 @@
 ---
 description: Log this work or dev session to the vault — infers project from context
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-log`:

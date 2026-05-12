@@ -1,5 +1,6 @@
 ---
 description: Create or update today's daily note — pulls calendar events, overdue tasks, and conversation context
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-daily`:

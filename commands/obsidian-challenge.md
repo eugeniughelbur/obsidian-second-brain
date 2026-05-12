@@ -1,5 +1,6 @@
 ---
 description: Red-team your current idea against your own vault history — finds contradictions, past failures, and flawed assumptions
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-challenge $ARGUMENTS`:

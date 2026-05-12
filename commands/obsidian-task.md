@@ -1,5 +1,6 @@
 ---
 description: Add a task to the right kanban board with inferred priority and due date
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-task $ARGUMENTS`:

@@ -1,5 +1,6 @@
 ---
 description: Automatic synthesis — scans the vault for unnamed patterns and writes synthesis pages without being asked
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-synthesize`:

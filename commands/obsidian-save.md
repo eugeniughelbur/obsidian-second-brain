@@ -1,5 +1,6 @@
 ---
 description: Save everything worth keeping from this conversation to the vault
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-save`:

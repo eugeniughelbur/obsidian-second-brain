@@ -1,5 +1,6 @@
 ---
 description: Promote an idea fragment into a full project spec with tasks, board entries, and structure
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-graduate $ARGUMENTS`:

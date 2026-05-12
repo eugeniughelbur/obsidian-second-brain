@@ -1,5 +1,6 @@
 ---
 description: Run a vault health check — grouped by severity, detects contradictions, concept gaps, stale claims, and structural issues
+category: meta
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-health`:

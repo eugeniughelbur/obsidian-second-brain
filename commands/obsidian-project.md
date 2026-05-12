@@ -1,5 +1,6 @@
 ---
 description: Create or update a project note — adds to board and daily note automatically
+category: vault
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-project $ARGUMENTS`:

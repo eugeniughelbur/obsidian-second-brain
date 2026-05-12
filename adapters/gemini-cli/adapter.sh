@@ -37,7 +37,7 @@ agent) should follow when the user's request matches its trigger phrase.
 
 1. Read `_CLAUDE.md` in the vault root, if it exists, to learn the user's
    vault conventions.
-2. When the user's request matches a trigger in the table below, read the
+2. When the user's request matches a trigger in the tables below, read the
    matching file under `.gemini/commands/<name>.md` and follow its
    instructions step by step.
 3. Treat the AI-first vault rule (`references/ai-first-rules.md`) as
@@ -46,22 +46,10 @@ agent) should follow when the user's request matches its trigger phrase.
    for every person/project/concept, recency markers per external claim,
    sources verbatim, confidence levels where applicable.
 
-## Command routing table
-
-| Command | What it does | Read this file |
-|---|---|---|
+## Command routing tables (grouped by category)
 EOF
 
-    local f name desc
-    for f in "$src/commands"/*.md; do
-      [[ -f "$f" ]] || continue
-      should_include "$f" "$GEMINI_PLATFORM" || continue
-      name="$(basename "$f" .md)"
-      desc="$(parse_frontmatter "$f" description)"
-      desc="${desc#\"}"; desc="${desc%\"}"
-      desc="${desc#\'}"; desc="${desc%\'}"
-      printf '| `/%s` | %s | `.gemini/commands/%s.md` |\n' "$name" "$desc" "$name"
-    done
+    emit_routing_table_grouped "$src/commands" "$GEMINI_PLATFORM" ".gemini/commands"
 
     cat <<'EOF'
 

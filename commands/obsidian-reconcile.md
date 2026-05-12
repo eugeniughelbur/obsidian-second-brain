@@ -1,5 +1,6 @@
 ---
 description: Find and resolve contradictions in the vault — the vault maintains its own truth
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-reconcile $ARGUMENTS`:

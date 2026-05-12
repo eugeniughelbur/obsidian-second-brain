@@ -1,5 +1,6 @@
 ---
 description: Extract transcript, metadata, and top comments from a YouTube video — summarized via Grok and saved to vault
+category: research
 ---
 
 Use the obsidian-second-brain skill. Execute `/youtube [url]`:

@@ -1,5 +1,6 @@
 ---
 description: Surface unnamed patterns from your recent notes — recurring themes, hidden connections, and conclusions you haven't explicitly stated
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-emerge $ARGUMENTS`:

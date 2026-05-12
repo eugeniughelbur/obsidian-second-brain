@@ -1,5 +1,6 @@
 ---
 description: Extract decisions from this conversation and log them to the right project notes
+category: thinking
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-decide $ARGUMENTS`:
