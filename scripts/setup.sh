@@ -17,6 +17,7 @@ set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETTINGS="$HOME/.claude/settings.json"
 HOOK_SCRIPT="$SKILL_DIR/hooks/obsidian-bg-agent.sh"
+ENV_FILE="$HOME/.config/obsidian-second-brain/.env"
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -77,6 +78,16 @@ jq --arg vault "$VAULT" '
 ' "$SETTINGS" > "$SETTINGS.tmp" && cat "$SETTINGS.tmp" > "$SETTINGS" && rm "$SETTINGS.tmp"
 
 green "   OBSIDIAN_VAULT_PATH set"
+
+# Wire the vault path into the research toolkit .env so standalone runs resolve it
+if [ -f "$ENV_FILE" ]; then
+  VAULT="$VAULT" awk '
+    /^OBSIDIAN_VAULT_PATH=/ { print "OBSIDIAN_VAULT_PATH=" ENVIRON["VAULT"]; done=1; next }
+    { print }
+    END { if (!done) print "OBSIDIAN_VAULT_PATH=" ENVIRON["VAULT"] }
+  ' "$ENV_FILE" > "$ENV_FILE.tmp" && mv "$ENV_FILE.tmp" "$ENV_FILE"
+  green "   OBSIDIAN_VAULT_PATH written to research .env"
+fi
 
 # ── add PostCompact hook ──────────────────────────────────────────────────────
 

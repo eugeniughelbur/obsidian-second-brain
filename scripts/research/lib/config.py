@@ -35,5 +35,5 @@ PERPLEXITY_RESEARCH_MODEL = get_optional("PERPLEXITY_RESEARCH_MODEL", "sonar-pro
 PERPLEXITY_DEEP_MODEL = get_optional("PERPLEXITY_DEEP_MODEL", "sonar-deep-research")
 NOTEBOOKLM_MODEL = get_optional("NOTEBOOKLM_MODEL", "gemini-2.5-flash")
 
-VAULT_PATH = Path.home() / "Projects" / "personal" / "obsinian" / "Eugeniu's Vault"
+VAULT_PATH = Path(get_required("OBSIDIAN_VAULT_PATH")).expanduser()
 USAGE_LOG = Path.home() / ".research-toolkit" / "usage.log"
