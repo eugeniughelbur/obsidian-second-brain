@@ -17,6 +17,7 @@ set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETTINGS="$HOME/.claude/settings.json"
 HOOK_SCRIPT="$SKILL_DIR/hooks/obsidian-bg-agent.sh"
+SESSION_HOOK="$SKILL_DIR/hooks/load_vault_context.py"
 ENV_FILE="$HOME/.config/obsidian-second-brain/.env"
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -52,9 +53,11 @@ echo ""
 
 # ── make hook executable ──────────────────────────────────────────────────────
 
-step "1. Making hook script executable..."
+step "1. Making hook scripts executable..."
 chmod +x "$HOOK_SCRIPT"
+[[ -f "$SESSION_HOOK" ]] && chmod +x "$SESSION_HOOK"
 green "   Done — $HOOK_SCRIPT"
+green "   Done — $SESSION_HOOK"
 
 # ── ensure settings.json exists ───────────────────────────────────────────────
 
@@ -116,6 +119,32 @@ else
     }]
   ' "$SETTINGS" > "$SETTINGS.tmp" && cat "$SETTINGS.tmp" > "$SETTINGS" && rm "$SETTINGS.tmp"
   green "   PostCompact hook wired"
+fi
+
+# ── add SessionStart hook ────────────────────────────────────────────────────
+
+SESSION_HOOK_CMD="python $SESSION_HOOK"
+
+EXISTING_SESSION=$(jq -r '
+  .hooks.SessionStart // [] |
+  .[].hooks // [] |
+  .[].command // ""
+' "$SETTINGS" 2>/dev/null | grep -F "$SESSION_HOOK" || true)
+
+if [[ -n "$EXISTING_SESSION" ]]; then
+  yellow "   SessionStart hook already configured — skipping"
+else
+  jq --arg cmd "$SESSION_HOOK_CMD" '
+    .hooks = (.hooks // {}) |
+    .hooks.SessionStart = (.hooks.SessionStart // []) + [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": $cmd
+      }]
+    }]
+  ' "$SETTINGS" > "$SETTINGS.tmp" && cat "$SETTINGS.tmp" > "$SETTINGS" && rm "$SETTINGS.tmp"
+  green "   SessionStart hook wired (injects _CLAUDE.md once per session)"
 fi
 
 # ── register slash commands ──────────────────────────────────────────────────

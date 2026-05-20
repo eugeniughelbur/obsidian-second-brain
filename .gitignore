@@ -21,3 +21,4 @@ __pycache__/
 
 # Build output (regenerate with `bash scripts/build.sh`)
 dist/
+.claude/settings.local.json
