@@ -8,6 +8,7 @@ __pycache__/
 # Local config (never commit)
 .env
 *.local
+.claude/
 
 # macOS
 .DS_Store
@@ -21,4 +22,3 @@ __pycache__/
 
 # Build output (regenerate with `bash scripts/build.sh`)
 dist/
-.claude/settings.local.json

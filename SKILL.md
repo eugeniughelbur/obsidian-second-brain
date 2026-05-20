@@ -31,6 +31,10 @@ description: >
 
 Try these methods in order. Use the first one available:
 
+**Method 0 — SessionStart hook (if configured):**
+If `hooks/load_vault_context.py` is wired as a SessionStart hook in `~/.claude/settings.json`, `_CLAUDE.md` is injected into context automatically at session start. Skip step 1 below.
+To wire it: `bash scripts/setup.sh "/path/to/vault"` or run `/obsidian-setup`.
+
 **Method A — MCP server (`mcp-obsidian`):**
 If the MCP tools (`get_file_contents`, `list_files_in_vault`, `search`, `append_content`, `write_file`) are available, use them.
 
@@ -51,6 +55,8 @@ get_file_contents("_CLAUDE.md")
 
 If it exists: follow its rules exactly — they override the defaults in this skill. Where `_CLAUDE.md` is silent, fall back to the defaults below.
 If it doesn't exist: use the defaults in this skill, then offer to create one.
+
+If the SessionStart hook is active, `_CLAUDE.md` is already in context — skip this step.
 
 ### 2. First time with a new user → run discovery
 

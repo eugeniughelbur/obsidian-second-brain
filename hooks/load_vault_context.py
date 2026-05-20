@@ -57,14 +57,13 @@ def main() -> int:
 
     content = claude_md.read_text(encoding="utf-8")
 
+    v = Path(vault)
     header = (
         f"**Vault root**: `{vault}`\n"
         f"**Key files** (absolute paths — use these directly, no discovery needed):\n"
-        f"  - `{vault}\\_CLAUDE.md` — this operating manual (already loaded)\n"
-        f"  - `{vault}\\index.md` — navigation hub + live Bases links + stats\n"
-        f"  - `{vault}\\log.md` — pointer to per-day logs\n"
-        f"  - `{vault}\\Logs\\YYYY-MM-DD.md` — today's operations log\n"
-        f"  - `{vault}\\Projects\\_Projects.base` — live project view\n"
+        f"  - `{v / '_CLAUDE.md'}` — this operating manual (already loaded)\n"
+        f"  - `{v / 'index.md'}` — navigation hub\n"
+        f"  - `{v / 'log.md'}` — operation log\n"
         "**Do NOT run `ls`, `Glob`, or `Bash` to discover the vault or its folders.**\n"
         "Use the vault root path above and the folder names from the manual below directly.\n\n"
         "---\n\n"
