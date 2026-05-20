@@ -95,7 +95,7 @@ The argument is a URL, file path, or pasted text. If no argument, ask what to in
 
 7. Update structural files:
    - REBUILD `index.md` — don't just append. Regenerate the sections that changed so descriptions stay current with the rewritten pages.
-   - Append to `log.md`: `## [YYYY-MM-DD] ingest | Source Title (type) — X created, Y rewritten, Z contradictions resolved`
+   - Append to the operation log: if `Logs/` exists write `**HH:MM** - ingest | Source Title (type) - X created, Y rewritten, Z contradictions resolved` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] ingest | Source Title (type) — X created, Y rewritten, Z contradictions resolved` to `log.md`
 
 8. Update today's daily note with:
    - What was ingested

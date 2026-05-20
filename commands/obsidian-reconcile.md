@@ -29,7 +29,7 @@ The optional argument is a topic or entity to focus on. If not provided, scan th
 
 6. After all resolutions:
    - Rebuild affected sections of `index.md`
-   - Append to `log.md`: `## [YYYY-MM-DD] reconcile | X contradictions found, Y auto-resolved, Z flagged for user`
+   - Append to the operation log: if `Logs/` exists write `**HH:MM** - reconcile | X contradictions found, Y auto-resolved, Z flagged for user` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] reconcile | X contradictions found, Y auto-resolved, Z flagged for user` to `log.md`
    - Update today's daily note with a reconciliation summary
 
 7. Report back:

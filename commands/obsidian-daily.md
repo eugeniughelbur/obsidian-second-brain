@@ -28,7 +28,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-daily`:
    - Tasks in progress, people mentioned, decisions made, what's being worked on
    - Pre-fill or update the note's sections with that context
 
-7. Check `log.md` for last night's sleeptime consolidation:
+7. Check the operation log for last night's sleeptime consolidation (if `Logs/` exists: read yesterday's `Logs/YYYY-MM-DD.md`; otherwise read `log.md`):
    - If the nightly agent ran, summarize what it did (reconciled, synthesized, healed)
    - Add a brief "Overnight changes" note so the user knows what happened while they slept
 

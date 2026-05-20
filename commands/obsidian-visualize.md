@@ -46,7 +46,7 @@ The optional argument is a scope: a project name, entity name, topic, or "full" 
    - Clusters found (groups of tightly connected notes)
    - Bridge nodes (connect two otherwise separate clusters)
 
-7. Append to `log.md`: `## [YYYY-MM-DD] visualize | Canvas generated — X nodes, Y edges, Z orphans`
+7. Append to the operation log: if `Logs/` exists write `**HH:MM** - visualize | Canvas generated - X nodes, Y edges, Z orphans` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] visualize | Canvas generated — X nodes, Y edges, Z orphans` to `log.md`
 
 The user can open the `.canvas` file in Obsidian to visually explore their vault's knowledge graph.
 

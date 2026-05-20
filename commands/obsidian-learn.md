@@ -9,7 +9,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-learn $ARGUMENTS`:
 The optional argument is a scope: `recent` (last 30 days, default), `all` (entire vault), or a topic name.
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
-2. Read `index.md` and `log.md` for vault context
+2. Read `index.md` and recent operation log for vault context (if `Logs/` exists: read the last 2-3 `Logs/YYYY-MM-DD.md` files; otherwise read `log.md`)
 
 3. Spawn parallel subagents to gather learnings:
 
@@ -46,7 +46,7 @@ The optional argument is a scope: `recent` (last 30 days, default), `all` (entir
    - Most impactful learnings ranked by frequency × recency × consequence
 
 6. Save the report to `wiki/concepts/YYYY-MM-DD — Learnings Review.md`
-7. Append to `log.md`: `## [YYYY-MM-DD] learn | X active, Y stale, Z superseded, N promotion candidates`
+7. Append to the operation log: if `Logs/` exists write `**HH:MM** - learn | X active, Y stale, Z superseded, N promotion candidates` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] learn | X active, Y stale, Z superseded, N promotion candidates` to `log.md`
 8. Update today's daily note with a brief summary
 9. Offer to:
    - Promote candidates to `_CLAUDE.md` (with user confirmation)

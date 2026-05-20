@@ -10,7 +10,7 @@ This command can run manually or as a scheduled agent. It thinks for you.
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
 2. Read `index.md` to understand all existing pages
-3. Read `log.md` (last 20 entries) to see recent vault activity
+3. Read recent operation log: if `Logs/` exists, read the last 2-3 `Logs/YYYY-MM-DD.md` files; otherwise read `log.md` (last 20 entries)
 
 4. Scan for synthesis opportunities — spawn parallel subagents:
 
@@ -37,7 +37,7 @@ This command can run manually or as a scheduled agent. It thinks for you.
    - Link the synthesis page FROM all the source notes it references
 
 6. Update `index.md` with new synthesis pages
-7. Append to `log.md`: `## [YYYY-MM-DD] synthesize | X synthesis pages created, Y orphans rescued, Z connections found`
+7. Append to the operation log: if `Logs/` exists write `**HH:MM** - synthesize | X synthesis pages created, Y orphans rescued, Z connections found` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] synthesize | X synthesis pages created, Y orphans rescued, Z connections found` to `log.md`
 8. If a daily note exists for today, add a Synthesis section with a brief summary
 
 The vault should generate its own insights. Not just when asked — on its own schedule.

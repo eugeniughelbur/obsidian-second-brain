@@ -136,7 +136,7 @@ Every write operation must ask: *where else does this belong?*
 | A specific reusable number or stat | `social-media/data-points.md` (if folder exists) |
 | An external post that performed well + why | `social-media/swipe-file.md` (if folder exists) |
 | Research findings worth keeping | `social-media/research/YYYY-MM-DD — topic.md` (if folder exists) |
-| Any vault write | `log.md` (append timestamped entry), `index.md` (update if new note created) |
+| Any vault write | operation log (`Logs/YYYY-MM-DD.md` if `Logs/` exists, else `log.md`), `index.md` (update if new note created) |
 
 Always propagate. Never create a single orphaned note.
 
@@ -188,7 +188,7 @@ Two structural files that keep the vault navigable and auditable:
 ### Per-day operation logs (modernized vaults)
 Vaults initialized with `/obsidian-init` (v0.9+) use a split log structure instead of a monolithic `log.md`:
 
-- **`Logs/YYYY-MM-DD.md`** — one file per day, append-only. Format: `**HH:MM** — action | description`
+- **`Logs/YYYY-MM-DD.md`** — one file per day, append-only. Format: `**HH:MM** - action | description`
 - **`log.md` at vault root** — pointer file only. Never write entries here; it explains the per-day structure and ships the entry template.
 
 To migrate an existing monolithic `log.md`: run `python scripts/migrate_log.py --vault <path>`.

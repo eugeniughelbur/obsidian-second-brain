@@ -25,7 +25,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-health`:
    - ⚪ Info: orphaned notes, empty folders
 6. For safe fixes (missing frontmatter, obvious duplicates, creating pages for concept gaps), offer to fix automatically
 7. For destructive fixes (archiving, merging, resolving contradictions), list them and ask for explicit confirmation first
-8. Append to `log.md`: `## [YYYY-MM-DD] health | X critical, Y warnings, Z info`
+8. Append to the operation log: if `Logs/` exists write `**HH:MM** - health | X critical, Y warnings, Z info` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] health | X critical, Y warnings, Z info` to `log.md`
 
 ---
 

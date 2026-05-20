@@ -51,7 +51,7 @@ The optional argument is the format: `json` (default) or `markdown`.
    A flat markdown file with every note listed with its metadata and summary.
    Save to `_export/vault-snapshot.md`
 
-5. Append to `log.md`: `## [YYYY-MM-DD] export | Vault snapshot exported (format, N notes)`
+5. Append to the operation log: if `Logs/` exists write `**HH:MM** - export | Vault snapshot exported (format, N notes)` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] export | Vault snapshot exported (format, N notes)` to `log.md`
 
 This file is the bridge between your vault and any other AI tool, automation, or agent. They don't need to know your folder structure. They read the snapshot.
 

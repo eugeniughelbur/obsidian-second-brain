@@ -32,7 +32,7 @@ The optional argument is the decision topic. If not provided, infer from recent 
 
 4. Update the relevant project note's Key Decisions section with a link to the ADR
 5. Update `index.md` with the new ADR
-6. Append to `log.md`: `## [YYYY-MM-DD] adr | Title — decision recorded`
+6. Append to the operation log: if `Logs/` exists write `**HH:MM** - adr | Title - decision recorded` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] adr | Title — decision recorded` to `log.md`
 7. Link from today's daily note
 
 Decision records prevent the vault from becoming a black box. When the user (or a future Claude session) asks "why is the vault structured this way?" — the ADR has the answer.

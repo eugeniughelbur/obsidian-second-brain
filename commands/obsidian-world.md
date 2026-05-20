@@ -18,7 +18,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-world`:
 
    **L1 — Navigation (~1-2K tokens)**
    - Read `index.md` — the catalog of all vault pages. This tells Claude what exists without loading everything.
-   - Read `log.md` (last 10 entries only) — what happened recently in the vault
+   - Read recent operation log (last 10 entries): if `Logs/` exists, read today's and yesterday's `Logs/YYYY-MM-DD.md`; otherwise read `log.md`
 
    **L2 — Current State (~2-5K tokens)**
    - Read `Home.md` or `Dashboard.md` — current top-level priorities
@@ -36,7 +36,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-world`:
 3. Present a brief status after L0-L2 (do NOT load L3 unless needed):
    - **Who I am to you**: confirm the persona and communication style
    - **Your current priorities**: top 3-5 active threads (from index.md + boards)
-   - **Open threads from last session**: anything unfinished (from log.md + daily notes)
+   - **Open threads from last session**: anything unfinished (from operation log + daily notes)
    - **Overdue / needs attention**: tasks or projects that are stale
    - **Today so far**: what's already logged today
 

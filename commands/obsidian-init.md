@@ -22,8 +22,8 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
 6. Initialize the vault operations log:
    - Create `Logs/` directory at the vault root
    - Write `log.md` at the vault root as a thin pointer file: explains the per-day structure, points at `Logs/`, and ships the entry template (do NOT put log entries in `log.md` itself)
-   - Write today's `Logs/YYYY-MM-DD.md` with the init entry: `**HH:MM** — init | Vault initialized with _CLAUDE.md, index.md, Logs/`
-   - Per-day file format: frontmatter (`type: log`, `date`, `ai-first: true`) + `**HH:MM** — action | description` entries, append-only
+   - Write today's `Logs/YYYY-MM-DD.md` with the init entry: `**HH:MM** - init | Vault initialized with _CLAUDE.md, index.md, Logs/`
+   - Per-day file format: frontmatter (`type: log`, `date`, `ai-first: true`) + `**HH:MM** - action | description` entries, append-only
 7. Write `_CLAUDE.md`, `index.md`, root `log.md` (pointer), and `Logs/YYYY-MM-DD.md` (today's entries)
 8. Confirm what was written and tell the user to restart their Claude session so the new files take effect
 
