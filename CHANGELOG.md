@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **`scripts/setup.sh` robustness:** four issues fixed together. Vault paths containing apostrophes or other shell metacharacters (`Joe's Notes`) no longer crash the installer - `eval echo` replaced with bash parameter substitution. `python` replaced with `python3` for compatibility with macOS 13+ and Ubuntu 22+ which don't ship a `python` symlink. All three `settings.json` writes are now atomic (`mv` instead of `cat … && rm`). The MCP setup prompt is skipped when stdin is not a terminal so `curl | bash` installs and CI don't hang.
+
 - **`vault_stats.py` people count:** now counts both `type: person` and `type: entity` in the People aggregate. Real vaults using either convention report the correct count.
 - **Log layout routing in all commands:** every `/obsidian-*` command that reads or appends to the operation log now explicitly detects the vault layout (`Logs/YYYY-MM-DD.md` vs monolithic `log.md`) and uses the correct file and format. Previously, commands hardcoded `log.md` with the old `## [YYYY-MM-DD]` section-header format, which would write incorrectly formatted entries on modernized vaults.
 - **`vault_stats.py` folder exclusions case-insensitive:** `EXCLUDED_FOLDERS` comparison now uses `part.lower()`, so `templates/` and `Templates/` are both excluded. Added `raw/` to the exclusion set (immutable source folder convention).
