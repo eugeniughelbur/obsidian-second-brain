@@ -185,6 +185,17 @@ Two structural files that keep the vault navigable and auditable:
 
 - **`log.md`** — An append-only chronological log of every vault operation. Every save, ingest, health check, and structural change gets a timestamped entry. Never delete or rewrite entries — only append. Format: `## [YYYY-MM-DD] action | Description`
 
+### Per-day operation logs (modernized vaults)
+Vaults initialized with `/obsidian-init` (v0.9+) use a split log structure instead of a monolithic `log.md`:
+
+- **`Logs/YYYY-MM-DD.md`** — one file per day, append-only. Format: `**HH:MM** — action | description`
+- **`log.md` at vault root** — pointer file only. Never write entries here; it explains the per-day structure and ships the entry template.
+
+To migrate an existing monolithic `log.md`: run `python scripts/migrate_log.py --vault <path>`.
+To refresh the stats block in `index.md` after bulk writes: run `python scripts/vault_stats.py --vault <path>`.
+
+When writing operation log entries, check whether the vault uses the old (`log.md`) or new (`Logs/YYYY-MM-DD.md`) structure and write to the correct location.
+
 ### The vault is a living system
 The vault is not a filing cabinet. It is a living knowledge base that rewrites itself with every input. When new information enters:
 - Existing pages get REWRITTEN with new context, not just appended to

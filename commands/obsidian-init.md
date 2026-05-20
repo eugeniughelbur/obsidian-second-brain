@@ -1,5 +1,5 @@
 ---
-description: Scan your vault and generate a _CLAUDE.md operating manual, index.md catalog, and log.md
+description: Scan your vault and generate a _CLAUDE.md operating manual, index.md catalog, and log.md pointer
 category: meta
 triggers_en: ["init vault", "bootstrap vault", "setup vault", "scan vault"]
 ---
@@ -19,17 +19,17 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - Include a one-line description for each note (from frontmatter or first paragraph)
    - Claude reads this file FIRST when navigating the vault — cheaper and faster than searching
    - Format: `- [[Note Name]] — brief description`
-6. Generate `log.md` at the vault root — a chronological activity log:
-   - Start with a header explaining the format
-   - Add an entry for this init: `## [YYYY-MM-DD] init | Vault initialized with _CLAUDE.md, index.md, log.md`
-   - Future commands append to this file: every ingest, save, health check, and structural change gets a timestamped entry
-   - Format: `## [YYYY-MM-DD] action | Description`
-7. Write all three files to the vault root
-8. Confirm what was written and tell the user to restart their Claude session so the new file takes effect
+6. Initialize the vault operations log:
+   - Create `Logs/` directory at the vault root
+   - Write `log.md` at the vault root as a thin pointer file: explains the per-day structure, points at `Logs/`, and ships the entry template (do NOT put log entries in `log.md` itself)
+   - Write today's `Logs/YYYY-MM-DD.md` with the init entry: `**HH:MM** — init | Vault initialized with _CLAUDE.md, index.md, Logs/`
+   - Per-day file format: frontmatter (`type: log`, `date`, `ai-first: true`) + `**HH:MM** — action | description` entries, append-only
+7. Write `_CLAUDE.md`, `index.md`, root `log.md` (pointer), and `Logs/YYYY-MM-DD.md` (today's entries)
+8. Confirm what was written and tell the user to restart their Claude session so the new files take effect
 
 If `_CLAUDE.md` already exists: show a diff of what would change and ask before overwriting.
 If `index.md` already exists: regenerate it (it's always a fresh catalog of current vault state).
-If `log.md` already exists: do NOT overwrite — only append the init entry.
+If a monolithic `log.md` already exists with `## YYYY-MM-DD` sections: run `python ~/.claude/skills/obsidian-second-brain/scripts/migrate_log.py --vault <vault-path>` to split it into `Logs/YYYY-MM-DD.md` files. Do not overwrite manually.
 
 ---
 
