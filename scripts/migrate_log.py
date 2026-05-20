@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Migrate a monolithic vault log.md into per-day files under Logs/.
 
-Splits the original log.md by `## YYYY-MM-DD` headers into individual files
-named `Logs/YYYY-MM-DD.md`, each with proper AI-first frontmatter. Replaces
-the root log.md with a thin pointer file that documents the new structure
-and ships the entry template.
+Splits the original log.md by `## [YYYY-MM-DD]` headers (brackets optional,
+trailing text on the header line is ignored) into individual files named
+`Logs/YYYY-MM-DD.md`, each with proper AI-first frontmatter. Replaces the
+root log.md with a thin pointer file that documents the new structure and
+ships the entry template.
 
 Idempotent: skips dates whose target file already exists. Prints a summary.
 
@@ -18,7 +19,7 @@ import re
 import sys
 from pathlib import Path
 
-DATE_HEADER = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})\s*$", re.MULTILINE)
+DATE_HEADER = re.compile(r"^##\s+\[?(\d{4}-\d{2}-\d{2})\]?[^\n]*", re.MULTILINE)
 TEMPLATE_HEADER = re.compile(r"^##\s+Template\s*$", re.MULTILINE)
 
 PER_DAY_FRONTMATTER = """---
@@ -27,7 +28,7 @@ date: {date}
 ai-first: true
 ---
 
-# Vault Operations — {date}
+# Vault Operations - {date}
 
 > For future Claude: timestamped audit log of vault writes on this day. Append-only.
 
@@ -47,9 +48,9 @@ ai-first: true
 
 ## Where to look
 
-- **Today's writes** — `Logs/YYYY-MM-DD.md`
-- **History** — `ls Logs/` then read the day(s) you need
-- **Cross-day queries** — search `Logs/` directly, do not scan this file
+- **Today's writes** - `Logs/YYYY-MM-DD.md`
+- **History** - `ls Logs/` then read the day(s) you need
+- **Cross-day queries** - search `Logs/` directly, do not scan this file
 
 ## Per-day file template
 
@@ -62,11 +63,11 @@ date: YYYY-MM-DD
 ai-first: true
 ---
 
-# Vault Operations — YYYY-MM-DD
+# Vault Operations - YYYY-MM-DD
 
 > For future Claude: timestamped audit log of vault writes on this day. Append-only.
 
-**HH:MM** — [Operation type]
+**HH:MM** - [Operation type]
 - [What changed]
 - [Files created/updated]
 - [Linked items]
@@ -76,8 +77,8 @@ ai-first: true
 Example entry:
 
 ```
-**09:30** — Dev log for Project X
-- Created Dev Logs/2026-05-06 — Project X.md
+**09:30** - Dev log for Project X
+- Created Dev Logs/2026-05-06 - Project X.md
 - Updated Projects/Project X.md with link to log
 - Linked: [[Project X]]
 ```
@@ -85,10 +86,12 @@ Example entry:
 
 
 def split_log(text: str) -> dict[str, str]:
-    """Return {date: body} for each `## YYYY-MM-DD` section in text.
+    """Return {date: body} for each `## [YYYY-MM-DD]` section in text.
 
+    Handles both bare `## YYYY-MM-DD` and bracketed `## [YYYY-MM-DD] ...`
+    formats; trailing content on the header line is excluded from the body.
     Stops a section at the next date header or at `## Template` (template
-    section is dropped — it moves to the new root pointer file).
+    section is dropped - it moves to the new root pointer file).
     """
     sections: dict[str, list[str]] = {}
     headers = list(DATE_HEADER.finditer(text))
@@ -127,7 +130,7 @@ def main() -> int:
     sections = split_log(text)
 
     if not sections:
-        print("error: no `## YYYY-MM-DD` sections found in log.md — nothing to migrate", file=sys.stderr)
+        print("error: no `## [YYYY-MM-DD]` sections found in log.md - nothing to migrate", file=sys.stderr)
         return 1
 
     today = max(sections.keys())  # most recent date in the log
