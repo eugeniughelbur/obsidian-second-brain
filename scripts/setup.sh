@@ -36,7 +36,7 @@ if [[ -z "$VAULT" ]]; then
   exit 1
 fi
 
-VAULT="$(eval echo "$VAULT")"  # expand ~
+VAULT="${VAULT/#\~/$HOME}"  # expand leading ~
 
 if [[ ! -d "$VAULT" ]]; then
   red "Error: vault directory not found: $VAULT"
@@ -78,7 +78,7 @@ fi
 
 jq --arg vault "$VAULT" '
   .env = (.env // {}) | .env.OBSIDIAN_VAULT_PATH = $vault
-' "$SETTINGS" > "$SETTINGS.tmp" && cat "$SETTINGS.tmp" > "$SETTINGS" && rm "$SETTINGS.tmp"
+' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
 
 green "   OBSIDIAN_VAULT_PATH set"
 
@@ -117,13 +117,13 @@ else
         "async": true
       }]
     }]
-  ' "$SETTINGS" > "$SETTINGS.tmp" && cat "$SETTINGS.tmp" > "$SETTINGS" && rm "$SETTINGS.tmp"
+  ' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
   green "   PostCompact hook wired"
 fi
 
 # ── add SessionStart hook ────────────────────────────────────────────────────
 
-SESSION_HOOK_CMD="python $SESSION_HOOK"
+SESSION_HOOK_CMD="python3 $SESSION_HOOK"
 
 EXISTING_SESSION=$(jq -r '
   .hooks.SessionStart // [] |
@@ -143,7 +143,7 @@ else
         "command": $cmd
       }]
     }]
-  ' "$SETTINGS" > "$SETTINGS.tmp" && cat "$SETTINGS.tmp" > "$SETTINGS" && rm "$SETTINGS.tmp"
+  ' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
   green "   SessionStart hook wired (injects _CLAUDE.md once per session)"
 fi
 
@@ -186,7 +186,10 @@ step "4. MCP server (optional — Claude Code only)..."
 echo "   The obsidian-vault MCP server gives Claude faster vault access."
 echo "   Without it, Claude reads/writes vault files directly (works fine)."
 echo ""
-read -r -p "   Configure MCP server for Claude Code? [y/N] " REPLY
+REPLY=n
+if [[ -t 0 ]]; then
+  read -r -p "   Configure MCP server for Claude Code? [y/N] " REPLY
+fi
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
   if command -v claude &>/dev/null; then
     claude mcp add obsidian-vault -s user -- npx -y mcp-obsidian "$VAULT"
