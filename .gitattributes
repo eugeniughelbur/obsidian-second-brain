@@ -1,0 +1,9 @@
+# Ensure shell scripts always use LF, regardless of editor/OS
+*.sh    text eol=lf
+*.bash  text eol=lf
+
+# Python
+*.py    text eol=lf
+
+# Default: normalize everything else to LF
+*       text=auto
