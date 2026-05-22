@@ -48,6 +48,22 @@ This rule applies to all `/obsidian-*` and `/research*` commands, all scheduled 
 
 ---
 
+## Section 0.5 — Verify Live State Before Acting
+
+Before declaring a bug, drafting a fix, or writing architecture: read the actual code, schema, deployed branch, env, or live data. Speculation from stale context burns hours and produces drafts that contradict reality.
+
+Specific cues:
+- Read the schema or types before declaring a bug (real field names live in the code, not in memory)
+- `git fetch origin` and read the deployed branch, not local `main`
+- Grep the live file before any anchor-based patch
+- Fetch live time, dates, and rates (never infer from training data)
+- Verify env vars in the running process before blaming code
+- Mock tests miss schema drift: read one real payload before declaring "done"
+
+This is a general operating principle, not vault-specific. Keep it in `_CLAUDE.md` so every Claude session in this vault inherits it.
+
+---
+
 ## Vault Identity
 
 - **Owner:** [Full Name]
