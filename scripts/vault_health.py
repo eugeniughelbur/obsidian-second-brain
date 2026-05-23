@@ -173,6 +173,8 @@ def check_empty_folders(vault: Path) -> list:
     for folder in vault.rglob("*/"):
         if any(p in EXCLUDE_DIRS for p in folder.parts):
             continue
+        if not folder.is_dir():
+            continue
         if not list(folder.iterdir()):
             rel = str(folder.relative_to(vault))
             issues.append({
