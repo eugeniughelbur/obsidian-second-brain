@@ -31,6 +31,10 @@ DATE_RE = re.compile(r"due:\s*(\d{4}-\d{2}-\d{2})")
 TEMPLATE_RE = re.compile(r"<%.*?%>")
 ALIAS_RE = re.compile(r"^aliases:\s*\n((?:\s+-\s+.+\n?)+)", re.MULTILINE)
 ALIAS_ITEM_RE = re.compile(r"^\s+-\s+(.+)$", re.MULTILINE)
+# Strip fenced + inline code before extracting wikilinks — Obsidian doesn't treat
+# `[[Foo]]` inside backticks as a real link, so neither should we.
+CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
+INLINE_CODE_RE = re.compile(r"`[^`\n]+`")
 
 
 def parse_aliases(frontmatter: str) -> list:
@@ -51,7 +55,8 @@ def load_vault(vault: Path) -> dict:
         content = md.read_text(encoding="utf-8", errors="replace")
         fm_match = FRONTMATTER_RE.match(content)
         frontmatter = fm_match.group(1) if fm_match else ""
-        links = [l.strip().rstrip("\\") for l in LINK_RE.findall(content)]
+        content_for_links = INLINE_CODE_RE.sub("", CODE_FENCE_RE.sub("", content))
+        links = [l.strip().rstrip("\\") for l in LINK_RE.findall(content_for_links)]
         due_match = DATE_RE.search(frontmatter)
         notes[rel] = {
             "path": md,
@@ -204,6 +209,18 @@ def check_broken_links(notes: dict, vault: Path) -> list:
     all_stems_dash_norm = {
         _normalize_dashes(note["stem"]).lower(): rel for rel, note in notes.items()
     }
+    # Obsidian resolves wikilinks across every folder including Templates/, but
+    # `load_vault` deliberately skips Templates/ to keep it out of duplicate/empty
+    # checks. Reindex *all* .md stems here purely for link resolution so refs like
+    # [[Person]] -> Templates/Person.md don't show up as false positives.
+    resolver_skip = {".obsidian", ".trash", "_trash", ".git"}
+    extra_stems = set()
+    for md in vault.rglob("*.md"):
+        parts = md.relative_to(vault).parts
+        if any(p in resolver_skip for p in parts):
+            continue
+        extra_stems.add(md.stem.lower())
+        extra_stems.add(_normalize_dashes(md.stem).lower())
     # build alias → rel lookup so [[Full Name]] resolves if the note has that alias
     all_aliases: dict[str, str] = {}
     for rel, note in notes.items():
@@ -220,7 +237,9 @@ def check_broken_links(notes: dict, vault: Path) -> list:
         if Path(rel).name in SKIP_FROM_LINK_SCAN:
             continue
         for link in note["links"]:
-            link_stem = Path(link).stem.lower() if "/" in link else link.lower()
+            # Always strip a trailing .md extension — Obsidian treats `[[Foo]]`
+            # and `[[Foo.md]]` as the same link target.
+            link_stem = Path(link).stem.lower()
             link_norm = link_stem.replace("-", " ").replace("_", " ")
             link_dash_norm = _normalize_dashes(link_stem)
             resolved = (
@@ -229,6 +248,8 @@ def check_broken_links(notes: dict, vault: Path) -> list:
                 or link_stem in all_aliases
                 or link_norm in all_aliases
                 or link_dash_norm in all_stems_dash_norm
+                or link_stem in extra_stems
+                or link_dash_norm in extra_stems
             )
             if not resolved:
                 potential_folder = vault / link
