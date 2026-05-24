@@ -186,8 +186,24 @@ def check_empty_folders(vault: Path) -> list:
     return issues
 
 
+def _normalize_dashes(s: str) -> str:
+    """Convert em-dash (U+2014) and en-dash (U+2013) to a regular hyphen.
+
+    Vault naming conventions often use em-dashes in filenames (e.g.
+    `2026-05-22 — Learnings Review.md`). Wikilinks that reference the same
+    note with a regular hyphen (`[[2026-05-22 - Learnings Review]]`) should
+    still resolve. Normalize both sides before comparison.
+    """
+    return s.replace("—", "-").replace("–", "-")
+
+
 def check_broken_links(notes: dict, vault: Path) -> list:
     all_stems = {note["stem"].lower(): rel for rel, note in notes.items()}
+    # also index stems with em-dashes normalized to regular hyphens so a
+    # wikilink written with `-` still matches a filename written with `—`
+    all_stems_dash_norm = {
+        _normalize_dashes(note["stem"]).lower(): rel for rel, note in notes.items()
+    }
     # build alias → rel lookup so [[Full Name]] resolves if the note has that alias
     all_aliases: dict[str, str] = {}
     for rel, note in notes.items():
@@ -206,11 +222,13 @@ def check_broken_links(notes: dict, vault: Path) -> list:
         for link in note["links"]:
             link_stem = Path(link).stem.lower() if "/" in link else link.lower()
             link_norm = link_stem.replace("-", " ").replace("_", " ")
+            link_dash_norm = _normalize_dashes(link_stem)
             resolved = (
                 link_stem in all_stems
                 or link_norm in all_stems
                 or link_stem in all_aliases
                 or link_norm in all_aliases
+                or link_dash_norm in all_stems_dash_norm
             )
             if not resolved:
                 potential_folder = vault / link
