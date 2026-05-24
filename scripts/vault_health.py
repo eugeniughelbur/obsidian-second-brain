@@ -194,8 +194,15 @@ def check_broken_links(notes: dict, vault: Path) -> list:
         for alias in note["aliases"]:
             all_aliases[alias.lower()] = rel
 
+    # Operating manuals contain example wikilinks like [[wikilinks]], [[Related Project]],
+    # [[Links]] as syntax demonstrations, not as real references. Skip them from the
+    # broken-link scan so they don't generate dozens of false positives per scan.
+    SKIP_FROM_LINK_SCAN = {"_CLAUDE.md"}
+
     issues = []
     for rel, note in notes.items():
+        if Path(rel).name in SKIP_FROM_LINK_SCAN:
+            continue
         for link in note["links"]:
             link_stem = Path(link).stem.lower() if "/" in link else link.lower()
             link_norm = link_stem.replace("-", " ").replace("_", " ")
