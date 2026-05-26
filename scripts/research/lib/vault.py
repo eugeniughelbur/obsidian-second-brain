@@ -113,7 +113,15 @@ def print_save_links(note_path: Path, file=None) -> None:
     # Auto-open in Obsidian by default. Disable with RESEARCH_AUTOOPEN=0.
     if os.environ.get("RESEARCH_AUTOOPEN", "1") != "0":
         try:
-            subprocess.run(["open", uri], check=False, timeout=5)
+            import platform
+            # Platform-aware open: `open` on macOS, `xdg-open` on Linux,
+            # `cmd /c start "" <uri>` on Windows (the empty "" is the window title).
+            open_cmd = {
+                "Darwin": ["open", uri],
+                "Linux": ["xdg-open", uri],
+                "Windows": ["cmd", "/c", "start", "", uri],
+            }.get(platform.system(), ["open", uri])
+            subprocess.run(open_cmd, check=False, timeout=5)
         except Exception:
             pass  # auto-open is a nice-to-have, never block the save flow
 
