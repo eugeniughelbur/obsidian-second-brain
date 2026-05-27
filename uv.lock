@@ -595,7 +595,7 @@ wheels = [
 
 [[package]]
 name = "obsidian-second-brain-research"
-version = "0.6.0"
+version = "0.8.0"
 source = { virtual = "." }
 dependencies = [
     { name = "feedparser" },

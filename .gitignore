@@ -22,3 +22,11 @@ __pycache__/
 
 # Build output (regenerate with `bash scripts/build.sh`)
 dist/
+
+# Node / npm scratch (not part of this skill; nothing here uses JS at runtime)
+node_modules/
+.next/
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
