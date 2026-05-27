@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
-    <img src="media/banner.png" alt="obsidian-second-brain — one brain, four CLIs, 33 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
+    <img src="media/banner.png" alt="obsidian-second-brain — one brain, four CLIs, 34 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
   </a>
 </p>
 
@@ -34,14 +34,14 @@
   <br /><br />
   <em>Every source updates existing pages instead of just appending new ones. Contradictions reconcile automatically. Your vault compounds while you sleep.</em>
   <br /><br />
-  <em>33 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
+  <em>34 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
   <br /><br />
   <em>live research from X, the web, and YouTube &middot; 4 scheduled agents &middot; 4 role presets</em>
   <br /><br />
   <em>write-time AI-first validator &middot; <code>/create-command</code> interview flow &middot; multilingual trigger schema</em>
   <br /><br />
   <a href="#what-happens-when-you-install-this">See it in action</a> &middot;
-  <a href="#33-commands">All commands</a> &middot;
+  <a href="#34-commands">All commands</a> &middot;
   <a href="#install">Install</a> &middot;
   <a href="#choose-your-preset">Presets</a> &middot;
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain/discussions">Discussions</a>
@@ -251,7 +251,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 
 ---
 
-## 33 Commands
+## 34 Commands
 
 ### Operations -- Claude remembers
 
@@ -552,21 +552,6 @@ vault/
 +-- boards/             # Kanban boards
 +-- templates/          # Note templates
 ```
-
-<details>
-<summary><strong>Obsidian-style (alternative) -- for daily browsers</strong></summary>
-
-```
-vault/
-+-- Daily/, Projects/, People/, Ideas/, Knowledge/
-+-- Dev Logs/, Tasks/, Reviews/, Boards/, Templates/
-```
-
-```bash
-python bootstrap_vault.py --path ~/my-vault --name "Your Name" --style obsidian
-```
-
-</details>
 
 ---
 

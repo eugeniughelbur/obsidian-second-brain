@@ -6,6 +6,13 @@ Creates a complete, production-ready Obsidian vault from scratch.
 Generates folder structure, templates, Home dashboard, kanban boards,
 and a _CLAUDE.md so Claude can operate the vault from day one.
 
+AI-first rule: every template emitted by this script must produce
+notes that pass `hooks/validate-ai-first.sh`. That means the template
+frontmatter must include `date:`, `type:`, `tags:`, and `ai-first: true`,
+and the body must include a `## For future Claude` preamble. See
+`references/ai-first-rules.md` for the full spec. When adding a new
+template here, follow the existing shape.
+
 Usage:
     python bootstrap_vault.py --path ~/my-vault --name "Your Name"
     python bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset researcher
@@ -452,13 +459,19 @@ def write_core_templates(vault: Path):
     """Templates shared by all presets."""
     write(vault / "Templates/Daily Note.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: daily
 tags:
   - daily
+ai-first: true
 mood:
 energy:
 ---
 
 # <% tp.date.now("YYYY-MM-DD") %> — <% tp.date.now("dddd") %>
+
+## For future Claude
+
+Daily note for this date. Captures what was worked on, who was met, decisions made, energy, and the day's intention. Pull this when reconstructing what happened on a given day.
 
 ---
 
@@ -514,13 +527,19 @@ energy:
 
     write(vault / "Templates/Project.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: project
 tags:
   - project
+ai-first: true
 status: active
 job:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Project note. Captures overview, architecture, key decisions, and related tasks. Pull this when reasoning about the project's direction, prior decisions, or current scope.
 
 ## Overview
 <% tp.file.cursor() %>
@@ -555,8 +574,10 @@ LIMIT 5
 
     write(vault / "Templates/Person.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: person
 tags:
   - person
+ai-first: true
 role:
 company:
 relationship_strength:
@@ -567,6 +588,10 @@ location:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Person note. Captures role, company, relationship context, what they care about, and how to help each other. Pull this before any interaction with this person or when reasoning about who knows what.
 
 ## About
 <% tp.file.cursor() %>
@@ -594,8 +619,10 @@ LIMIT 15
 
     write(vault / "Templates/Task.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: task
 tags:
   - task
+ai-first: true
 status: in-progress
 project:
 job:
@@ -604,6 +631,10 @@ due:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Task note. Captures requirements, implementation notes, and what was delivered. Pull this when reconstructing why a piece of work was done or what was actually shipped vs requested.
 
 ## Requirements
 <% tp.file.cursor() %>
@@ -618,13 +649,19 @@ due:
 
     write(vault / "Templates/Dev Log.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: devlog
 tags:
   - devlog
+ai-first: true
 project:
 job:
 ---
 
 # Dev Log — <% tp.date.now("YYYY-MM-DD") %>
+
+## For future Claude
+
+Engineering log for this date. Captures what was worked on, problems solved, decisions made, and next steps. Pull this when reconstructing the chain of technical decisions on a project.
 
 ## What I Worked On
 <% tp.file.cursor() %>
@@ -645,8 +682,10 @@ def write_preset_extras(vault: Path, preset_key: str):
     if preset_key == "default":
         write(vault / "Templates/Goal.md", f"""---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: goal
 tags:
   - goal
+ai-first: true
 category:
 status: active
 progress: 0
@@ -654,6 +693,10 @@ target_date: {YEAR}-12-31
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Goal note. Captures why this goal matters, success criteria, milestones, and progress. Pull this when assessing whether work being proposed actually moves toward a stated goal.
 
 ## Why This Matters
 <% tp.file.cursor() %>
@@ -669,14 +712,20 @@ target_date: {YEAR}-12-31
 
         write(vault / "Templates/Mention.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: mention
 tags:
   - mention
+ai-first: true
 source:
 from:
 context:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Mention note. Captures a moment when someone recognized work publicly (Slack, email, meeting, LinkedIn). Pull these to surface social proof, track recurring advocates, or reconstruct who said what about a project.
 
 ## What Was Said
 <% tp.file.cursor() %>
@@ -761,13 +810,19 @@ SORT date DESC
     if preset_key == "executive":
         write(vault / "Templates/Meeting.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: meeting
 tags:
   - meeting
+ai-first: true
 attendees:
 duration:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Meeting note. Captures attendees, agenda, decisions, action items, and free-form notes. Pull this when reconstructing what was decided in a meeting or what commitments were made.
 
 ## Agenda
 <% tp.file.cursor() %>
@@ -781,13 +836,19 @@ duration:
 """)
         write(vault / "Templates/Decision.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: decision
 tags:
   - decision
+ai-first: true
 status: decided
 context:
 ---
 
 # ADR — <% tp.file.title %>
+
+## For future Claude
+
+Decision record (ADR). Captures the context, options considered, the decision, and its consequences. Pull this when a similar decision comes up again, or when reconstructing why the system is shaped the way it is.
 
 ## Context
 
@@ -799,14 +860,20 @@ context:
 """)
         write(vault / "Templates/OKR.md", f"""---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: okr
 tags:
   - okr
+ai-first: true
 quarter:
 status: active
 progress: 0
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+OKR note. Captures the objective, key results, and progress over the quarter. Pull this when reasoning about whether current work is aligned to a stated objective.
 
 ## Objective
 
@@ -822,12 +889,18 @@ progress: 0
     if preset_key == "builder":
         write(vault / "Templates/Architecture.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: architecture
 tags:
   - architecture
+ai-first: true
 project:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Architecture note. Captures the problem, constraints, design, tradeoffs, and open questions. Pull this when extending a system, debating a refactor, or onboarding to a component.
 
 ## Problem
 
@@ -841,13 +914,19 @@ project:
 """)
         write(vault / "Templates/Debug.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: debug
 tags:
   - debug
+ai-first: true
 project:
 status: investigating
 ---
 
 # Bug — <% tp.file.title %>
+
+## For future Claude
+
+Bug investigation note. Captures the symptom, repro steps, investigation trail, root cause, and fix. Pull this when a similar symptom comes up again or when reasoning about why a fix was shaped a certain way.
 
 ## Symptom
 
@@ -864,14 +943,20 @@ status: investigating
     if preset_key == "creator":
         write(vault / "Templates/Post.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: post
 tags:
   - content
+ai-first: true
 platform:
 status: draft
 hook:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Content post note. Captures the hook, body, CTA, and platform variants for a piece of public-facing content. Pull this to reconstruct what was published, where it went, and which hooks worked.
 
 ## Hook
 
@@ -883,12 +968,18 @@ hook:
 """)
         write(vault / "Templates/Audience Note.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: audience
 tags:
   - audience
+ai-first: true
 segment:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Audience segment note. Captures who they are, what they want, what they read, and the hooks that work for them. Pull this before drafting content aimed at this segment.
 
 ## Who They Are
 
@@ -903,15 +994,21 @@ segment:
     if preset_key == "researcher":
         write(vault / "Templates/Source.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: source
 tags:
   - source
-type:
+ai-first: true
+source_kind:
 authors:
 year:
 url:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Source note (book, paper, podcast, video, article). Captures citation, abstract or summary, and raw notes. `source_kind` distinguishes the form (book/paper/podcast/etc.). Pull this when reasoning about what's been read on a topic.
 
 ## Citation
 
@@ -921,12 +1018,18 @@ url:
 """)
         write(vault / "Templates/Literature Note.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: literature
 tags:
   - literature
+ai-first: true
 source:
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Literature note. Distillation of one source's key claims, methodology, critique, and connections to other ideas. Pull this when reasoning about what one specific source argues, separate from the broader landscape.
 
 ## Source
 [[<% tp.file.title %>]]
@@ -941,13 +1044,19 @@ source:
 """)
         write(vault / "Templates/Hypothesis.md", """---
 date: <% tp.date.now("YYYY-MM-DD") %>
+type: hypothesis
 tags:
   - hypothesis
+ai-first: true
 status: open
 confidence: medium
 ---
 
 # <% tp.file.title %>
+
+## For future Claude
+
+Hypothesis note. Captures a testable statement, predictions, evidence for and against, and a verdict. Pull this when reasoning about open questions or when new evidence arrives that could update an open hypothesis.
 
 ## Statement
 
