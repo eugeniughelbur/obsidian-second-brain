@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **`install.sh` cross-platform editor and uv-install hint:** the `${EDITOR:-open}` fallback was macOS-only — on Linux it threw `open: command not found`, on Windows (Git Bash) likewise. Now picks `xdg-open` on Linux, `notepad` on Windows (MSYS/MINGW/Cygwin), `open` on macOS. The "uv not found" hint also branches per platform: `brew install uv` on macOS, `curl … | sh` on Linux, the PowerShell one-liner on Windows. Matches the same pattern PR #34 applied to `scripts/research/lib/vault.py`.
+
 ### Added
 
 - **Centrality ranking in `/obsidian-visualize`:** the text summary now surfaces hub nodes (degree at least 3x the median or top 1% of the vault), bridge nodes ranked by approximate betweenness, stale-orphan flagging (>30 days old), silo clusters (<3 cross-cluster edges), and a centrality-skew warning when one node holds >25% of total edges. Turns the canvas into a structural diagnostic of the vault, not just a picture.

@@ -48,7 +48,13 @@ setup_research=${setup_research:-N}
 if [[ "$setup_research" =~ ^[Yy]$ ]]; then
   # Verify uv is available
   if ! command -v uv >/dev/null 2>&1; then
-    echo "  ⚠️  'uv' not found. Install with: brew install uv"
+    case "$(uname -s)" in
+      Darwin)               uv_hint="brew install uv" ;;
+      Linux)                uv_hint="curl -LsSf https://astral.sh/uv/install.sh | sh" ;;
+      MINGW*|MSYS*|CYGWIN*) uv_hint="powershell -c \"irm https://astral.sh/uv/install.ps1 | iex\"" ;;
+      *)                    uv_hint="see https://docs.astral.sh/uv/getting-started/installation/" ;;
+    esac
+    echo "  ⚠️  'uv' not found. Install with: $uv_hint"
     echo "     Then re-run this installer to finish research toolkit setup."
   else
     echo "  Installing Python deps via uv..."
@@ -73,7 +79,13 @@ if [[ "$setup_research" =~ ^[Yy]$ ]]; then
   echo "    YOUTUBE_API_KEY=      (https://console.cloud.google.com — optional)"
   echo ""
   read -r -p "  Press Enter to open the file in your default editor (or Ctrl+C to skip)... " _
-  ${EDITOR:-open} "$ENV_FILE"
+  # Pick a default opener if $EDITOR is unset. Original used `open` (macOS-only).
+  default_editor=open
+  case "$(uname -s)" in
+    Linux)                default_editor=xdg-open ;;
+    MINGW*|MSYS*|CYGWIN*) default_editor=notepad ;;
+  esac
+  ${EDITOR:-$default_editor} "$ENV_FILE"
 fi
 
 echo ""
