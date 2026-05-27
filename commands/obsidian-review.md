@@ -19,6 +19,7 @@ The optional argument specifies `weekly` or `monthly`. Ask if not clear from con
    - People I worked with
    - What I learned
    - What to carry forward
+   - **Suggested questions for future-Claude** — 4 to 5 questions this period's vault content can answer that the user has not asked yet. Each question must cite at least one specific note (with `[[wikilink]]`). Prefer questions that surface contradictions across notes, connect entities that co-appeared without being explicitly linked, or name an unstated next action. Skip generic prompts the review section already covers.
 7. Save to `Reviews/YYYY-MM-DD — Weekly Review.md` (or Monthly)
 8. Link from the last daily note of the period
 

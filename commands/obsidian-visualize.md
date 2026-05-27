@@ -39,12 +39,13 @@ The optional argument is a scope: a project name, entity name, topic, or "full" 
 
 5. Save to vault root as `atlas.canvas` (or `atlas-{topic}.canvas` if scoped)
 
-6. Also generate a text summary:
+6. Also generate a text summary with centrality ranking:
    - Total nodes and edges
-   - Top 5 hub nodes (most connected)
-   - Orphan nodes (no connections)
-   - Clusters found (groups of tightly connected notes)
-   - Bridge nodes (connect two otherwise separate clusters)
+   - **Hub nodes (centrality)** — top 5 by degree centrality, with the raw link count and a one-line "everything flows through this because…" note. A hub qualifies if its degree is at least 3x the median, or it sits in the top 1% of the vault — whichever surfaces fewer.
+   - **Bridge nodes** — nodes that, if removed, would split a cluster. Rank by betweenness (approximate: count the shortest paths each node sits on between the top-10 hubs). These are the load-bearing connectors; surface the top 3 with the two clusters each one joins.
+   - **Orphan nodes** — no connections, listed by type. Flag any that are >30 days old (stale orphans are higher-priority cleanup targets than fresh ones).
+   - **Clusters** — groups of tightly connected notes, named by their hub. Note any cluster with <3 cross-cluster edges (those are silos).
+   - **Centrality skew** — if one node holds >25% of total edges, call it out as a single point of failure for navigation.
 
 7. Append to the operation log: if `Logs/` exists write `**HH:MM** - visualize | Canvas generated - X nodes, Y edges, Z orphans` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] visualize | Canvas generated — X nodes, Y edges, Z orphans` to `log.md`
 

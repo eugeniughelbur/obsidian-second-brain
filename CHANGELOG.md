@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Centrality ranking in `/obsidian-visualize`:** the text summary now surfaces hub nodes (degree at least 3x the median or top 1% of the vault), bridge nodes ranked by approximate betweenness, stale-orphan flagging (>30 days old), silo clusters (<3 cross-cluster edges), and a centrality-skew warning when one node holds >25% of total edges. Turns the canvas into a structural diagnostic of the vault, not just a picture.
+- **Suggested questions for future-Claude in `/obsidian-recap` and `/obsidian-review`:** both commands now end with 4 to 5 questions the period's vault content is uniquely positioned to answer that the user has not asked yet. Each question cites at least one specific note via `[[wikilink]]`. Prefers questions that surface contradictions, connect co-appearing-but-unlinked entities, or name unstated next actions. Turns passive recaps into actionable prompts.
 - **SessionStart hook (`hooks/load_vault_context.py`):** injects `_CLAUDE.md` into context once per session when the session starts inside the vault. Eliminates the per-command re-read of `_CLAUDE.md` that burned tokens on every invocation. Wired automatically by `scripts/setup.sh`.
 - **`scripts/setup.sh` updated:** wires the new SessionStart hook (`hooks/load_vault_context.py`) in addition to the existing PostCompact background agent.
 - **Per-day operation logs:** `/obsidian-init` now creates a `Logs/` folder with per-day files (`Logs/YYYY-MM-DD.md`) instead of a monolithic `log.md`. Root `log.md` becomes a pointer file only. Cheaper to read, faster to query.
