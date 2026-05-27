@@ -109,7 +109,7 @@ See `references/vault-schema.md` for full structural details.
 ## Core Operating Principles
 
 ### AI-first vault rule (applies to every note)
-The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes — across all 32 commands — must follow `references/ai-first-rules.md`:
+The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes — across all 34 commands — must follow `references/ai-first-rules.md`:
 
 1. **Self-contained context** — each note explains itself; don't rely on backlinks alone
 2. **"For future Claude" preamble** — 2-3 sentence summary so Claude can decide relevance in 10 seconds
