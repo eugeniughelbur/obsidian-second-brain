@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# validate-ai-first.sh — Enforce the AI-first vault rule on Write/Edit
+# validate-ai-first.sh - Enforce the AI-first vault rule on Write/Edit
 # =============================================================================
 # Fires as a Claude Code PostToolUse hook after Write/Edit. Inspects the
 # written file and warns if it does not follow the AI-first rule defined in
@@ -16,14 +16,14 @@
 #   3. Required AI-first fields present: date, type, tags, ai-first: true
 #   4. `## For future Claude` preamble exists in the body
 #   5. No banned non-ASCII substitution characters (em/en-dashes, curly
-#      quotes, smart apostrophes, Unicode math/arrows). Reports codepoint +
-#      suggested ASCII replacement. Whitelist: box-drawing U+2500-257F,
-#      currency (EUR/GBP/JPY), private-use/Nerd Fonts, emoji.
+#      quotes, smart apostrophes, Unicode math). Reports codepoint +
+#      suggested ASCII replacement. Explicit ban list; anything not in
+#      the list passes.
 #
 # Scope:
 #   - Only inspects files inside OBSIDIAN_VAULT_PATH (env var)
 #   - Skips raw/, templates/, _export/, .obsidian/, and any path containing
-#     /.git/ — those are system/template paths, not first-class notes
+#     /.git/ - those are system/template paths, not first-class notes
 #   - Skips any file not ending in .md
 #
 # Exit codes:
@@ -122,22 +122,13 @@ BANNED = {
     ' ': ('U+00A0 non-breaking space',  ' '),
 }
 
-def allowed(cp):
-    if 0x2500 <= cp <= 0x257F: return True   # box-drawing chars
-    if cp in (0x20AC, 0x00A3, 0x00A5): return True  # EUR, GBP, JPY
-    if 0xE000 <= cp <= 0xF8FF: return True   # private use / Nerd Fonts
-    if 0x2600 <= cp <= 0x27BF: return True   # misc symbols + dingbats
-    if 0x1F300 <= cp <= 0x1FFFF: return True # emoji
-    return False
-
 path = sys.argv[1]
 seen = set()
 try:
     with open(path, encoding='utf-8', errors='replace') as fh:
         for lineno, line in enumerate(fh, 1):
             for ch in line:
-                cp = ord(ch)
-                if cp <= 127 or allowed(cp) or ch not in BANNED:
+                if ch not in BANNED:
                     continue
                 key = (lineno, ch)
                 if key in seen:
