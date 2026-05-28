@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""/youtube [url] — extract transcript, metadata, and top comments from a YouTube video.
+"""/youtube [url] - extract transcript, metadata, and top comments from a YouTube video.
 
 Transcript: free, no API key needed (youtube-transcript-api).
 Metadata + comments: free, requires YOUTUBE_API_KEY (Data API v3).
@@ -36,7 +36,7 @@ Produce EXACTLY this structure (markdown):
 - [...continue for 5-12 bullets covering the actual substance, not filler]
 
 ## Notable Quotes
-- "[Verbatim quote]" — [if you can locate it; max 5 quotes]
+- "[Verbatim quote]" - [if you can locate it; max 5 quotes]
 
 ## Themes & Topics
 [2-3 sentences naming the broader themes / domains this video touches]
@@ -81,7 +81,7 @@ def main(argv: list[str]) -> int:
     published = (metadata or {}).get("published_at") or "(unknown date)"
 
     if transcript:
-        TX_LIMIT = 24000  # ~6k tokens — plenty for grok-4 context
+        TX_LIMIT = 24000  # ~6k tokens - plenty for grok-4 context
         tx_truncated = transcript[:TX_LIMIT]
         tx_note = "" if len(transcript) <= TX_LIMIT else f"\n\n[Transcript truncated at {TX_LIMIT} chars from total {len(transcript)} chars]"
     else:
@@ -152,7 +152,7 @@ def main(argv: list[str]) -> int:
     )
     path = vault.write_note("youtube", title, fm, note_body)
     vault.print_save_links(path)
-    vault.append_to_log(f"youtube on \"{title}\" — saved to {path.name}")
+    vault.append_to_log(f"youtube on \"{title}\" - saved to {path.name}")
     print(
         f"---\n[cost: ${result['cost_usd']:.4f} · transcript: {len(transcript) if transcript else 0} chars · comments: {len(comments)}]",
         file=sys.stderr,

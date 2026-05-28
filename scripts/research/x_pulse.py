@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""/x-pulse [topic] — scan X for trends, voices, hooks, and post ideas in a topic.
+"""/x-pulse [topic] - scan X for trends, voices, hooks, and post ideas in a topic.
 
 Output: hot themes (with rep posts + voices), gaps, hooks working, voice/tone, post ideas.
 Default behavior: print to chat AND save AI-first note to Research/X-pulse/.
@@ -17,26 +17,26 @@ Use Live Search on X to scan posts from the last 24-72 hours about this topic. R
 
 WHAT'S HOT (last 24-72h)
 [3-5 emerging themes. For each theme:]
-1. **Theme name** — 1-2 sentence description
+1. **Theme name** - 1-2 sentence description
    - Voices: @handle1, @handle2, @handle3
    - Representative posts:
-     - https://x.com/handle/status/... — "<short quote>"
-     - https://x.com/handle/status/... — "<short quote>"
+     - https://x.com/handle/status/... - "<short quote>"
+     - https://x.com/handle/status/... - "<short quote>"
 
 WHAT'S UNDEREXPLORED
-- [bullets of gaps — angles or sub-topics that almost no one is posting about, that have audience demand]
+- [bullets of gaps - angles or sub-topics that almost no one is posting about, that have audience demand]
 
 HOOKS THAT ARE WORKING
 - [specific hook formats with one-line examples drawn from real posts]
-- e.g. "I replaced [X] with [Y] and saved [Z] — format used by @handle"
+- e.g. "I replaced [X] with [Y] and saved [Z] - format used by @handle"
 
 VOICE & TONE WORKING
-[2-3 sentences describing the dominant style of high-engagement posts on this topic — direct, contrarian, data-led, story-led, etc.]
+[2-3 sentences describing the dominant style of high-engagement posts on this topic - direct, contrarian, data-led, story-led, etc.]
 
 POST IDEAS FOR YOU TODAY
-1. **[Post angle]** — rationale tied to gap or hook. (Format suggestion: thread / single / image+caption.)
-2. **[Post angle]** — rationale.
-3. **[Post angle]** — rationale.
+1. **[Post angle]** - rationale tied to gap or hook. (Format suggestion: thread / single / image+caption.)
+2. **[Post angle]** - rationale.
+3. **[Post angle]** - rationale.
 
 Rules:
 - Do NOT add commentary outside this structure.
@@ -79,7 +79,7 @@ def main(argv: list[str]) -> int:
         f"For future Claude: This note is a Grok Live Search scan of X discourse "
         f"about \"{topic}\" performed on {now.strftime('%Y-%m-%d %H:%M')}. It captures "
         f"emerging themes, gaps, hook formats, and content angles for Eugeniu's posting strategy. "
-        f"X posts are time-sensitive — claims here may be stale within days."
+        f"X posts are time-sensitive - claims here may be stale within days."
     )
     fm = {
         "date": now.strftime("%Y-%m-%d"),
@@ -94,7 +94,7 @@ def main(argv: list[str]) -> int:
     note_body = f"## For future Claude\n\n{preamble}\n\n## Topic\n\n{topic}\n\n## Pulse\n\n{body}\n"
     path = vault.write_note("x-pulse", topic, fm, note_body)
     vault.print_save_links(path)
-    vault.append_to_log(f"x-pulse on \"{topic}\" — saved to {path.name}")
+    vault.append_to_log(f"x-pulse on \"{topic}\" - saved to {path.name}")
     print(
         f"---\n[cost: ${result['cost_usd']:.4f} · tokens in/out: {result['input_tokens']}/{result['output_tokens']}]",
         file=sys.stderr,

@@ -1,6 +1,6 @@
 # AI-First Note Rules
 
-The vault is designed for **future-Claude** to read and reason over, not for human review. The owner rarely opens notes directly — they call Claude to retrieve, synthesize, and connect dots across years of accumulated knowledge. **Every command that writes to the vault must produce notes that follow these rules.**
+The vault is designed for **future-Claude** to read and reason over, not for human review. The owner rarely opens notes directly - they call Claude to retrieve, synthesize, and connect dots across years of accumulated knowledge. **Every command that writes to the vault must produce notes that follow these rules.**
 
 This document is the canonical specification. It lives at `references/ai-first-rules.md` in the obsidian-second-brain repo and is referenced from `_CLAUDE.md` Section 0, every slash command, and `references/write-rules.md`.
 
@@ -12,7 +12,7 @@ This document is the canonical specification. It lives at `references/ai-first-r
 Each note must explain itself. Future-Claude may pull this single note via `/obsidian-find` or vault scan with no surrounding context. Don't rely on backlinks alone for meaning. State the *what*, the *why*, and the *when* inside the note itself.
 
 ### 2. "For future Claude" preamble
-Every note begins with a 2–3 sentence summary in plain English under a `## For future Claude` header (immediately after the frontmatter). Future-Claude reads this to decide relevance in 10 seconds before parsing the rest. State what's in the note, why it was saved, and any temporal/staleness caveat.
+Every note begins with a 2-3 sentence summary in plain English under a `## For future Claude` header (immediately after the frontmatter). Future-Claude reads this to decide relevance in 10 seconds before parsing the rest. State what's in the note, why it was saved, and any temporal/staleness caveat.
 
 ```markdown
 ## For future Claude
@@ -44,7 +44,7 @@ When stating external facts, attach the date inline:
 So future-Claude knows what to verify before trusting individual facts.
 
 ### 5. Sources preserved verbatim
-Every external claim has its source URL inline. Don't paraphrase a citation — keep the actual URL so the claim can be re-verified or refreshed years later.
+Every external claim has its source URL inline. Don't paraphrase a citation - keep the actual URL so the claim can be re-verified or refreshed years later.
 
 ### 6. Cross-links are mandatory
 Every person, project, idea, decision, or concept referenced uses `[[wikilinks]]` so the graph is traversable by future-Claude:
@@ -57,10 +57,10 @@ If a linked note doesn't exist, create a stub (per `references/write-rules.md` �
 
 ### 7. Confidence levels
 Where applicable, mark claims with confidence:
-- `stated` — directly quoted or claimed by a source
-- `high` — multiple sources agree
-- `medium` — single source, plausible
-- `speculation` — your inference
+- `stated` - directly quoted or claimed by a source
+- `high` - multiple sources agree
+- `medium` - single source, plausible
+- `speculation` - your inference
 
 Use this in frontmatter (`confidence: high`) or inline (`(confidence: speculation)`).
 
@@ -68,7 +68,7 @@ Use this in frontmatter (`confidence: high`) or inline (`(confidence: speculatio
 
 ## Type Schemas
 
-Frontmatter schemas by note type. **Add fields specific to your type — never remove the universal fields.**
+Frontmatter schemas by note type. **Add fields specific to your type - never remove the universal fields.**
 
 ### `type: daily`
 ```yaml
@@ -274,10 +274,10 @@ Don't do these. They produce notes that are useless to future-Claude.
 
 | Anti-pattern | Why it's bad |
 |---|---|
-| `date: today` | Use the actual `YYYY-MM-DD` — "today" is meaningless when read later |
-| Bare claims without dates | "Mem0 is the leader" — leader as of when? |
-| External URL omitted | "According to a study, X is true" — which study? |
-| Plain text names instead of `[[wikilinks]]` | Breaks the link graph — future-Claude can't traverse |
+| `date: today` | Use the actual `YYYY-MM-DD` - "today" is meaningless when read later |
+| Bare claims without dates | "Mem0 is the leader" - leader as of when? |
+| External URL omitted | "According to a study, X is true" - which study? |
+| Plain text names instead of `[[wikilinks]]` | Breaks the link graph - future-Claude can't traverse |
 | "See above" / "as mentioned" | Future-Claude may pull this note in isolation. Repeat the context. |
 | Trusting the model to infer | Be explicit. State the type, the rule applied, the source. |
 | Multi-paragraph human-readable narratives | Bullets and structure beat prose for retrieval. |
@@ -299,10 +299,10 @@ When auditing an existing note (Phase 2 work or one-off cleanup), verify:
 - [ ] External claims have recency markers AND source URLs
 - [ ] If multi-source, confidence levels marked
 - [ ] No "see above" or context-dependent references
-- [ ] Self-contained — readable with zero context
+- [ ] Self-contained - readable with zero context
 
 ---
 
 ## Migration Note
 
-This rule was established 2026-04-25 and shipped as part of obsidian-second-brain v0.5.0 (Research Toolkit). All 5 research commands (`/x-read`, `/x-pulse`, `/research`, `/research-deep`, `/youtube`) follow it from day one. The 26 existing `/obsidian-*` commands were updated in v0.6.0 (Phase 2) to explicitly reference this document. Notes written before that may not yet meet the standard — `/obsidian-health` flags them.
+This rule was established 2026-04-25 and shipped as part of obsidian-second-brain v0.5.0 (Research Toolkit). All 5 research commands (`/x-read`, `/x-pulse`, `/research`, `/research-deep`, `/youtube`) follow it from day one. The 26 existing `/obsidian-*` commands were updated in v0.6.0 (Phase 2) to explicitly reference this document. Notes written before that may not yet meet the standard - `/obsidian-health` flags them.

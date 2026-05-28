@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-vault_health.py — Obsidian Second Brain Health Check
+vault_health.py - Obsidian Second Brain Health Check
 
 Audits an Obsidian vault for structural issues:
 - Duplicate notes (same concept, multiple files)
@@ -190,17 +190,17 @@ def _normalize_dashes(s: str) -> str:
     """Convert em-dash (U+2014) and en-dash (U+2013) to a regular hyphen.
 
     Vault naming conventions often use em-dashes in filenames (e.g.
-    `2026-05-22 — Learnings Review.md`). Wikilinks that reference the same
+    `2026-05-22 - Learnings Review.md`). Wikilinks that reference the same
     note with a regular hyphen (`[[2026-05-22 - Learnings Review]]`) should
     still resolve. Normalize both sides before comparison.
     """
-    return s.replace("—", "-").replace("–", "-")
+    return s.replace("-", "-").replace("-", "-")
 
 
 def check_broken_links(notes: dict, vault: Path) -> list:
     all_stems = {note["stem"].lower(): rel for rel, note in notes.items()}
     # also index stems with em-dashes normalized to regular hyphens so a
-    # wikilink written with `-` still matches a filename written with `—`
+    # wikilink written with `-` still matches a filename written with `-`
     all_stems_dash_norm = {
         _normalize_dashes(note["stem"]).lower(): rel for rel, note in notes.items()
     }
@@ -293,7 +293,7 @@ def run_health_check(vault: Path) -> dict:
 
 def print_report(result: dict):
     print("=" * 60)
-    print(f"  VAULT HEALTH REPORT — {result['scanned']}")
+    print(f"  VAULT HEALTH REPORT - {result['scanned']}")
     print("=" * 60)
     print(f"  Notes scanned: {result['total_notes']}")
     print(f"  Issues found:  {result['total_issues']}")

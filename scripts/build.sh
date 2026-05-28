@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# scripts/build.sh — Compile platform-neutral source into dist/<platform>/
+# scripts/build.sh - Compile platform-neutral source into dist/<platform>/
 # =============================================================================
 # Usage:
 #   bash scripts/build.sh                       # builds all platforms

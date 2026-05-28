@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""/research [topic] — Perplexity Sonar-powered web research with citations.
+"""/research [topic] - Perplexity Sonar-powered web research with citations.
 
 Output (deep dossier): summary, key facts, sources, timeline, key players, contrarian views,
 recommended further reading, open questions.
@@ -14,7 +14,7 @@ PROMPT_TEMPLATE = """You are a research analyst. Topic: "{topic}"
 
 Produce a DEEP DOSSIER on this topic with the following structure (markdown). Be specific, cite sources, and attach a recency marker (date or "as of YYYY-MM") to every concrete factual claim so it can be re-verified later.
 
-# Research — {topic}
+# Research - {topic}
 
 ## Summary
 [3-5 sentence executive summary capturing the current state of the topic.]
@@ -30,15 +30,15 @@ Produce a DEEP DOSSIER on this topic with the following structure (markdown). Be
 - ...
 
 ## Key Players
-- **[Name / company]** — [role, why they matter]
+- **[Name / company]** - [role, why they matter]
 - ...
 
 ## Contrarian Views
-- [Counter-argument or skeptical position] — held by [who], summary of their case.
+- [Counter-argument or skeptical position] - held by [who], summary of their case.
 - ...
 
 ## Recommended Further Reading
-- [Title or topic] — [why it's worth reading]
+- [Title or topic] - [why it's worth reading]
 - ...
 
 ## Open Questions
@@ -79,7 +79,7 @@ def main(argv: list[str]) -> int:
             if isinstance(c, dict):
                 url = c.get("url") or c.get("link") or ""
                 title = c.get("title", "")
-                print(f"[{i}] {title} — {url}".strip())
+                print(f"[{i}] {title} - {url}".strip())
             else:
                 print(f"[{i}] {c}")
 
@@ -89,7 +89,7 @@ def main(argv: list[str]) -> int:
         f"For future Claude: This note is a Perplexity Sonar deep dossier on \"{topic}\" "
         f"performed on {now.strftime('%Y-%m-%d %H:%M')}. It captures key facts with recency markers, "
         f"timeline, key players, contrarian views, and open questions. "
-        f"Every claim was sourced at the time of research — verify recency markers before relying on individual facts."
+        f"Every claim was sourced at the time of research - verify recency markers before relying on individual facts."
     )
     sources_list = []
     for c in citations:
@@ -121,7 +121,7 @@ def main(argv: list[str]) -> int:
     )
     path = vault.write_note("research", topic, fm, note_body)
     vault.print_save_links(path)
-    vault.append_to_log(f"research on \"{topic}\" — saved to {path.name}")
+    vault.append_to_log(f"research on \"{topic}\" - saved to {path.name}")
     return 0
 
 

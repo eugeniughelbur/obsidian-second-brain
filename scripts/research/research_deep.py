@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""/research-deep [topic] — vault-first deep research with cross-vault propagation.
+"""/research-deep [topic] - vault-first deep research with cross-vault propagation.
 
 Flow (per design decision C):
 1. Vault scan: find existing notes on this topic (baseline knowledge).
@@ -116,14 +116,14 @@ VAULT BASELINE (what the vault already knew):
 NEW EXTERNAL FINDINGS:
 {findings}
 
-CRITICAL FORMAT RULES — DO NOT DEVIATE:
+CRITICAL FORMAT RULES - DO NOT DEVIATE:
 - Output ONLY the six sections below, in this exact order, with these exact headers.
 - Use markdown bullets (- ...) inside each section. NO long narrative paragraphs.
 - Do NOT add an introduction, preamble, conclusion, or "report" framing.
 - Do NOT exceed ~1200 words total.
 - Every external claim has a recency marker (date) AND source domain.
 - Every vault reference uses [[wikilinks]] with the exact path.
-- Be ruthless about contradictions — flagging them is the most valuable output.
+- Be ruthless about contradictions - flagging them is the most valuable output.
 
 ## What's New Since Vault Baseline
 - [Specific new fact from external sources, with recency marker and source domain]
@@ -134,7 +134,7 @@ CRITICAL FORMAT RULES — DO NOT DEVIATE:
 - [...]
 
 ## Contradictions / Updates Needed
-- [Specific claim where new external info contradicts a vault note — name the [[vault file path]] and the specific contradiction]
+- [Specific claim where new external info contradicts a vault note - name the [[vault file path]] and the specific contradiction]
 - [...]
 
 ## Synthesis
@@ -183,7 +183,7 @@ def main(argv: list[str]) -> int:
             if src == "web":
                 print(f"  [web] {q}", file=sys.stderr)
                 r = perplexity.call(f"Research this question: {q}\n\nReturn 3-5 specific facts with recency markers (date) and source domain. Be concise.", deep=False, max_tokens=1200)
-                findings_chunks.append(f"### Web — {q}\n\n{r['text']}")
+                findings_chunks.append(f"### Web - {q}\n\n{r['text']}")
                 for c in r.get("citations", []):
                     if isinstance(c, dict):
                         url = c.get("url") or c.get("link") or ""
@@ -199,12 +199,12 @@ def main(argv: list[str]) -> int:
                     tools=[{"type": "x_search"}],
                     max_output_tokens=1200,
                 )
-                findings_chunks.append(f"### X — {q}\n\n{r['text']}")
+                findings_chunks.append(f"### X - {q}\n\n{r['text']}")
         except Exception as e:
-            findings_chunks.append(f"### {src} — {q}\n\n[FAILED: {e}]")
+            findings_chunks.append(f"### {src} - {q}\n\n[FAILED: {e}]")
             print(f"  ⚠️  {src} query failed: {e}", file=sys.stderr)
 
-    findings = "\n\n".join(findings_chunks) if findings_chunks else "(no findings — all targeted queries failed)"
+    findings = "\n\n".join(findings_chunks) if findings_chunks else "(no findings - all targeted queries failed)"
 
     print(f"[/research-deep] Phase 4: synthesizing delta vs vault baseline...", file=sys.stderr)
     synth_prompt = SYNTHESIS_PROMPT.format(
@@ -272,7 +272,7 @@ def main(argv: list[str]) -> int:
     print(json.dumps(propagation_payload, indent=2))
     print("<<<END_PAYLOAD>>>")
 
-    vault.append_to_log(f"research-deep on \"{topic}\" — saved to {path.name}, propagation payload emitted")
+    vault.append_to_log(f"research-deep on \"{topic}\" - saved to {path.name}, propagation payload emitted")
     return 0
 
 

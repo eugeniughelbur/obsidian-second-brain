@@ -1,5 +1,5 @@
 ---
-description: Scan X for what's trending in a topic — themes, voices, hooks, and post ideas powered by Grok + Live Search
+description: Scan X for what's trending in a topic - themes, voices, hooks, and post ideas powered by Grok + Live Search
 category: research
 triggers_en: ["x pulse", "what is trending on twitter", "scan x for", "twitter pulse"]
 ---
@@ -27,4 +27,4 @@ Use the obsidian-second-brain skill. Execute `/x-pulse [topic]`:
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

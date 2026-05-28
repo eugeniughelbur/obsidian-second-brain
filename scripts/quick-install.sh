@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# quick-install.sh — one-liner installer for obsidian-second-brain
+# quick-install.sh - one-liner installer for obsidian-second-brain
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
@@ -10,8 +10,8 @@
 #   3. Runs scripts/setup.sh with that path
 #
 # Environment:
-#   OBSIDIAN_VAULT_PATH — skip the prompt and use this path
-#   SKILL_DIR           — override the install location (default: ~/.claude/skills/obsidian-second-brain)
+#   OBSIDIAN_VAULT_PATH - skip the prompt and use this path
+#   SKILL_DIR           - override the install location (default: ~/.claude/skills/obsidian-second-brain)
 
 set -euo pipefail
 
@@ -30,7 +30,7 @@ fi
 # ── clone or update ──────────────────────────────────────────────────────────
 
 if [[ -d "$SKILL_DIR/.git" ]]; then
-  yellow "Repo already at $SKILL_DIR — pulling latest..."
+  yellow "Repo already at $SKILL_DIR - pulling latest..."
   git -C "$SKILL_DIR" pull --ff-only
 else
   if [[ -e "$SKILL_DIR" ]]; then

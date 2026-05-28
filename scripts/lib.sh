@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# scripts/lib.sh — Shared utility helpers for build orchestration
+# scripts/lib.sh - Shared utility helpers for build orchestration
 # =============================================================================
 # Sourced by scripts/build.sh. Provides logging primitives and error helpers.
 # Do NOT execute directly.

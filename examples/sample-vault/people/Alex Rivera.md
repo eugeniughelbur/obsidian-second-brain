@@ -26,17 +26,17 @@ Alex Rivera is the owner of this vault. Founder and sole owner of the fictional 
 
 ## Active commitments
 
-- Building [[Projects/Tide]] — fictional habit-tracking SaaS, ~600 paid users (as of 2026-04, internal stripe dashboard)
+- Building [[Projects/Tide]] - fictional habit-tracking SaaS, ~600 paid users (as of 2026-04, internal stripe dashboard)
 - Writing weekly devlogs in `wiki/logs/`
 - One open-source side project (TBD, not yet captured)
 
 ## Recent interactions
 
-- **2026-04-27** — Paired with [[people/Sam Patel]] on streak invalidation, captured idea about streak insurance, logged work in [[wiki/logs/2026-04-27 — Tide retention rebuild]]
-- **2026-04-26** — Released Tide v0.8.4, fixed a webhook race condition (TBD: link the devlog when written)
+- **2026-04-27** - Paired with [[people/Sam Patel]] on streak invalidation, captured idea about streak insurance, logged work in [[wiki/logs/2026-04-27 - Tide retention rebuild]]
+- **2026-04-26** - Released Tide v0.8.4, fixed a webhook race condition (TBD: link the devlog when written)
 
 ## Notes for future Claude
 
 - Alex prefers terse outputs and dislikes em-dashes in prose
-- Working hours: 09:00–18:00 WET, hard stop weekends
+- Working hours: 09:00-18:00 WET, hard stop weekends
 - Confidence: this profile is `stated` based on direct vault content

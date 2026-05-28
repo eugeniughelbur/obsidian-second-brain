@@ -34,10 +34,10 @@ Your Vault/
 ```
 
 ### Key principles:
-- **raw/ is immutable** — original sources go here. Claude reads them but never modifies them. If a wiki page gets corrupted, re-derive from raw.
-- **wiki/ is Claude's workspace** — Claude is the sole writer. Every entity, concept, and project lives here.
-- **index.md is the front door** — Claude reads this first to navigate. Cheaper and faster than searching.
-- **Flat folders over nested** — `wiki/entities/` is a flat list. Harder for humans to browse, perfect for Claude to grep and index.
+- **raw/ is immutable** - original sources go here. Claude reads them but never modifies them. If a wiki page gets corrupted, re-derive from raw.
+- **wiki/ is Claude's workspace** - Claude is the sole writer. Every entity, concept, and project lives here.
+- **index.md is the front door** - Claude reads this first to navigate. Cheaper and faster than searching.
+- **Flat folders over nested** - `wiki/entities/` is a flat list. Harder for humans to browse, perfect for Claude to grep and index.
 
 ---
 
@@ -166,9 +166,9 @@ timeline:                       # bi-temporal facts — never delete, only appen
 ```
 
 **Bi-temporal facts rule:** never overwrite a role, company, status, or location. Add a new entry to `timeline:` with:
-- `from` / `until` — **event time**: when the fact was true in reality
-- `learned` — **transaction time**: when the vault first recorded this fact
-- `source` (optional) — where the vault learned it from (daily note, ingested source, etc.)
+- `from` / `until` - **event time**: when the fact was true in reality
+- `learned` - **transaction time**: when the vault first recorded this fact
+- `source` (optional) - where the vault learned it from (daily note, ingested source, etc.)
 
 The `role:` and `company:` top-level fields always reflect the CURRENT state. The `timeline:` preserves full history.
 

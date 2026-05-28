@@ -23,7 +23,7 @@ Use the obsidian-second-brain skill. Execute `/podcast [url]`:
    - Parses the RSS feed, extracts episode metadata (title, show, host, published, duration, audio URL, show notes).
    - Tries to obtain a transcript in this order:
      1. **`<podcast:transcript>` tag** in the RSS feed (free, fast, high fidelity).
-     2. **Whisper API**, only if `OPENAI_API_KEY` is set. Downloads audio (≤25 MB OpenAI per-file limit), transcribes via `whisper-1`. Approximate cost: $0.006/min.
+     2. **Whisper API**, only if `OPENAI_API_KEY` is set. Downloads audio (<=25 MB OpenAI per-file limit), transcribes via `whisper-1`. Approximate cost: $0.006/min.
      3. **Show-notes-only fallback**. If no transcript path works, summarizes from RSS show notes alone. Quality drops; Notable Quotes will be empty.
    - Sends transcript-or-shownotes to Grok for AI-first summarization.
    - Returns: TL;DR, Key Points, Notable Quotes, Themes & Topics, Guests & People Mentioned, Worth Following Up On.

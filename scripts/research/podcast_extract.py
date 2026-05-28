@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""/podcast [url] — extract metadata, transcript, and summary from a podcast episode.
+"""/podcast [url] - extract metadata, transcript, and summary from a podcast episode.
 
 Inputs: Apple Podcasts URL OR RSS feed URL (with optional ?episode=<guid> selector).
 
@@ -41,13 +41,13 @@ Produce EXACTLY this structure (markdown):
 - [...continue for 5-12 bullets covering the actual substance, not filler]
 
 ## Notable Quotes
-- "[Verbatim quote]" — [speaker if identifiable; max 5 quotes]
+- "[Verbatim quote]" - [speaker if identifiable; max 5 quotes]
 
 ## Themes & Topics
 [2-3 sentences naming the broader themes / domains this episode touches]
 
 ## Guests & People Mentioned
-- [[Person Name]] — short context. List every named person referenced; mark unknowns as [uncertain].
+- [[Person Name]] - short context. List every named person referenced; mark unknowns as [uncertain].
 
 ## Worth Following Up On
 - [Specific things mentioned that would be worth a deeper /research call later]
@@ -55,9 +55,9 @@ Produce EXACTLY this structure (markdown):
 Rules:
 - Be specific. "Talks about AI" is useless to future-Claude. "Argues that LLM context windows over 1M tokens degrade reasoning quality after 200k tokens" is useful.
 - Don't pad. If a section is genuinely thin, write one bullet and move on.
-- Don't invent quotes. If TRANSCRIPT SOURCE is "show-notes" you have no transcript — leave Notable Quotes empty.
+- Don't invent quotes. If TRANSCRIPT SOURCE is "show-notes" you have no transcript - leave Notable Quotes empty.
 - Don't add commentary outside this structure.
-- **Wikilinks are mandatory.** Wrap every named person, company, project, product, book, and named concept in `[[Name]]` so future-Claude can traverse the vault graph. Examples: `[[Sam Altman]]`, `[[OpenAI]]`, `[[GPT-5]]`, `[[Attention Is All You Need]]`. This applies in every section — TL;DR, Key Points, Notable Quotes (the speaker attribution), Themes, Guests & People Mentioned, Worth Following Up On.
+- **Wikilinks are mandatory.** Wrap every named person, company, project, product, book, and named concept in `[[Name]]` so future-Claude can traverse the vault graph. Examples: `[[Sam Altman]]`, `[[OpenAI]]`, `[[GPT-5]]`, `[[Attention Is All You Need]]`. This applies in every section - TL;DR, Key Points, Notable Quotes (the speaker attribution), Themes, Guests & People Mentioned, Worth Following Up On.
 """
 
 
@@ -77,13 +77,13 @@ def _resolve_transcript(episode: dict) -> tuple[str | None, str]:
         if text is None:
             print(
                 "[/podcast] Transcript tag returned no usable text "
-                "(unsupported JSON schema, fetch error, or empty body) — falling through.",
+                "(unsupported JSON schema, fetch error, or empty body) - falling through.",
                 file=sys.stderr,
             )
         elif len(text) <= MIN_TRANSCRIPT_CHARS:
             print(
                 f"[/podcast] Transcript tag content too short ({len(text)} chars, "
-                f"minimum {MIN_TRANSCRIPT_CHARS}) — likely a stub or redirect page. Falling through.",
+                f"minimum {MIN_TRANSCRIPT_CHARS}) - likely a stub or redirect page. Falling through.",
                 file=sys.stderr,
             )
         else:
@@ -103,7 +103,7 @@ def _resolve_transcript(episode: dict) -> tuple[str | None, str]:
                 return text, "whisper-api"
             if text is not None:
                 print(
-                    f"[/podcast] Whisper returned content too short ({len(text)} chars) — falling through to show notes.",
+                    f"[/podcast] Whisper returned content too short ({len(text)} chars) - falling through to show notes.",
                     file=sys.stderr,
                 )
     else:
@@ -193,7 +193,7 @@ def main(argv: list[str]) -> int:
         f"Source label '{transcript_source}' indicates transcript provenance: "
         f"'rss-transcript-tag' (publisher-provided, high fidelity), 'whisper-api' "
         f"(Whisper transcription, may have errors on names), or 'show-notes' "
-        f"(notes only, no transcript — quotes will be absent). Use Worth Following Up On bullets to spawn deeper research."
+        f"(notes only, no transcript - quotes will be absent). Use Worth Following Up On bullets to spawn deeper research."
     )
     fm = {
         "date": now.strftime("%Y-%m-%d"),
@@ -229,7 +229,7 @@ def main(argv: list[str]) -> int:
     )
     path = vault.write_note("podcast", title, fm, note_body)
     vault.print_save_links(path)
-    vault.append_to_log(f"podcast on \"{title}\" — saved to {path.name}")
+    vault.append_to_log(f"podcast on \"{title}\" - saved to {path.name}")
     tx_len = len(transcript_text) if transcript_text else 0
     print(
         f"---\n[cost: ${result['cost_usd']:.4f} · transcript: {tx_len} chars · source: {transcript_source}]",

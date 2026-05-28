@@ -1,5 +1,5 @@
 ---
-description: Generate a decision record when the vault structure changes — the vault knows why it knows what it does
+description: Generate a decision record when the vault structure changes - the vault knows why it knows what it does
 category: thinking
 triggers_en: ["log this decision", "ADR", "record decision", "decision record"]
 ---
@@ -24,10 +24,10 @@ The optional argument is the decision topic. If not provided, infer from recent 
 
    Structure:
    - **Decision**: one-line summary of what was decided
-   - **Context**: what prompted this decision — the problem or trigger
+   - **Context**: what prompted this decision - the problem or trigger
    - **Options Considered**: 2-3 alternatives that were evaluated
    - **Rationale**: why this option was chosen over the others
-   - **Consequences**: what changes as a result — what notes were created, moved, or restructured
+   - **Consequences**: what changes as a result - what notes were created, moved, or restructured
    - **Related**: links to affected project notes, people, or ideas
 
 4. Update the relevant project note's Key Decisions section with a link to the ADR
@@ -35,10 +35,10 @@ The optional argument is the decision topic. If not provided, infer from recent 
 6. Append to the operation log: if `Logs/` exists write `**HH:MM** - adr | Title - decision recorded` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] adr | Title — decision recorded` to `log.md`
 7. Link from today's daily note
 
-Decision records prevent the vault from becoming a black box. When the user (or a future Claude session) asks "why is the vault structured this way?" — the ADR has the answer.
+Decision records prevent the vault from becoming a black box. When the user (or a future Claude session) asks "why is the vault structured this way?" - the ADR has the answer.
 
-This command can also be triggered automatically by other commands: when `/obsidian-graduate` promotes an idea, when `/obsidian-health` recommends a structural fix, or when the user reorganizes folders. In those cases, offer to create an ADR — don't force it.
+This command can also be triggered automatically by other commands: when `/obsidian-graduate` promotes an idea, when `/obsidian-health` recommends a structural fix, or when the user reorganizes folders. In those cases, offer to create an ADR - don't force it.
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

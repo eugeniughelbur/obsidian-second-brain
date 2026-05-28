@@ -138,7 +138,7 @@ Source-grounded synthesis on "{topic}" via Gemini File Search (model: {model}). 
 
 def safe_display_name(path: str) -> str:
     """Strip non-ASCII so display_name survives HTTP header encoding."""
-    s = path.replace("—", " - ").replace("–", "-")
+    s = path.replace("-", " - ").replace("-", "-")
     s = s.encode("ascii", "replace").decode("ascii")
     return s[:200]
 

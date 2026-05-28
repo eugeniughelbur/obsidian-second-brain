@@ -1,4 +1,4 @@
-# `_CLAUDE.md` Template — Assistant Mode
+# `_CLAUDE.md` Template - Assistant Mode
 
 Use this template when the vault operator is maintaining a vault FOR someone else (e.g., an executive assistant managing their boss's knowledge base, a consultant tracking a client's decisions).
 

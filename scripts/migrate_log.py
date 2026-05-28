@@ -108,7 +108,7 @@ def split_log(text: str) -> dict[str, str]:
         if body:
             sections.setdefault(date, []).append(body)
 
-    # Concatenate duplicate-date sections (defensive — log.md may have repeats)
+    # Concatenate duplicate-date sections (defensive - log.md may have repeats)
     return {date: "\n\n".join(parts) for date, parts in sections.items()}
 
 
@@ -134,7 +134,7 @@ def main() -> int:
         return 1
 
     today = max(sections.keys())  # most recent date in the log
-    print(f"Found {len(sections)} dated section(s): {min(sections)} … {today}")
+    print(f"Found {len(sections)} dated section(s): {min(sections)} ... {today}")
 
     if not args.dry_run:
         logs_dir.mkdir(exist_ok=True)

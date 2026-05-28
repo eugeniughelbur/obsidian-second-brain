@@ -1,5 +1,5 @@
 ---
-description: Generate a visual canvas map of your vault — see the shape of your second brain and how knowledge connects
+description: Generate a visual canvas map of your vault - see the shape of your second brain and how knowledge connects
 category: meta
 triggers_en: ["visualize vault", "vault map", "canvas of vault", "show me the vault shape"]
 ---
@@ -41,11 +41,11 @@ The optional argument is a scope: a project name, entity name, topic, or "full" 
 
 6. Also generate a text summary with centrality ranking:
    - Total nodes and edges
-   - **Hub nodes (centrality)** — top 5 by degree centrality, with the raw link count and a one-line "everything flows through this because…" note. A hub qualifies if its degree is at least 3x the median, or it sits in the top 1% of the vault — whichever surfaces fewer.
-   - **Bridge nodes** — nodes that, if removed, would split a cluster. Rank by betweenness (approximate: count the shortest paths each node sits on between the top-10 hubs). These are the load-bearing connectors; surface the top 3 with the two clusters each one joins.
-   - **Orphan nodes** — no connections, listed by type. Flag any that are >30 days old (stale orphans are higher-priority cleanup targets than fresh ones).
-   - **Clusters** — groups of tightly connected notes, named by their hub. Note any cluster with <3 cross-cluster edges (those are silos).
-   - **Centrality skew** — if one node holds >25% of total edges, call it out as a single point of failure for navigation.
+   - **Hub nodes (centrality)** - top 5 by degree centrality, with the raw link count and a one-line "everything flows through this because..." note. A hub qualifies if its degree is at least 3x the median, or it sits in the top 1% of the vault - whichever surfaces fewer.
+   - **Bridge nodes** - nodes that, if removed, would split a cluster. Rank by betweenness (approximate: count the shortest paths each node sits on between the top-10 hubs). These are the load-bearing connectors; surface the top 3 with the two clusters each one joins.
+   - **Orphan nodes** - no connections, listed by type. Flag any that are >30 days old (stale orphans are higher-priority cleanup targets than fresh ones).
+   - **Clusters** - groups of tightly connected notes, named by their hub. Note any cluster with <3 cross-cluster edges (those are silos).
+   - **Centrality skew** - if one node holds >25% of total edges, call it out as a single point of failure for navigation.
 
 7. Append to the operation log: if `Logs/` exists write `**HH:MM** - visualize | Canvas generated - X nodes, Y edges, Z orphans` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] visualize | Canvas generated — X nodes, Y edges, Z orphans` to `log.md`
 
@@ -53,4 +53,4 @@ The user can open the `.canvas` file in Obsidian to visually explore their vault
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

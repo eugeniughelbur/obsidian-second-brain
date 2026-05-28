@@ -40,7 +40,7 @@ def slugify(text: str, max_len: int = 80) -> str:
 def filename_for(command: str, topic: str) -> str:
     date = datetime.now().strftime("%Y-%m-%d")
     slug = slugify(topic) or "untitled"
-    return f"{date} — {slug}.md"
+    return f"{date} - {slug}.md"
 
 
 def write_note(command: str, topic: str, frontmatter: dict[str, Any], body: str) -> Path:
@@ -143,7 +143,7 @@ def append_to_daily(summary_md: str) -> bool:
     if not daily_path.exists():
         return False
     current = daily_path.read_text()
-    block = f"\n### Research — {datetime.now().strftime('%H:%M')}\n\n{summary_md.strip()}\n"
+    block = f"\n### Research - {datetime.now().strftime('%H:%M')}\n\n{summary_md.strip()}\n"
     if "## 🌙 Evening Review" in current:
         new = current.replace("## 🌙 Evening Review", f"{block}\n---\n\n## 🌙 Evening Review", 1)
     else:

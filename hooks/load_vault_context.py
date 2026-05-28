@@ -12,7 +12,7 @@ Setup:
            "command": "python ~/.claude/skills/obsidian-second-brain/hooks/load_vault_context.py" }
 
 Path normalization handles Windows ("C:\\..."), MSYS ("/c/..."), and POSIX
-("/...") — match works regardless of which form the harness or env var uses.
+("/...") - match works regardless of which form the harness or env var uses.
 """
 from __future__ import annotations
 
@@ -60,15 +60,15 @@ def main() -> int:
     v = Path(vault)
     header = (
         f"**Vault root**: `{vault}`\n"
-        f"**Key files** (absolute paths — use these directly, no discovery needed):\n"
-        f"  - `{v / '_CLAUDE.md'}` — this operating manual (already loaded)\n"
-        f"  - `{v / 'index.md'}` — navigation hub\n"
-        f"  - `{v / 'log.md'}` — operation log\n"
+        f"**Key files** (absolute paths - use these directly, no discovery needed):\n"
+        f"  - `{v / '_CLAUDE.md'}` - this operating manual (already loaded)\n"
+        f"  - `{v / 'index.md'}` - navigation hub\n"
+        f"  - `{v / 'log.md'}` - operation log\n"
         "**Do NOT run `ls`, `Glob`, or `Bash` to discover the vault or its folders.**\n"
         "Use the vault root path above and the folder names from the manual below directly.\n\n"
         "---\n\n"
         "Vault operating manual (_CLAUDE.md, loaded once at session start "
-        "by the load_vault_context hook — do not re-read on each command):\n\n"
+        "by the load_vault_context hook - do not re-read on each command):\n\n"
     )
 
     output = {

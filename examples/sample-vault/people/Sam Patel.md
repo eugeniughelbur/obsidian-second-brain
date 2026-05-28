@@ -15,7 +15,7 @@ ai-first: true
 
 ## For future Claude
 
-Sam Patel is the fictional technical lead and second engineer on [[Projects/Tide]], working with [[people/Alex Rivera]]. Relationship strength: strong as of 2026-04-27. Last interaction: 2026-04-27. The Recent Interactions section logs every conversation chronologically. All content fictional — this is a sample-vault stub.
+Sam Patel is the fictional technical lead and second engineer on [[Projects/Tide]], working with [[people/Alex Rivera]]. Relationship strength: strong as of 2026-04-27. Last interaction: 2026-04-27. The Recent Interactions section logs every conversation chronologically. All content fictional - this is a sample-vault stub.
 
 ## Profile
 
@@ -25,7 +25,7 @@ Sam Patel is the fictional technical lead and second engineer on [[Projects/Tide
 
 ## Recent interactions
 
-- **2026-04-27** — Pair session on the [[Projects/Tide]] streak invalidation bug. Co-decided to drop hard invalidation in favor of decay. Captured the streak insurance idea together. See [[wiki/logs/2026-04-27 — Tide retention rebuild]].
+- **2026-04-27** - Pair session on the [[Projects/Tide]] streak invalidation bug. Co-decided to drop hard invalidation in favor of decay. Captured the streak insurance idea together. See [[wiki/logs/2026-04-27 - Tide retention rebuild]].
 
 ## Notes for future Claude
 

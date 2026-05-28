@@ -53,7 +53,7 @@ Use `[[Note Name]]` syntax. Always link:
 
 **Never hardcode paths** unless necessary. Obsidian resolves `[[Name]]` by filename.
 
-If the linked note doesn't exist yet, create it (stub is fine — frontmatter + title + one line of context).
+If the linked note doesn't exist yet, create it (stub is fine - frontmatter + title + one line of context).
 
 ---
 
@@ -97,7 +97,7 @@ Columns are H2 headings. Items are task checkboxes with optional indented descri
 - 🟡 Important / this week
 - 🟢 Nice to have / low urgency
 
-**Never delete done items** — move them to the Done column with strikethrough. Done items are the changelog.
+**Never delete done items** - move them to the Done column with strikethrough. Done items are the changelog.
 
 ---
 
@@ -125,10 +125,10 @@ Use these consistently across all note types:
 ## Writing Style Calibration
 
 Before writing a new note in a folder you haven't written in before:
-1. Read 1–2 existing notes in that folder
+1. Read 1-2 existing notes in that folder
 2. Match: heading structure, frontmatter fields present, tone (formal vs casual), emoji usage, list style (bullet vs numbered), section names
 
-Don't introduce new patterns — extend what's there.
+Don't introduce new patterns - extend what's there.
 
 ---
 
@@ -139,7 +139,7 @@ Don't introduce new patterns — extend what's there.
 
 **Update frontmatter**: set `status: archived`
 
-Never delete vault notes — archive them. The vault is a permanent record.
+Never delete vault notes - archive them. The vault is a permanent record.
 
 ---
 

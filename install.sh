@@ -65,7 +65,7 @@ if [[ "$setup_research" =~ ^[Yy]$ ]]; then
   # Set up config dir + .env
   mkdir -p "$CONFIG_DIR"
   if [ -f "$ENV_FILE" ]; then
-    echo "  $ENV_FILE already exists — leaving it untouched."
+    echo "  $ENV_FILE already exists - leaving it untouched."
   else
     cp "$SKILL_DIR/.env.example" "$ENV_FILE"
     chmod 600 "$ENV_FILE"
@@ -76,7 +76,7 @@ if [[ "$setup_research" =~ ^[Yy]$ ]]; then
   echo "  Now paste your API keys into: $ENV_FILE"
   echo "    XAI_API_KEY=          (https://console.x.ai)"
   echo "    PERPLEXITY_API_KEY=   (https://perplexity.ai/settings/api)"
-  echo "    YOUTUBE_API_KEY=      (https://console.cloud.google.com — optional)"
+  echo "    YOUTUBE_API_KEY=      (https://console.cloud.google.com - optional)"
   echo ""
   read -r -p "  Press Enter to open the file in your default editor (or Ctrl+C to skip)... " _
   # Pick a default opener if $EDITOR is unset. Original used `open` (macOS-only).

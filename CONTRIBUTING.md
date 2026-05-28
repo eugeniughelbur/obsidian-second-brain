@@ -16,9 +16,9 @@ This guide explains **how to contribute** so your work lands fast.
 
 ## Quick links
 
-- 📜 [AI-first vault rule](references/ai-first-rules.md) — required reading before adding any command that writes to the vault
-- 📖 [SKILL.md](SKILL.md) — the operating manual for Claude
-- 🏗 [architecture.md](architecture.md) — how the layers fit together
+- 📜 [AI-first vault rule](references/ai-first-rules.md) - required reading before adding any command that writes to the vault
+- 📖 [SKILL.md](SKILL.md) - the operating manual for Claude
+- 🏗 [architecture.md](architecture.md) - how the layers fit together
 - 🐛 [Bug report form](https://github.com/eugeniughelbur/obsidian-second-brain/issues/new?template=bug_report.yml)
 - ✨ [Feature request form](https://github.com/eugeniughelbur/obsidian-second-brain/issues/new?template=feature_request.yml)
 
@@ -73,9 +73,9 @@ This is the most common contribution. The skill currently has 31 commands across
    - Preserve external claims with recency markers (`(as of 2026-04, source.com)`)
    - Include source URLs verbatim
    - Mark confidence where applicable (`stated | high | medium | speculation`)
-5. Update `SKILL.md` — add a section under the appropriate Layer with the command name and full operating instructions
-6. Update `README.md` — add the command to the relevant table in the "Commands" section
-7. Update `references/ai-first-rules.md` — if your command produces a NEW note type, add its frontmatter schema there
+5. Update `SKILL.md` - add a section under the appropriate Layer with the command name and full operating instructions
+6. Update `README.md` - add the command to the relevant table in the "Commands" section
+7. Update `references/ai-first-rules.md` - if your command produces a NEW note type, add its frontmatter schema there
 8. Add an entry to `CHANGELOG.md` under "Unreleased"
 
 ### 🔌 New integrations / sources
@@ -93,7 +93,7 @@ Documentation PRs are always welcome. Specifically helpful:
 - Translation of docs into other languages
 - Fixing typos and unclear wording
 
-No issue required for typo fixes — just open a PR.
+No issue required for typo fixes - just open a PR.
 
 ### 🌍 Translating trigger phrases (multilingual support)
 
@@ -107,7 +107,7 @@ triggers_en: ["save this", "save the conversation", "save to vault", "obsidian s
 ---
 ```
 
-To add a new language, add a `triggers_<two-letter-code>:` line right after the existing `triggers_en:` line, with a list of equivalent phrases in that language. **Important:** use natural, conversational phrases a native speaker would actually say — not literal word-for-word translations of the English.
+To add a new language, add a `triggers_<two-letter-code>:` line right after the existing `triggers_en:` line, with a list of equivalent phrases in that language. **Important:** use natural, conversational phrases a native speaker would actually say - not literal word-for-word translations of the English.
 
 Supported language codes (add more by editing `_lang_label()` in `adapters/lib.sh`):
 
@@ -162,7 +162,7 @@ The skill currently assumes macOS (`install.sh`, `~/.config` paths, the `open` c
 - **Co-author tag** if Claude pair-programmed: `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`
 
 ### PR titles
-Same as commits — imperative + WHY-focused. Examples that ship fast:
+Same as commits - imperative + WHY-focused. Examples that ship fast:
 - ✅ `Add /obsidian-shipped for weekly retrospectives`
 - ✅ `Fix /research-deep retry logic when Grok times out`
 - ❌ `Updates`
@@ -211,10 +211,10 @@ uv run -m scripts.research.x_read "https://x.com/some/post"
 
 ## Release process
 
-(For maintainers — included so contributors understand the cadence.)
+(For maintainers - included so contributors understand the cadence.)
 
 1. Merge approved PRs to `main`
-2. Update `CHANGELOG.md` — move "Unreleased" entries under a new version header with date
+2. Update `CHANGELOG.md` - move "Unreleased" entries under a new version header with date
 3. Bump version in `pyproject.toml` and `CITATION.cff`
 4. Tag the release: `git tag v0.X.0 && git push origin v0.X.0`
 5. Create a GitHub release with detailed notes covering: new commands, breaking changes, bug fixes, contributors

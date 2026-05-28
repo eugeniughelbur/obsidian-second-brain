@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup.sh — obsidian-second-brain one-command installer
+# setup.sh - obsidian-second-brain one-command installer
 #
 # Usage:
 #   bash ~/.claude/skills/obsidian-second-brain/scripts/setup.sh "/path/to/your/vault"
@@ -56,8 +56,8 @@ echo ""
 step "1. Making hook scripts executable..."
 chmod +x "$HOOK_SCRIPT"
 [[ -f "$SESSION_HOOK" ]] && chmod +x "$SESSION_HOOK"
-green "   Done — $HOOK_SCRIPT"
-green "   Done — $SESSION_HOOK"
+green "   Done - $HOOK_SCRIPT"
+green "   Done - $SESSION_HOOK"
 
 # ── ensure settings.json exists ───────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ EXISTING=$(jq -r '
 ' "$SETTINGS" 2>/dev/null | grep -F "$HOOK_CMD" || true)
 
 if [[ -n "$EXISTING" ]]; then
-  yellow "   PostCompact hook already configured — skipping"
+  yellow "   PostCompact hook already configured - skipping"
 else
   jq --arg cmd "$HOOK_CMD" '
     .hooks = (.hooks // {}) |
@@ -132,7 +132,7 @@ EXISTING_SESSION=$(jq -r '
 ' "$SETTINGS" 2>/dev/null | grep -F "$SESSION_HOOK" || true)
 
 if [[ -n "$EXISTING_SESSION" ]]; then
-  yellow "   SessionStart hook already configured — skipping"
+  yellow "   SessionStart hook already configured - skipping"
 else
   jq --arg cmd "$SESSION_HOOK_CMD" '
     .hooks = (.hooks // {}) |
@@ -155,7 +155,7 @@ COMMANDS_SRC="$SKILL_DIR/commands"
 COMMANDS_DST="$HOME/.claude/commands"
 
 if [[ ! -d "$COMMANDS_SRC" ]]; then
-  yellow "   No commands/ directory in skill — skipping"
+  yellow "   No commands/ directory in skill - skipping"
 else
   mkdir -p "$COMMANDS_DST"
   linked=0
@@ -166,11 +166,11 @@ else
     name=$(basename "$cmd")
     target="$COMMANDS_DST/$name"
     if [[ -L "$target" ]]; then
-      # already a symlink — refresh it (idempotent, handles repo path changes)
+      # already a symlink - refresh it (idempotent, handles repo path changes)
       ln -snf "$cmd" "$target"
       skipped=$((skipped + 1))
     elif [[ -e "$target" ]]; then
-      yellow "   Skipped $name — file already exists (not a symlink). Remove it manually if you want the skill version."
+      yellow "   Skipped $name - file already exists (not a symlink). Remove it manually if you want the skill version."
       blocked=$((blocked + 1))
     else
       ln -s "$cmd" "$target"
@@ -182,7 +182,7 @@ fi
 
 # ── optional: MCP server (Claude Code only) ───────────────────────────────────
 
-step "4. MCP server (optional — Claude Code only)..."
+step "4. MCP server (optional - Claude Code only)..."
 echo "   The obsidian-vault MCP server gives Claude faster vault access."
 echo "   Without it, Claude reads/writes vault files directly (works fine)."
 echo ""
@@ -195,7 +195,7 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     claude mcp add obsidian-vault -s user -- npx -y mcp-obsidian "$VAULT"
     green "   MCP server configured"
   else
-    yellow "   claude CLI not found — skipping MCP setup"
+    yellow "   claude CLI not found - skipping MCP setup"
     echo "   Run manually when ready:"
     echo "   claude mcp add obsidian-vault -s user -- npx -y mcp-obsidian \"$VAULT\""
   fi

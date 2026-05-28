@@ -1,5 +1,5 @@
 ---
-description: Run a vault health check — grouped by severity, detects contradictions, concept gaps, stale claims, and structural issues
+description: Run a vault health check - grouped by severity, detects contradictions, concept gaps, stale claims, and structural issues
 category: meta
 triggers_en: ["vault health", "check vault", "audit vault", "vault diagnostics"]
 ---
@@ -17,8 +17,8 @@ Use the obsidian-second-brain skill. Execute `/obsidian-health`:
    - **Staleness agent**: check overdue tasks and unfilled template syntax
    - **Orphans agent**: check orphaned notes and empty folders
    - **Contradictions agent**: scan Key Decisions sections and Knowledge/ notes for claims that conflict with each other or have been superseded by newer sources
-   - **Concept gaps agent**: find terms mentioned 3+ times across different notes that lack a dedicated page — these are missing concepts the vault should have
-   - **Stale claims agent**: compare Knowledge/ notes against their source dates — flag any note older than 6 months that references fast-moving topics (tools, APIs, pricing, team structure)
+   - **Concept gaps agent**: find terms mentioned 3+ times across different notes that lack a dedicated page - these are missing concepts the vault should have
+   - **Stale claims agent**: compare Knowledge/ notes against their source dates - flag any note older than 6 months that references fast-moving topics (tools, APIs, pricing, team structure)
 5. Merge results and group by severity:
    - 🔴 Critical: broken links, unfilled template syntax, contradictions between notes
    - 🟡 Warning: duplicates, stale tasks, missing frontmatter, stale claims, concept gaps
@@ -29,4 +29,4 @@ Use the obsidian-second-brain skill. Execute `/obsidian-health`:
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

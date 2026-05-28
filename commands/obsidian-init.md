@@ -14,10 +14,10 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - **Samples agent**: read one existing note per major folder to capture naming conventions and frontmatter patterns
 3. Merge all agent results into a complete picture of the vault
 4. Generate a complete `_CLAUDE.md` using the template in `~/.claude/skills/obsidian-second-brain/references/claude-md-template.md`, filled with real values from the vault
-5. Generate `index.md` at the vault root — a catalog of all pages organized by category:
+5. Generate `index.md` at the vault root - a catalog of all pages organized by category:
    - List every note in the vault grouped by folder (Projects, People, Ideas, etc.)
    - Include a one-line description for each note (from frontmatter or first paragraph)
-   - Claude reads this file FIRST when navigating the vault — cheaper and faster than searching
+   - Claude reads this file FIRST when navigating the vault - cheaper and faster than searching
    - Format: `- [[Note Name]] — brief description`
 6. Initialize the vault operations log:
    - Create `Logs/` directory at the vault root
@@ -33,4 +33,4 @@ If a monolithic `log.md` already exists with `## YYYY-MM-DD` sections: run `pyth
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

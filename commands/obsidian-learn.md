@@ -1,5 +1,5 @@
 ---
-description: Review vault learnings, prune stale ones, surface active patterns — the vault's lessons compound or expire
+description: Review vault learnings, prune stale ones, surface active patterns - the vault's lessons compound or expire
 category: thinking
 triggers_en: ["review learnings", "what have I learned", "show lessons", "prune learnings"]
 ---
@@ -14,16 +14,16 @@ The optional argument is a scope: `recent` (last 30 days, default), `all` (entir
 3. Spawn parallel subagents to gather learnings:
 
    - **Lessons agent**: scan all daily notes for "Lesson learned" sections, "What didn't" sections, evening review insights
-   - **Decisions agent**: read all ADRs in `wiki/decisions/` — extract the rationale and outcome of each
+   - **Decisions agent**: read all ADRs in `wiki/decisions/` - extract the rationale and outcome of each
    - **Reports agent**: read recent emerge/synthesize/connect/challenge reports in `wiki/concepts/` (the auto-generated pattern reports)
    - **Mistakes agent**: scan dev logs and daily notes for "what didn't work", "wasted time on", "next time", "lesson", phrases indicating learning from failure
-   - **Wins agent**: scan for patterns that worked — "this saved time", "this approach worked", recurring success patterns
+   - **Wins agent**: scan for patterns that worked - "this saved time", "this approach worked", recurring success patterns
 
 4. For each learning found, classify:
    - **Active**: still relevant, recurring, reinforced by recent activity
    - **Stale**: 6+ months old with no recent reinforcement, or contradicted by newer evidence
    - **Superseded**: explicitly replaced by a newer ADR or pattern
-   - **Promoted**: appeared 3+ times — should become a permanent rule in `_CLAUDE.md`
+   - **Promoted**: appeared 3+ times - should become a permanent rule in `_CLAUDE.md`
 
 5. Generate the Learnings Report:
 
@@ -57,4 +57,4 @@ Lessons that aren't reviewed don't compound. This command turns scattered notes 
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

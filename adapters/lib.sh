@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# adapters/lib.sh — Shared helpers for platform adapters
+# adapters/lib.sh - Shared helpers for platform adapters
 # =============================================================================
 # Sourced by scripts/build.sh BEFORE the platform-specific adapter.sh.
 # Provides parsing helpers, path rewriting, and platform-neutral filtering.
@@ -75,10 +75,10 @@ CATEGORY_ORDER="vault thinking research meta"
 
 _category_title() {
   case "$1" in
-    vault)    echo "Vault — daily writing, capture, find" ;;
-    thinking) echo "Thinking — synthesis, decisions, learning, reviews" ;;
-    research) echo "Research — bring external sources into the vault" ;;
-    meta)     echo "Meta — vault setup, health, structure" ;;
+    vault)    echo "Vault - daily writing, capture, find" ;;
+    thinking) echo "Thinking - synthesis, decisions, learning, reviews" ;;
+    research) echo "Research - bring external sources into the vault" ;;
+    meta)     echo "Meta - vault setup, health, structure" ;;
     *)        echo "${1^}" ;;
   esac
 }
@@ -250,7 +250,7 @@ _emit_one_trigger_category() {
   awk -F '\t' -v c="$cat" '$1 == c { print $2 "\t" $3 }' "$index_file" \
     | sort \
     | while IFS=$'\t' read -r name triggers; do
-        printf -- '- `/%s` — %s\n' "$name" "$triggers"
+        printf -- '- `/%s` - %s\n' "$name" "$triggers"
       done
 }
 

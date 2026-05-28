@@ -1,5 +1,5 @@
 ---
-description: Export a clean structured snapshot of the vault that any agent or tool can consume — flat JSON or markdown index
+description: Export a clean structured snapshot of the vault that any agent or tool can consume - flat JSON or markdown index
 category: meta
 triggers_en: ["export vault", "snapshot vault", "dump vault", "vault export"]
 ---
@@ -57,4 +57,4 @@ This file is the bridge between your vault and any other AI tool, automation, or
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

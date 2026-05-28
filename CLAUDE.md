@@ -8,17 +8,17 @@ If you are Claude operating on a user's vault, you want `_CLAUDE.md` inside thei
 
 ## Repo layout
 
-- `commands/` — 32 slash command definitions, one `.md` per command. **This is the platform-neutral source.** Adapters compile it for each platform.
-- `references/` — shared specs that commands link to. **`ai-first-rules.md` is the canonical vault-write spec** and is non-negotiable.
-- `scripts/` — Python helpers (`bootstrap_vault.py`, `vault_health.py`, the `research/` toolkit), plus `build.sh` (the adapter orchestrator) and `lib.sh`.
-- `adapters/` — platform translation layer. `lib.sh` holds shared parsing helpers. `claude-code/`, `codex-cli/`, `gemini-cli/`, `opencode/` each ship an `adapter.sh`.
-- `dist/` — build output, one tree per platform. **Gitignored.** Regenerate with `bash scripts/build.sh` (all platforms) or `bash scripts/build.sh --platform <name>`.
-- `hooks/` — Claude Code hooks shipped with the skill.
-- `SKILL.md` — full operating manual loaded by Claude when the skill activates.
-- `architecture.md` — how the layers fit together.
-- `README.md` — public-facing docs on github.com.
-- `pyproject.toml` — Python deps managed via `uv`.
-- `install.sh` — one-shot installer that symlinks the skill into `~/.claude/`. (Legacy; for non-Claude platforms see `dist/<platform>/INSTALL.md` after building.)
+- `commands/` - 32 slash command definitions, one `.md` per command. **This is the platform-neutral source.** Adapters compile it for each platform.
+- `references/` - shared specs that commands link to. **`ai-first-rules.md` is the canonical vault-write spec** and is non-negotiable.
+- `scripts/` - Python helpers (`bootstrap_vault.py`, `vault_health.py`, the `research/` toolkit), plus `build.sh` (the adapter orchestrator) and `lib.sh`.
+- `adapters/` - platform translation layer. `lib.sh` holds shared parsing helpers. `claude-code/`, `codex-cli/`, `gemini-cli/`, `opencode/` each ship an `adapter.sh`.
+- `dist/` - build output, one tree per platform. **Gitignored.** Regenerate with `bash scripts/build.sh` (all platforms) or `bash scripts/build.sh --platform <name>`.
+- `hooks/` - Claude Code hooks shipped with the skill.
+- `SKILL.md` - full operating manual loaded by Claude when the skill activates.
+- `architecture.md` - how the layers fit together.
+- `README.md` - public-facing docs on github.com.
+- `pyproject.toml` - Python deps managed via `uv`.
+- `install.sh` - one-shot installer that symlinks the skill into `~/.claude/`. (Legacy; for non-Claude platforms see `dist/<platform>/INSTALL.md` after building.)
 
 ### The adapter pattern
 
@@ -64,7 +64,7 @@ ln -s "$(pwd)" ~/.claude/skills/obsidian-second-brain
 ln -s commands/* ~/.claude/commands/
 ```
 
-Then restart Claude Code and run the command against a test vault. There is no automated test suite yet — verification is manual: run the command, inspect the resulting vault notes, confirm AI-first compliance.
+Then restart Claude Code and run the command against a test vault. There is no automated test suite yet - verification is manual: run the command, inspect the resulting vault notes, confirm AI-first compliance.
 
 ## Release process
 
@@ -79,6 +79,6 @@ Then restart Claude Code and run the command against a test vault. There is no a
 - Do not rewrite vault output to be "more human-friendly." The vault is for future-Claude, not human readers.
 - Do not strip frontmatter or `## For future Claude` preambles from existing commands.
 - Do not add emojis to command files or vault output (unless explicitly part of a UI element like a kanban column emoji).
-- Do not invent rates, dates, or relationships when writing project notes — mark unknowns as `TBD`.
-- **Contributors:** do not push to `main` directly — open a PR.
+- Do not invent rates, dates, or relationships when writing project notes - mark unknowns as `TBD`.
+- **Contributors:** do not push to `main` directly - open a PR.
 - **Maintainer (Eugeniu) and Claude assisting him:** may push to `main` directly when working solo. PRs are optional, not mandatory.

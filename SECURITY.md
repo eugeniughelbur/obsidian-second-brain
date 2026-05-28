@@ -53,4 +53,4 @@ If your report leads to a fix, you'll be credited in the release notes for the v
 - **Email:** e.ghelbur@gmail.com
 - **Do not** open a public issue for a vulnerability
 - **Do** include reproduction steps and version info
-- **Coordinated disclosure** — we'll work with you on the timeline
+- **Coordinated disclosure** - we'll work with you on the timeline

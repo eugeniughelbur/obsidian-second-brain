@@ -34,8 +34,8 @@ The optional argument is the idea title, tag, or keyword. If not provided, scan 
 8. Link the new project from today's daily note
 9. Report: what was created, what was linked, what needs the user's input
 
-The idea doesn't die — it evolves. The original note stays as the origin story, the project note becomes the execution plan.
+The idea doesn't die - it evolves. The original note stays as the origin story, the project note becomes the execution plan.
 
 ---
 
-**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval — not human reading.
+**AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. The vault is for future-Claude retrieval - not human reading.

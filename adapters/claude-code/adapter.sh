@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# adapters/claude-code/adapter.sh — Claude Code platform adapter
+# adapters/claude-code/adapter.sh - Claude Code platform adapter
 # =============================================================================
 # Sourced by scripts/build.sh AFTER adapters/lib.sh.
 # Writes dist/claude-code/ containing slash commands and the skill manifest
@@ -21,7 +21,7 @@ adapter_build() {
   _cc_emit_install_hint "$dst"
 }
 
-# Identity copy of slash commands — Claude Code's source format matches ours.
+# Identity copy of slash commands - Claude Code's source format matches ours.
 _cc_copy_commands() {
   local src="$1" dst="$2"
   [[ -d "$src" ]] || return 0

@@ -8,7 +8,7 @@ Inputs accepted:
 Transcript priority:
   1. RSS <podcast:transcript> tag (free, fast)
   2. Whisper API via OPENAI_API_KEY (paid, ~$0.006/min)
-  3. None — caller falls back to show-notes-only summary
+  3. None - caller falls back to show-notes-only summary
 """
 
 from __future__ import annotations

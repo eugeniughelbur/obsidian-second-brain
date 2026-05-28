@@ -1,5 +1,5 @@
 ---
-description: Create a new obsidian-second-brain command via interview — zero markdown editing required
+description: Create a new obsidian-second-brain command via interview - zero markdown editing required
 category: meta
 triggers_en: ["create command", "new command", "add a command", "scaffold a command"]
 ---
@@ -14,7 +14,7 @@ The optional argument is a free-text seed describing what the command should do 
 
 ---
 
-## Phase 1 — Intent
+## Phase 1 - Intent
 
 Ask ONE question via AskUserQuestion:
 
@@ -24,7 +24,7 @@ Read the answer. Confirm understanding back in one sentence before proceeding.
 
 ---
 
-## Phase 2 — Naming
+## Phase 2 - Naming
 
 From the intent, propose 3 candidate kebab-case names. Names should be lowercase, hyphenated, and start with `obsidian-` (vault-management commands) OR a topic prefix (research toolkit uses `research-*`, social uses `x-*`/`brand-*`) OR just a verb (`create-*`, `import-*`).
 
@@ -36,24 +36,24 @@ Use AskUserQuestion (single-select) with 3 options plus "Other" implicit:
 > - `<candidate-3>`
 
 After the user picks, validate:
-1. Check that `commands/<name>.md` does NOT already exist (use Read; if it succeeds, the name is taken — go back and re-ask)
+1. Check that `commands/<name>.md` does NOT already exist (use Read; if it succeeds, the name is taken - go back and re-ask)
 2. Confirm the name passes the regex `^[a-z][a-z0-9-]*$`
 
 ---
 
-## Phase 3 — Category
+## Phase 3 - Category
 
 Ask via AskUserQuestion (single-select, 4 options):
 
 > "Which category does this command belong to?"
-> - `vault` — daily writing, capture, find (note creation, retrieval, kanban)
-> - `thinking` — synthesis, decisions, learning, reviews
-> - `research` — bring external sources into the vault
-> - `meta` — vault setup, health, structure, tooling
+> - `vault` - daily writing, capture, find (note creation, retrieval, kanban)
+> - `thinking` - synthesis, decisions, learning, reviews
+> - `research` - bring external sources into the vault
+> - `meta` - vault setup, health, structure, tooling
 
 ---
 
-## Phase 4 — Trigger phrases
+## Phase 4 - Trigger phrases
 
 Generate 3-5 natural-language trigger phrases the user might say to invoke this command (not slash-form). Examples from existing commands: `"save this"`, `"deep research"`, `"weekly review"`. Avoid duplicating triggers already used by other commands (read all `commands/*.md` frontmatter `triggers_en:` once and warn on collisions).
 
@@ -64,7 +64,7 @@ Ask via AskUserQuestion (free text, default to your suggested set):
 
 ---
 
-## Phase 5 — Behavior outline
+## Phase 5 - Behavior outline
 
 Ask via AskUserQuestion (free text):
 
@@ -74,19 +74,19 @@ Use the answer as the spine of the command body.
 
 ---
 
-## Phase 6 — Vault writes? (AI-first compliance gate)
+## Phase 6 - Vault writes? (AI-first compliance gate)
 
 Ask via AskUserQuestion (single-select):
 
 > "Does this command write notes to the user's Obsidian vault?"
-> - `yes` — output must apply the AI-first rule (frontmatter, preamble, wikilinks)
-> - `no` — read-only, informational, or external-write only
+> - `yes` - output must apply the AI-first rule (frontmatter, preamble, wikilinks)
+> - `no` - read-only, informational, or external-write only
 
 If `yes`: the generated command body MUST end with the AI-first rule footer (see Phase 8).
 
 ---
 
-## Phase 7 — External APIs?
+## Phase 7 - External APIs?
 
 Ask via AskUserQuestion (multi-select):
 
@@ -95,13 +95,13 @@ Ask via AskUserQuestion (multi-select):
 > - xAI Grok (X posts, Live Search)
 > - YouTube Data API
 > - Other (free text)
-> - None — purely operates on the vault and conversation
+> - None - purely operates on the vault and conversation
 
 If any are selected, the generated body should include a setup line referencing `~/.config/obsidian-second-brain/.env` and the relevant key (e.g., `PERPLEXITY_API_KEY`).
 
 ---
 
-## Phase 8 — Generate the file
+## Phase 8 - Generate the file
 
 Build the new command file. The exact format MUST be:
 
@@ -135,20 +135,20 @@ Write the file to `commands/<name>.md` using the Write tool.
 
 ---
 
-## Phase 9 — Confirm + next steps
+## Phase 9 - Confirm + next steps
 
 Show the user the absolute path of the file you just wrote. Then surface the three follow-up actions:
 
-1. **Build** — `bash scripts/build.sh` will recompile every platform (`dist/claude-code/commands/<name>.md`, plus the auto-generated routing tables and trigger reference in `AGENTS.md` / `GEMINI.md`)
-2. **Install** — for Claude Code users who symlink, the new command appears automatically on next session. For other platforms, copy `dist/<platform>/` into the vault.
-3. **Iterate** — open the file, refine steps, commit. Or rerun `/create-command` to add a sibling command.
+1. **Build** - `bash scripts/build.sh` will recompile every platform (`dist/claude-code/commands/<name>.md`, plus the auto-generated routing tables and trigger reference in `AGENTS.md` / `GEMINI.md`)
+2. **Install** - for Claude Code users who symlink, the new command appears automatically on next session. For other platforms, copy `dist/<platform>/` into the vault.
+3. **Iterate** - open the file, refine steps, commit. Or rerun `/create-command` to add a sibling command.
 
-If the new command writes to the vault and the user has the validate-ai-first hook installed, remind them that the validator will warn on missing preamble/frontmatter — that's expected; just follow the AI-first rule in the command's own logic.
-
----
-
-**Why this matters:** Most "no-code" frameworks fail because they make the user fill out a form. This command treats the conversation itself as the form. Six questions, one file, zero markdown editing. Lowers the contribution bar so anyone can extend the skill — and every command added through this flow lands AI-first-compliant by construction.
+If the new command writes to the vault and the user has the validate-ai-first hook installed, remind them that the validator will warn on missing preamble/frontmatter - that's expected; just follow the AI-first rule in the command's own logic.
 
 ---
 
-**Note for future-Claude:** This is a command that creates commands. Do not run it recursively on itself. Do not rewrite this file when invoked — write a NEW `commands/<name>.md` based on the interview.
+**Why this matters:** Most "no-code" frameworks fail because they make the user fill out a form. This command treats the conversation itself as the form. Six questions, one file, zero markdown editing. Lowers the contribution bar so anyone can extend the skill - and every command added through this flow lands AI-first-compliant by construction.
+
+---
+
+**Note for future-Claude:** This is a command that creates commands. Do not run it recursively on itself. Do not rewrite this file when invoked - write a NEW `commands/<name>.md` based on the interview.

@@ -28,21 +28,21 @@ Tide is a fictional habit-tracking SaaS aimed at indie creators who want a calme
 
 ## Recent activity
 
-- **2026-04-27** — Paired with [[people/Sam Patel]] on streak invalidation. Decision logged below. See [[wiki/logs/2026-04-27 — Tide retention rebuild]] for details
-- **2026-04-26** — Released v0.8.4 patching a webhook race condition
-- **2026-04-22** — Started the retention rebuild after support tickets clustered around streak loss complaints
+- **2026-04-27** - Paired with [[people/Sam Patel]] on streak invalidation. Decision logged below. See [[wiki/logs/2026-04-27 - Tide retention rebuild]] for details
+- **2026-04-26** - Released v0.8.4 patching a webhook race condition
+- **2026-04-22** - Started the retention rebuild after support tickets clustered around streak loss complaints
 
 ## Key decisions
 
-### 2026-04-27 — Drop hard streak invalidation in favor of decay
+### 2026-04-27 - Drop hard streak invalidation in favor of decay
 
 **Decision:** Stop invalidating streaks on a missed day. Instead, decay the tide level by a daily multiplier so users recover gradually instead of resetting to zero.
 
-**Rationale:** Three weeks of support tickets (TBD: link the support digest note when written) showed users churning specifically after losing long streaks. The hard reset feels punitive and contradicts Tide's positioning as a calmer alternative. Confidence: `high` (multiple support tickets agree, plus competitor research from [[Research/Web/2026-04-20 — Habit app retention mechanics]] (TBD note)).
+**Rationale:** Three weeks of support tickets (TBD: link the support digest note when written) showed users churning specifically after losing long streaks. The hard reset feels punitive and contradicts Tide's positioning as a calmer alternative. Confidence: `high` (multiple support tickets agree, plus competitor research from [[Research/Web/2026-04-20 - Habit app retention mechanics]] (TBD note)).
 
 **Consequences:** Schema migration on the `streaks` table (decay coefficient column added). Front-end "tide level" gauge replaces the streak counter. Stripe subscriptions unaffected.
 
-### 2026-03-12 — Build vs. buy on email delivery
+### 2026-03-12 - Build vs. buy on email delivery
 
 **Decision:** Use a fictional managed service rather than self-hosting SMTP.
 
@@ -50,7 +50,7 @@ Tide is a fictional habit-tracking SaaS aimed at indie creators who want a calme
 
 ## Open questions
 
-- Should streak insurance ([[Ideas/2026-04-27 — Streak insurance feature]]) become its own SKU or a free-tier safety net?
+- Should streak insurance ([[Ideas/2026-04-27 - Streak insurance feature]]) become its own SKU or a free-tier safety net?
 - v0.9.0 changelog tone: keep technical or pitch the calmer-streak narrative? TBD.
 
 ## Sources

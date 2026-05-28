@@ -2,13 +2,13 @@
 
 `obsidian-second-brain` is the core. Domain-specific forks extend the pattern.
 
-This page lists known forks that take the vault-rewrite architecture (the AI-first rule, the wikilink graph, the rewrite-vs-append principle from Karpathy's LLM Wiki) and apply it to a specific domain — academic research, legal practice, finance, medicine, anything.
+This page lists known forks that take the vault-rewrite architecture (the AI-first rule, the wikilink graph, the rewrite-vs-append principle from Karpathy's LLM Wiki) and apply it to a specific domain - academic research, legal practice, finance, medicine, anything.
 
 Each fork stays independent. The relationship is contractual, not custodial: upstream owns the core primitives (vault management, AI-first rule, the rewrite engine, the multi-platform adapter layer, the generic research toolkit), and forks own everything domain-specific (source routers, controlled-vocab schemas, domain-specific backends, specialized note types).
 
 ## Why this pattern
 
-A vault skill is only as useful as the domain knowledge it carries. PubMed routing belongs in an academic fork, not in core. Case-law lookup belongs in a legal fork, not in core. The alternative — absorbing every domain into the upstream repo — leads to a single monolithic skill that nobody can maintain and that fails the AI-first rule (because the upstream maintainer cannot meaningfully reason about controlled vocabularies they do not use).
+A vault skill is only as useful as the domain knowledge it carries. PubMed routing belongs in an academic fork, not in core. Case-law lookup belongs in a legal fork, not in core. The alternative - absorbing every domain into the upstream repo - leads to a single monolithic skill that nobody can maintain and that fails the AI-first rule (because the upstream maintainer cannot meaningfully reason about controlled vocabularies they do not use).
 
 Instead, upstream ships the **primitives** that forks plug into:
 

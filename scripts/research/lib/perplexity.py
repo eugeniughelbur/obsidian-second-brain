@@ -37,7 +37,7 @@ def call(prompt: str, *, model: str | None = None, deep: bool = False, max_token
                 data = r.json()
                 text = data["choices"][0]["message"]["content"]
                 text = _THINK_BLOCK.sub("", text)
-                # Handle unclosed <think> (truncated mid-reasoning) — drop everything from it onward
+                # Handle unclosed <think> (truncated mid-reasoning) - drop everything from it onward
                 if "<think>" in text:
                     text = text.split("<think>")[0]
                 text = text.strip()

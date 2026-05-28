@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-bootstrap_vault.py — Obsidian Second Brain Bootstrapper
+bootstrap_vault.py - Obsidian Second Brain Bootstrapper
 
 Creates a complete, production-ready Obsidian vault from scratch.
 Generates folder structure, templates, Home dashboard, kanban boards,
@@ -22,7 +22,7 @@ Options:
     --path        Path where the vault should be created (required)
     --name        Your full name (required)
     --preset      Vault preset: default | executive | builder | creator | researcher
-                  (default: "default" — Life OS layout)
+                  (default: "default" - Life OS layout)
     --mode        Operating mode: personal | assistant (default: personal)
     --subject     Subject name (required when --mode=assistant)
     --jobs        Comma-separated list of jobs/companies (default: "Work")
@@ -52,7 +52,7 @@ YEAR = date.today().year
 
 PRESETS = {
     "default": {
-        "purpose": "Life OS — work, personal, finances",
+        "purpose": "Life OS - work, personal, finances",
         "folders": [
             "Daily", "Dev Logs", "Tasks", "Projects", "People",
             "Boards", "Knowledge", "Learning", "Ideas", "Content/LinkedIn", "Content/X",
@@ -138,14 +138,14 @@ kanban-plugin: board
 def folder_map_table(folders: list) -> str:
     descriptions = {
         "Daily": "One note per day. Named `YYYY-MM-DD.md`",
-        "Dev Logs": "Technical work logs — dated, project-tagged",
+        "Dev Logs": "Technical work logs - dated, project-tagged",
         "Tasks": "Standalone task notes (linked from boards)",
         "Projects": "Active and archived projects",
         "People": "One note per person",
         "Boards": "Kanban boards",
         "Knowledge": "Reference material",
         "Learning": "Books, courses, content consumed",
-        "Ideas": "Captured ideas — graduate to projects when ready",
+        "Ideas": "Captured ideas - graduate to projects when ready",
         "Goals": "Annual and life goals",
         "Health": "Health tracking and habits",
         "Mentions": "Recognition and shoutouts",
@@ -154,15 +154,15 @@ def folder_map_table(folders: list) -> str:
         "Templates": "Note templates",
         "Reviews": "Weekly and monthly reviews",
         "Life Chapters": "Major life phases and transitions",
-        "Meetings": "Meeting notes — one per meeting",
+        "Meetings": "Meeting notes - one per meeting",
         "Decisions": "ADR-style decision records",
         "OKRs": "Objectives and key results",
         "Architecture": "System design and architecture notes",
         "Debugging": "Bug investigations and root-cause notes",
         "Audience": "Audience research and persona notes",
         "Publishing": "Published content archive",
-        "Sources": "Original source material — articles, papers, transcripts",
-        "Literature": "Literature notes — your read of each source",
+        "Sources": "Original source material - articles, papers, transcripts",
+        "Literature": "Literature notes - your read of each source",
         "Hypotheses": "Hypotheses being tested or refined",
         "Methodology": "Research methods and protocols",
         "Synthesis": "Cross-source synthesis pages",
@@ -180,7 +180,7 @@ def folder_map_table(folders: list) -> str:
             sub = f.split("/", 1)[1] if "/" in f else ""
             desc = f"Finance notes ({sub})" if sub else "Finance notes"
         else:
-            desc = descriptions.get(key, "—")
+            desc = descriptions.get(key, "-")
         rows.append(f"| `{f}/` | {desc} |")
     return "\n".join(rows)
 
@@ -202,7 +202,7 @@ def claude_md_personal(name: str, preset_key: str, preset: dict, jobs: list, vau
         board_lines = [f"- **{b[0]} Board:** `Boards/{b[0]}.md`" for b in preset["boards"]]
         key_files = "- **Dashboard:** `Home.md`\n" + "\n".join(board_lines)
 
-    return f"""# Claude Operating Manual — {name}'s Vault
+    return f"""# Claude Operating Manual - {name}'s Vault
 
 > Read this file before doing anything in this vault.
 > This is the single source of truth for how Claude operates here.
@@ -252,7 +252,7 @@ Claude should **ask before saving**:
 ## Naming Conventions
 
 - Daily notes: `YYYY-MM-DD.md`
-- Dev logs: `YYYY-MM-DD — Description.md`
+- Dev logs: `YYYY-MM-DD - Description.md`
 - People: Full name (e.g. `Jane Smith.md`)
 - Archive prefix: `_archived_`
 
@@ -298,7 +298,7 @@ def claude_md_assistant(operator: str, subject: str, preset_key: str, preset: di
     board_lines = [f"- **{b[0]} Board:** `Boards/{b[0]}.md`" for b in preset["boards"]]
     key_files = "- **Dashboard:** `Home.md`\n" + ("\n".join(board_lines) if board_lines else "")
 
-    return f"""# Claude Operating Manual — {subject}'s Vault
+    return f"""# Claude Operating Manual - {subject}'s Vault
 
 > Read this file before doing anything in this vault.
 > This vault is maintained BY {operator} FOR {subject}.
@@ -307,8 +307,8 @@ def claude_md_assistant(operator: str, subject: str, preset_key: str, preset: di
 
 ## Vault Identity
 
-- **Subject:** {subject} — the person this vault is about
-- **Operator:** {operator} — the person who maintains this vault
+- **Subject:** {subject} - the person this vault is about
+- **Operator:** {operator} - the person who maintains this vault
 - **Vault path:** {vault_path}
 - **Preset:** {preset_key}
 - **Mode:** assistant
@@ -324,7 +324,7 @@ This vault is operated on behalf of someone else. Key differences from personal 
 - **Voice**: write in {subject}'s voice and perspective, not the operator's
 - **Capture logic**: save what matters to {subject}, not what matters to the operator
 - **Synthesis focus**: surface patterns relevant to {subject}'s goals and decisions
-- **Privacy**: the operator may not have full context — ask before saving sensitive topics
+- **Privacy**: the operator may not have full context - ask before saving sensitive topics
 - **Decision records**: always note WHO made the decision (subject or operator)
 
 ---
@@ -343,7 +343,7 @@ This vault is operated on behalf of someone else. Key differences from personal 
 
 - Save everything from conversations the operator has ABOUT the subject
 - Flag when the operator's interpretation might differ from the subject's intent
-- Keep a clear audit trail — the subject should be able to review what was saved and why
+- Keep a clear audit trail - the subject should be able to review what was saved and why
 - Never mix the operator's personal notes into this vault
 
 ---
@@ -467,7 +467,7 @@ mood:
 energy:
 ---
 
-# <% tp.date.now("YYYY-MM-DD") %> — <% tp.date.now("dddd") %>
+# <% tp.date.now("YYYY-MM-DD") %> - <% tp.date.now("dddd") %>
 
 ## For future Claude
 
@@ -488,11 +488,11 @@ Daily note for this date. Captures what was worked on, who was met, decisions ma
 
 ## 🎯 Today's Focus
 
-### 🔴 #1 —
+### 🔴 #1 -
 
-### 🟡 #2 —
+### 🟡 #2 -
 
-### 🟢 #3 —
+### 🟢 #3 -
 
 ---
 
@@ -657,7 +657,7 @@ project:
 job:
 ---
 
-# Dev Log — <% tp.date.now("YYYY-MM-DD") %>
+# Dev Log - <% tp.date.now("YYYY-MM-DD") %>
 
 ## For future Claude
 
@@ -760,7 +760,7 @@ tags:
 
 # Mentions Log
 
-Every time someone publicly recognizes your work — in Slack, email, meetings, LinkedIn.
+Every time someone publicly recognizes your work - in Slack, email, meetings, LinkedIn.
 
 ```dataview
 TABLE WITHOUT ID file.link AS "Mention", date, from, source, context
@@ -844,7 +844,7 @@ status: decided
 context:
 ---
 
-# ADR — <% tp.file.title %>
+# ADR - <% tp.file.title %>
 
 ## For future Claude
 
@@ -878,9 +878,9 @@ OKR note. Captures the objective, key results, and progress over the quarter. Pu
 ## Objective
 
 ## Key Results
-- [ ] KR1 —
-- [ ] KR2 —
-- [ ] KR3 —
+- [ ] KR1 -
+- [ ] KR2 -
+- [ ] KR3 -
 
 ## Progress Log
 """)
@@ -922,7 +922,7 @@ project:
 status: investigating
 ---
 
-# Bug — <% tp.file.title %>
+# Bug - <% tp.file.title %>
 
 ## For future Claude
 
@@ -1135,13 +1135,13 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
 
     print(f"\n✅ Vault bootstrapped at: {vault}")
     print("\n📋 Recommended Obsidian plugins:")
-    print("   • Dataview  — powers the dashboard queries")
-    print("   • Templater — powers the Templates/ folder")
-    print("   • Kanban    — powers the Boards/ folder")
-    print("   • Calendar  — daily note navigation")
+    print("   • Dataview  - powers the dashboard queries")
+    print("   • Templater - powers the Templates/ folder")
+    print("   • Kanban    - powers the Boards/ folder")
+    print("   • Calendar  - daily note navigation")
     print("\n🤖 Claude MCP config:")
     print(f'   "obsidian-vault": {{"command": "npx", "args": ["-y", "mcp-obsidian", "{vault}"]}}')
-    print("\n🧠 _CLAUDE.md is ready — Claude will read it automatically on every session.")
+    print("\n🧠 _CLAUDE.md is ready - Claude will read it automatically on every session.")
 
 
 def main():
