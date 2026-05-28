@@ -282,6 +282,7 @@ Don't do these. They produce notes that are useless to future-Claude.
 | Trusting the model to infer | Be explicit. State the type, the rule applied, the source. |
 | Multi-paragraph human-readable narratives | Bullets and structure beat prose for retrieval. |
 | Forgetting `ai-first: true` | The flag lets future-Claude know which notes meet the standard. |
+| Em-dash (`—`), curly quotes (`"`), Unicode math (`≥ ≤ ≠`) | Substitution Unicode slips in silently via LLM defaults. Caught by `validate-ai-first.sh` check 5. Use ` - ` for dashes, straight `"` quotes, ASCII operators (`>=`, `!=`). Allowed: box-drawing (`─`), arrows (`→ ←`), currency (`€ £ ¥`), Nerd Font codepoints - all carry semantic meaning. |
 
 ---
 

@@ -15,6 +15,10 @@
 #   2. No tabs inside frontmatter (YAML requires spaces)
 #   3. Required AI-first fields present: date, type, tags, ai-first: true
 #   4. `## For future Claude` preamble exists in the body
+#   5. No banned non-ASCII substitution characters (em/en-dashes, curly
+#      quotes, smart apostrophes, Unicode math/arrows). Reports codepoint +
+#      suggested ASCII replacement. Whitelist: box-drawing U+2500-257F,
+#      currency (EUR/GBP/JPY), private-use/Nerd Fonts, emoji.
 #
 # Scope:
 #   - Only inspects files inside OBSIDIAN_VAULT_PATH (env var)
@@ -97,6 +101,60 @@ fi
 BODY=$(awk '/^---$/{c++; if (c<2) next; next} c>=2' "$FILE")
 if ! printf '%s\n' "$BODY" | grep -qE '^##[[:space:]]+For future Claude' ; then
   WARNINGS+=("$BASENAME missing '## For future Claude' preamble (required by ai-first-rules.md rule #2).")
+fi
+
+# ── Check 5: non-ASCII substitution characters ───────────────────────────────
+if command -v python3 >/dev/null 2>&1; then
+  NON_ASCII_HITS=$(python3 - "$FILE" <<'PYEOF'
+import sys
+
+BANNED = {
+    '—': ('U+2014 em-dash',            ' - '),
+    '–': ('U+2013 en-dash',             ' - '),
+    '“': ('U+201C left double quote',   '"'),
+    '”': ('U+201D right double quote',  '"'),
+    '‘': ('U+2018 left single quote',   "'"),
+    '’': ('U+2019 right single quote',  "'"),
+    '≥': ('U+2265 >=',                  '>='),
+    '≤': ('U+2264 <=',                  '<='),
+    '≠': ('U+2260 !=',                  '!='),
+    '…': ('U+2026 ellipsis',            '...'),
+    ' ': ('U+00A0 non-breaking space',  ' '),
+}
+
+def allowed(cp):
+    if 0x2500 <= cp <= 0x257F: return True   # box-drawing chars
+    if cp in (0x20AC, 0x00A3, 0x00A5): return True  # EUR, GBP, JPY
+    if 0xE000 <= cp <= 0xF8FF: return True   # private use / Nerd Fonts
+    if 0x2600 <= cp <= 0x27BF: return True   # misc symbols + dingbats
+    if 0x1F300 <= cp <= 0x1FFFF: return True # emoji
+    return False
+
+path = sys.argv[1]
+seen = set()
+try:
+    with open(path, encoding='utf-8', errors='replace') as fh:
+        for lineno, line in enumerate(fh, 1):
+            for ch in line:
+                cp = ord(ch)
+                if cp <= 127 or allowed(cp) or ch not in BANNED:
+                    continue
+                key = (lineno, ch)
+                if key in seen:
+                    continue
+                seen.add(key)
+                name, suggest = BANNED[ch]
+                print(f"    line {lineno}: {name} -- try {suggest!r}")
+except OSError:
+    pass
+PYEOF
+  )
+  if [[ -n "$NON_ASCII_HITS" ]]; then
+    WARNINGS+=("$BASENAME contains banned non-ASCII substitution characters:")
+    while IFS= read -r hit; do
+      [[ -n "$hit" ]] && WARNINGS+=("$hit")
+    done <<< "$NON_ASCII_HITS"
+  fi
 fi
 
 # ── Emit warnings ────────────────────────────────────────────────────────────

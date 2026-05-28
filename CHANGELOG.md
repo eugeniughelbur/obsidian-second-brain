@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Non-ASCII substitution character check in `validate-ai-first.sh` (check 5):** the hook now detects banned Unicode that slips in silently via LLM defaults: em-dashes (`—`), en-dashes (`–`), curly/smart quotes, Unicode math substitutions (`≥ ≤ ≠`), ellipsis (`…`), and non-breaking spaces. Each violation reports the exact codepoint, line number, and a suggested ASCII replacement. Whitelist covers box-drawing chars (U+2500-257F), arrows (`→ ←`), currency symbols (`€ £ ¥`), private-use / Nerd Font codepoints, and emoji - all carry semantic meaning rather than substituting for ASCII. Specific em-dash ban was unenforceable in practice; the broader codepoint-level check catches the full substitution-Unicode class. Rule documented in `CLAUDE.md` conventions and `references/ai-first-rules.md` anti-patterns table.
+
 ### Documentation
 
 - **Per-project vault setup documented** (closes question in Discussion #11): added a "Per-Project Vaults (multi-repo workflows)" section to `SKILL.md` and a matching FAQ entry in `README.md`. Recipe: drop `{"env": {"OBSIDIAN_VAULT_PATH": "..."}}` into each repo's `.claude/settings.json`; Claude Code's per-project settings merge over the global one and every hook reads `OBSIDIAN_VAULT_PATH` from env at fire-time, so each project session routes to its own vault. The pattern always worked; nobody had written down the recipe.
