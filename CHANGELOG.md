@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **Non-ASCII substitution sweep across all tracked `.md`, `.py`, `.sh` files:** automated conversion of em-dashes, en-dashes, curly/smart quotes, Unicode math substitutions, ellipsis, and non-breaking spaces to ASCII equivalents. Code fences and inline backtick spans preserved verbatim. `hooks/validate-ai-first.sh` and `scripts/sweep_non_ascii.py` exempted (intentional banned chars in detection logic). `README.md` handled separately with a manual pass. All 78 affected files now pass `validate-ai-first.sh` check 5.
+
 ### Added
 
 - **Non-ASCII substitution character check in `validate-ai-first.sh` (check 5):** the hook now detects banned Unicode that slips in silently via LLM defaults: em-dashes (`—`), en-dashes (`–`), curly/smart quotes, Unicode math substitutions (`≥ ≤ ≠`), ellipsis (`…`), and non-breaking spaces. Each violation reports the exact codepoint, line number, and a suggested ASCII replacement. Whitelist covers box-drawing chars (U+2500-257F), arrows (`→ ←`), currency symbols (`€ £ ¥`), private-use / Nerd Font codepoints, and emoji - all carry semantic meaning rather than substituting for ASCII. Specific em-dash ban was unenforceable in practice; the broader codepoint-level check catches the full substitution-Unicode class. Rule documented in `CLAUDE.md` conventions and `references/ai-first-rules.md` anti-patterns table.
