@@ -656,6 +656,9 @@ Approximate per-call costs as of 2026-04: `/x-read` ~$0.05, `/x-pulse` ~$0.13, `
 ### Can I use this on Windows or Linux?
 The core vault commands work anywhere Claude Code runs. The research toolkit was tested on macOS — `install.sh` and the auto-open behavior assume macOS conventions (`~/.config`, `open` command). Pull requests welcome to add Windows and Linux paths.
 
+### Can I have a separate vault per project (multi-repo workflows)?
+Yes. The default `scripts/setup.sh` writes `OBSIDIAN_VAULT_PATH` globally to `~/.claude/settings.json`, but every hook in this skill reads that env var at fire-time. Claude Code merges per-project `.claude/settings.json` on top of the global one, so you can put `{"env": {"OBSIDIAN_VAULT_PATH": "/path/to/repo-vault"}}` in each repo's `.claude/settings.json` and Claude will use that repo's vault whenever you launch a session from that directory. The slash commands and hooks remain globally installed; only the vault path changes. Full recipe in [`SKILL.md`](SKILL.md#per-project-vaults-multi-repo-workflows). One thing this does NOT give you: isolation within a single vault (no `--scope` on commands yet).
+
 ### How do I update to the latest version?
 ```bash
 cd ~/.claude/skills/obsidian-second-brain && git pull

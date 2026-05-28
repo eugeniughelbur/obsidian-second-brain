@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Documentation
+
+- **Per-project vault setup documented** (closes question in Discussion #11): added a "Per-Project Vaults (multi-repo workflows)" section to `SKILL.md` and a matching FAQ entry in `README.md`. Recipe: drop `{"env": {"OBSIDIAN_VAULT_PATH": "..."}}` into each repo's `.claude/settings.json`; Claude Code's per-project settings merge over the global one and every hook reads `OBSIDIAN_VAULT_PATH` from env at fire-time, so each project session routes to its own vault. The pattern always worked; nobody had written down the recipe.
+
 ### Fixed
 
 - **`bootstrap_vault.py` templates now AI-first compliant (#16):** all 17 templates emitted by the bootstrapper (`Daily Note`, `Project`, `Person`, `Task`, `Dev Log`, `Goal`, `Mention`, `Meeting`, `Decision`, `OKR`, `Architecture`, `Debug`, `Post`, `Audience Note`, `Source`, `Literature Note`, `Hypothesis`) now include `type:` and `ai-first: true` in frontmatter plus a `## For future Claude` preamble in the body. Notes created from these templates now pass `hooks/validate-ai-first.sh` cleanly. Previously every Write/Edit on a templated note warned, undermining the AI-first rule the skill is built around. `Templates/Source.md` renamed its existing `type:` field to `source_kind:` to free up `type:` for the ai-first frontmatter (the field was for book/paper/podcast/video, never the note's ai-first type). Added a `references/ai-first-rules.md` reference block to the top of `bootstrap_vault.py` so future contributors see the rule.

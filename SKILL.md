@@ -1172,6 +1172,34 @@ A non-blocking validator that fires after every `Write` or `Edit` on a markdown 
 
 ---
 
+## Per-Project Vaults (multi-repo workflows)
+
+The default install path (`scripts/setup.sh`) writes `OBSIDIAN_VAULT_PATH` into `~/.claude/settings.json` (global). That assumes one machine = one vault. If you work across multiple repos and want each to have its own dedicated vault — or want to keep work and personal vaults separate without manually swapping config — use Claude Code's per-project settings to override the global setting on a per-directory basis.
+
+**How it works:** every hook in this skill (`hooks/load_vault_context.py`, `hooks/validate-ai-first.sh`, `hooks/obsidian-bg-agent.sh`) reads `OBSIDIAN_VAULT_PATH` from process env at fire-time. Claude Code merges `.claude/settings.json` from the current project directory on top of `~/.claude/settings.json`, so a project-scoped env block overrides the global one for any session launched from that directory.
+
+**Setup per repo:**
+
+1. Bootstrap each vault once: `bash scripts/setup.sh` for the first vault (writes the global default), then `python scripts/bootstrap_vault.py --path ~/vaults/repo-b --name "Your Name"` for any additional vaults (skips the global config step).
+
+2. In each repo where you want a non-default vault, create `.claude/settings.json`:
+
+   ```json
+   {
+     "env": {
+       "OBSIDIAN_VAULT_PATH": "/Users/you/vaults/repo-a-vault"
+     }
+   }
+   ```
+
+3. Restart Claude Code (or open a new session in that directory). All slash commands, hooks, and scripts will now operate on the project-specific vault.
+
+**What this does NOT give you:** isolation within a single vault. The skill has no `--scope` concept — `/obsidian-find`, `/obsidian-recap`, and `/obsidian-emerge` scan the entire configured vault. If you want multiple projects sharing one vault, you can organize them by top-level folders for visual grouping, but commands will still see across folders. A real `--scope` refactor is tracked in discussion threads — open a discussion if this is your use case.
+
+**Slash commands and hooks are still globally installed.** Only the `OBSIDIAN_VAULT_PATH` env var is per-project. You do not need to re-symlink commands or re-register hooks per repo.
+
+---
+
 ## Reference Files
 
 - `references/vault-schema.md` — Complete folder structure + frontmatter specs for all note types
