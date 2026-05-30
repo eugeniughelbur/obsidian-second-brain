@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
-"""/research-deep [topic] - vault-first deep research with cross-vault propagation.
+"""/research-deep [topic] [--free] [--academic] - vault-first deep research.
 
-Flow (per design decision C):
+Paid flow (default when PERPLEXITY_API_KEY is set):
 1. Vault scan: find existing notes on this topic (baseline knowledge).
-2. Identify gaps: areas vault is silent on or stale about.
+2. Identify gaps via Perplexity.
 3. Targeted research: Perplexity (web) + Grok (X discourse) to fill gaps.
-4. Synthesize: delta vs baseline, flag contradictions, recency markers.
-5. Write the synthesized note to Research/Deep/ (deterministic, this script).
-6. Emit a JSON block telling the calling Claude to run /obsidian-save for cross-vault propagation.
+4. Synthesize the delta vs baseline (Perplexity), write the note, emit a
+   propagation payload for the calling Claude to run /obsidian-save.
+
+Free flow (no key, or --free): vault scan + free key-less source aggregation,
+then emit JSON. The calling Claude does the gap analysis + delta synthesis
+itself, writes the AI-first note to Research/Deep/, and propagates via
+/obsidian-save (see commands/research-deep.md). The vault scan is identical in
+both modes - /research-deep is vault-first by definition, so OBSIDIAN_VAULT_PATH
+is required either way.
 """
 
 import json
+import os
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from .lib import perplexity, grok, vault
 from .lib.config import VAULT_PATH
 
 VAULT_SCAN_DIRS = ["wiki", "Research", "Knowledge", "Projects", "Ideas"]
@@ -150,12 +156,71 @@ CRITICAL FORMAT RULES - DO NOT DEVIATE:
 """
 
 
-def main(argv: list[str]) -> int:
-    if len(argv) < 2 or not argv[1].strip():
-        print("Usage: /research-deep <topic>", file=sys.stderr)
-        return 2
+def run_free_deep(topic: str, academic: bool) -> int:
+    """Vault scan + free key-less source aggregation, emitted as JSON. The
+    calling Claude performs the gap analysis, delta synthesis, note write, and
+    /obsidian-save propagation (it is the LLM in free mode)."""
+    from .lib.aggregator import aggregate
+    from .lib.result import encode_results
+    from .research import _free_sources
 
-    topic = " ".join(argv[1:]).strip()
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    print(f"[/research-deep] Phase 1: scanning vault for '{topic}'...", file=sys.stderr)
+    hits = vault_scan(topic)
+    print(f"[/research-deep] Found {len(hits)} relevant vault notes.", file=sys.stderr)
+
+    baseline_notes = []
+    for h in hits:
+        try:
+            excerpt = Path(h["abs_path"]).read_text(errors="ignore")[:MAX_BASELINE_CHARS_PER_NOTE].strip()
+        except OSError:
+            excerpt = ""
+        baseline_notes.append({"path": h["path"], "score": h["score"], "excerpt": excerpt})
+
+    sources = _free_sources(academic)
+    label = "academic" if academic else "default"
+    print(
+        f"[/research-deep] No Perplexity key (or --free): aggregating {len(sources)} free "
+        f"{label} sources for '{topic}'...",
+        file=sys.stderr,
+    )
+    agg = aggregate(topic, sources, n_per_source=10)
+    stats = agg["stats"]
+    print(
+        f"[/research-deep] {stats['results_total']} results from "
+        f"{stats['sources_succeeded']}/{stats['sources_attempted']} sources.",
+        file=sys.stderr,
+    )
+
+    payload = {
+        "mode": "free-sources-deep",
+        "topic": topic,
+        "today": today,
+        "vault_baseline_notes": baseline_notes,
+        "sources": agg["results"],
+        "stats": stats,
+        "warnings": agg["warnings"],
+        "instruction": (
+            "You are the synthesizer in free mode. Using the vault_baseline_notes (what the vault "
+            "already knew) and the sources (fresh external findings), produce a vault-first delta note "
+            "with exactly these sections: What's New Since Vault Baseline, What's Confirmed, "
+            "Contradictions / Updates Needed (name the [[vault path]]), Synthesis, Recommended Vault "
+            "Updates, Open Questions. Every external claim carries a recency marker and source domain; "
+            "every vault reference uses [[wikilinks]]. Never invent facts - if coverage is thin "
+            "(stats.success is false), say so in Open Questions. Save the note to "
+            "Research/Deep/YYYY-MM-DD - <slug>.md as AI-first (type: research-deep, ai-first: true, "
+            "vault-baseline-notes and sources in frontmatter), then run /obsidian-save propagation on "
+            "the synthesis and honor the Recommended Vault Updates bullets."
+        ),
+    }
+    print(json.dumps(payload, indent=2, default=encode_results))
+    return 0
+
+
+def run_paid_deep(topic: str) -> int:
+    from .lib import perplexity, grok, vault
+
     today = datetime.now().strftime("%Y-%m-%d")
 
     print(f"[/research-deep] Phase 1: scanning vault for '{topic}'...", file=sys.stderr)
@@ -168,7 +233,7 @@ def main(argv: list[str]) -> int:
     try:
         gap_result = perplexity.call(gap_prompt, deep=False, max_tokens=2000)
     except Exception as e:
-        print(f"❌ Phase 2 (gap analysis) failed: {e}", file=sys.stderr)
+        print(f"Phase 2 (gap analysis) failed: {e}", file=sys.stderr)
         return 1
 
     queries = parse_queries(gap_result["text"])
@@ -202,7 +267,7 @@ def main(argv: list[str]) -> int:
                 findings_chunks.append(f"### X - {q}\n\n{r['text']}")
         except Exception as e:
             findings_chunks.append(f"### {src} - {q}\n\n[FAILED: {e}]")
-            print(f"  ⚠️  {src} query failed: {e}", file=sys.stderr)
+            print(f"  {src} query failed: {e}", file=sys.stderr)
 
     findings = "\n\n".join(findings_chunks) if findings_chunks else "(no findings - all targeted queries failed)"
 
@@ -218,7 +283,7 @@ def main(argv: list[str]) -> int:
         # sonar-deep-research has a hardcoded "10k-word academic narrative" that overrides our prompt.
         synth = perplexity.call(synth_prompt, model="sonar-reasoning-pro", max_tokens=3500)
     except Exception as e:
-        print(f"❌ Phase 4 (synthesis) failed: {e}", file=sys.stderr)
+        print(f"Phase 4 (synthesis) failed: {e}", file=sys.stderr)
         return 1
 
     body = synth["text"]
@@ -274,6 +339,21 @@ def main(argv: list[str]) -> int:
 
     vault.append_to_log(f"research-deep on \"{topic}\" - saved to {path.name}, propagation payload emitted")
     return 0
+
+
+def main(argv: list[str]) -> int:
+    args = argv[1:]
+    force_free = "--free" in args
+    academic = "--academic" in args
+    topic = " ".join(a for a in args if not a.startswith("--")).strip()
+    if not topic:
+        print("Usage: /research-deep <topic> [--free] [--academic]", file=sys.stderr)
+        return 2
+
+    use_free = force_free or not os.environ.get("PERPLEXITY_API_KEY", "").strip()
+    if use_free:
+        return run_free_deep(topic, academic)
+    return run_paid_deep(topic)
 
 
 def _slug_tag(s: str) -> str:
