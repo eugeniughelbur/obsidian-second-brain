@@ -118,7 +118,10 @@ else
       }]
     }]
   ' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
-  green "   PostCompact hook wired"
+  green "   PostCompact hook registered (inert by default)"
+  echo "      Background agent is OPT-IN - it writes unattended, so it ships off."
+  echo "      To enable: set OBSIDIAN_BG_AGENT_ENABLED=1 in the env section of"
+  echo "      ~/.claude/settings.json. See hooks/postcompact.hook.example.json."
 fi
 
 # ── add SessionStart hook ────────────────────────────────────────────────────

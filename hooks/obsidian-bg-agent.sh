@@ -1,19 +1,33 @@
 #!/usr/bin/env bash
 # obsidian-bg-agent.sh - PostCompact vault propagation hook
 #
-# Fires automatically after Claude compacts the conversation context.
-# Reads the session summary from stdin (JSON), then runs a headless
-# Claude agent to propagate everything worth preserving to the vault.
+# Fires after Claude compacts the conversation context. Reads the session
+# summary from stdin (JSON), then runs a headless Claude agent to propagate
+# everything worth preserving to the vault.
+#
+# TRUST CAVEAT: this agent writes to the vault UNATTENDED using
+# --dangerously-skip-permissions. For that reason it is OPT-IN and ships INERT.
+# It requires BOTH of the following before it does anything:
+#   - OBSIDIAN_VAULT_PATH set (where to write), AND
+#   - OBSIDIAN_BG_AGENT_ENABLED=1 (a second, deliberate enable flag)
+# setup.sh sets the first but never the second, so the agent stays inert after a
+# normal install. See hooks/postcompact.hook.example.json for the opt-in steps.
 #
 # Setup:
-#   1. Set OBSIDIAN_VAULT_PATH in ~/.claude/settings.json env section
-#   2. Add this script as a PostCompact hook in ~/.claude/settings.json
-#   3. Make executable: chmod +x hooks/obsidian-bg-agent.sh
+#   1. Set OBSIDIAN_VAULT_PATH in the env section of ~/.claude/settings.json
+#   2. Set OBSIDIAN_BG_AGENT_ENABLED=1 in the same env section to enable
+#   3. Register this script as a PostCompact hook (see postcompact.hook.example.json)
+#   4. Make executable: chmod +x hooks/obsidian-bg-agent.sh
+# To disable again: clear OBSIDIAN_BG_AGENT_ENABLED (the gate below makes that enough).
 #
 # Logs: /tmp/obsidian-bg-agent.log
 
 VAULT="${OBSIDIAN_VAULT_PATH:-}"
 [[ -z "$VAULT" ]] && exit 0
+
+# Opt-in gate: no-op unless the user deliberately enabled the agent. This is the
+# second of the two flags; without it the hook does nothing even when registered.
+[[ "${OBSIDIAN_BG_AGENT_ENABLED:-0}" != "1" ]] && exit 0
 
 # PostCompact stdin includes `transcript_path`; the compaction summary itself
 # is written into the transcript JSONL as entries with `isCompactSummary: true`.

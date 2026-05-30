@@ -1,0 +1,16 @@
+name: obsidian-bg-agent
+description: >
+  PostCompact hook (OPT-IN, DISABLED BY DEFAULT). After Claude compacts the
+  conversation context, spawns a headless Claude subprocess that propagates
+  vault-worthy items from the compaction summary into the vault. TRUST-GATED:
+  it writes UNATTENDED with --dangerously-skip-permissions, so it ships inert.
+  It requires BOTH OBSIDIAN_VAULT_PATH and OBSIDIAN_BG_AGENT_ENABLED=1, plus a
+  PostCompact registration in ~/.claude/settings.json (see
+  hooks/postcompact.hook.example.json), before it does anything. setup.sh sets
+  OBSIDIAN_VAULT_PATH but never the enable flag, so a normal install leaves it
+  inert. Add/update only - it never deletes, moves, or archives notes.
+script: obsidian-bg-agent.sh
+enabled: false
+triggers:
+  - event: post-compact
+exclude: []
