@@ -106,7 +106,7 @@ See `references/vault-schema.md` for full structural details.
 ## Core Operating Principles
 
 ### AI-first vault rule (applies to every note)
-The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 37 commands - must follow `references/ai-first-rules.md`:
+The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 38 commands - must follow `references/ai-first-rules.md`:
 
 1. **Self-contained context** - each note explains itself; don't rely on backlinks alone
 2. **"For future Claude" preamble** - 2-3 sentence summary so Claude can decide relevance in 10 seconds
@@ -401,6 +401,14 @@ Three modes: standalone (`"<title>" <when> <duration>`), from a vault task (`tas
 **Generates a meeting note from a Google Calendar event.** Claude Code only.
 
 Resolve the event (`last`, `next`, `today`, `event-id:<id>`, or fuzzy title), cross-link attendees to person notes, and backlink any task whose frontmatter `calendar-event-id` matches. Saves to `wiki/meetings/` as `type: meeting` with the event metadata pre-filled and **empty** Notes / Decisions / Action items sections - never fabricate meeting content that did not happen.
+
+---
+
+### `/obsidian-recurring`
+
+**Tracks a recurring obligation (payment, filing, ops) with a cadence and a computed next-due date.**
+
+State the obligation and cadence (e.g. "pay social benefits, monthly day 20"). Searches for an existing note first, then builds a `type: recurring-task` note with What / Cadence / Blockers / History sections and frontmatter (`cadence`, `owner`, `blocker`, `next-due`, optional `amount`). Adds a board card for the next occurrence; on each completion, appends a History row and advances `next-due`. Fills the gap that `/obsidian-task` (one-shot) leaves.
 
 ---
 

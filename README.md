@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
-    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 37 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
+    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 38 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
   </a>
 </p>
 
@@ -34,14 +34,14 @@
   <br /><br />
   <em>Every source updates existing pages instead of just appending new ones. Contradictions reconcile automatically. Your vault compounds while you sleep.</em>
   <br /><br />
-  <em>37 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
+  <em>38 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
   <br /><br />
   <em>live research from X, the web, and YouTube &middot; 4 scheduled agents &middot; 4 role presets</em>
   <br /><br />
   <em>write-time AI-first validator &middot; <code>/create-command</code> interview flow &middot; multilingual trigger schema</em>
   <br /><br />
   <a href="#what-happens-when-you-install-this">See it in action</a> &middot;
-  <a href="#37-commands">All commands</a> &middot;
+  <a href="#38-commands">All commands</a> &middot;
   <a href="#install">Install</a> &middot;
   <a href="#choose-your-preset">Presets</a> &middot;
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain/discussions">Discussions</a>
@@ -216,7 +216,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 ```
   +------------------------------------------+
   |                                          |
-  |   LAYER 1: Operations (25 commands)      |
+  |   LAYER 1: Operations (26 commands)      |
   |   Claude remembers everything            |
   |                                          |
   +------------------------------------------+
@@ -243,7 +243,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
   +------------------------------------------+
 ```
 
-37 commands total. The 3 Google Calendar commands (in Operations) are Claude Code only, so the Codex / Gemini / OpenCode builds ship 34.
+38 commands total. The 3 Google Calendar commands (in Operations) are Claude Code only, so the Codex / Gemini / OpenCode builds ship 35.
 
 **Layer 1** saves, organizes, ingests, reconciles, exports, schedules your calendar, and maintains your vault.
 **Layer 2** challenges your ideas, surfaces hidden patterns, bridges unrelated domains, and graduates ideas into projects.
@@ -253,7 +253,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 
 ---
 
-## 37 Commands
+## 38 Commands
 
 ### Operations -- Claude remembers
 
@@ -268,6 +268,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 | `/obsidian-agenda` | Reads Google Calendar and writes an AI-first snapshot (conflicts, focus blocks, attendee links) |
 | `/obsidian-schedule` | Creates or moves a Google Calendar event from a task or standalone, links it back to the task |
 | `/obsidian-meeting` | Generates a meeting note from a calendar event (attendees, time, link pre-filled) |
+| `/obsidian-recurring` | Tracks a recurring obligation with a cadence and a computed next-due date |
 | `/obsidian-log` | Logs a work session, links it everywhere |
 | `/obsidian-task` | Adds task to the right board with priority and due date |
 | `/obsidian-person` | Creates or updates a person note |
@@ -618,7 +619,7 @@ Keys you need:
 | `YOUTUBE_API_KEY` | [console.cloud.google.com](https://console.cloud.google.com) | `/youtube` metadata + comments (optional, transcripts free without) | Free tier 10k units/day |
 | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) | `/podcast` Whisper transcription (optional, falls back to show-notes if unset) | ~$0.006/min |
 
-Without keys, the 29 non-research commands work fully, and `/research` + `/research-deep` fall back to free, key-less sources. The rest of the research toolkit degrades gracefully.
+Without keys, the 30 non-research commands work fully, and `/research` + `/research-deep` fall back to free, key-less sources. The rest of the research toolkit degrades gracefully.
 
 ---
 
@@ -637,7 +638,7 @@ An Obsidian plugin runs inside Obsidian and is written in TypeScript against Obs
 Run the one-line installer from the Install section below. It clones the repo to `~/.claude/skills/obsidian-second-brain` and symlinks the slash commands into `~/.claude/commands/` so Claude Code picks them up automatically. Restart Claude Code after install. The skill loads on every session that touches an Obsidian vault.
 
 ### Does this work with Codex CLI, Gemini CLI, or OpenCode?
-Yes. The repo ships a build script that compiles the platform-neutral source into four platform-specific outputs: Claude Code (slash commands + `CLAUDE.md`), Codex CLI (`AGENTS.md` + `.codex/commands/`), Gemini CLI (`GEMINI.md` + `.gemini/commands/`), and OpenCode (`AGENTS.md` + `.opencode/commands/`). Run `bash scripts/build.sh --platform codex-cli` (or another platform name), then copy the resulting `dist/<platform>/` tree into your vault. The non-Claude builds auto-generate a routing table that maps natural-language triggers to command files, so the same 34 cross-platform commands work no matter which CLI you use (the 3 Google Calendar commands are Claude Code only, since they depend on the claude.ai Calendar connector). The vault rules (AI-first notes, frontmatter, wikilinks, recency markers) are identical across all four platforms.
+Yes. The repo ships a build script that compiles the platform-neutral source into four platform-specific outputs: Claude Code (slash commands + `CLAUDE.md`), Codex CLI (`AGENTS.md` + `.codex/commands/`), Gemini CLI (`GEMINI.md` + `.gemini/commands/`), and OpenCode (`AGENTS.md` + `.opencode/commands/`). Run `bash scripts/build.sh --platform codex-cli` (or another platform name), then copy the resulting `dist/<platform>/` tree into your vault. The non-Claude builds auto-generate a routing table that maps natural-language triggers to command files, so the same 35 cross-platform commands work no matter which CLI you use (the 3 Google Calendar commands are Claude Code only, since they depend on the claude.ai Calendar connector). The vault rules (AI-first notes, frontmatter, wikilinks, recency markers) are identical across all four platforms.
 
 ### Does this work with Obsidian Sync?
 Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, iCloud, Syncthing, and Git-based sync all work without modification.

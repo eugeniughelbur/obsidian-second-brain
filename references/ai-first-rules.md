@@ -256,6 +256,20 @@ tags: [meeting]
 ai-first: true
 ```
 
+### `type: recurring-task`
+Written by `/obsidian-recurring`. Tracks a repeating obligation with a cadence and a computed `next-due` that advances on each completion. The History section logs each occurrence.
+```yaml
+date: YYYY-MM-DD
+type: recurring-task
+cadence: ""                  # e.g. "monthly day 20", "every quarter", "weekly Mon"
+owner: ""
+blocker: "[[People/...]]"    # optional - who/what gates it
+next-due: YYYY-MM-DD         # computed next occurrence
+amount: ""                   # optional - for payments
+tags: [recurring-task]
+ai-first: true
+```
+
 ---
 
 ## Preamble Templates by Type
