@@ -66,6 +66,21 @@ Use this in frontmatter (`confidence: high`) or inline (`(confidence: speculatio
 
 ---
 
+## Anti-fabrication and search-completeness (hard rules)
+
+Rules 1-7 govern how a note is written. These govern how Claude reads and reasons over the vault before writing. They are non-negotiable because the failure modes below silently corrupt the vault's value as a memory.
+
+### False absence (the most common failure mode)
+Never assert that a note, person, project, or file does NOT exist without an exhaustive search first. Saying "no note exists" when one does is the single most common observed failure - more common than fabrication. Verify presence or absence by listing and grepping the vault, not from memory or a single lucky query. Search by every plausible name, alias, and folder before concluding something is missing. When unsure, over-include and label the uncertainty rather than under-report.
+
+### Search completeness
+When a command reads or scans the vault, enumerate exhaustively - do not sample. List every matching note, not a representative few. A partial scan that is reported as complete produces confident wrong answers, which are worse than an honest "I only checked X".
+
+### No fabrication
+Never invent facts, entities, rates, dates, or relationships that were not actually stated. Mark unknowns as `TBD`. Attach a recency marker and source URL to every external claim (Rules 4-5); mark inferences with a confidence level (Rule 7). Never fabricate a value just to make a section look complete - an empty `## Decisions` section is correct when no decision was made.
+
+---
+
 ## Type Schemas
 
 Frontmatter schemas by note type. **Add fields specific to your type - never remove the universal fields.**
@@ -300,6 +315,8 @@ When auditing an existing note (Phase 2 work or one-off cleanup), verify:
 - [ ] If multi-source, confidence levels marked
 - [ ] No "see above" or context-dependent references
 - [ ] Self-contained - readable with zero context
+- [ ] No fabricated facts, entities, or dates - unknowns marked `TBD`
+- [ ] Any "no note / nothing found" claim was verified by an exhaustive search, not from memory
 
 ---
 

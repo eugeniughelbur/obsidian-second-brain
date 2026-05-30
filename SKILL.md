@@ -240,6 +240,13 @@ search(query="keyword from title")
 ```
 Duplicate notes are vault rot. Merge or update instead of creating new.
 
+### Never claim absence from memory, never fabricate
+Two failure modes corrupt the vault silently:
+- **False absence (most common):** never say "no note exists" or create a note on the assumption none exists without searching exhaustively first - by every plausible name, alias, and folder, listing and grepping, not from memory. When in doubt, over-include and label the uncertainty.
+- **Fabrication:** never invent facts, entities, rates, dates, or relationships that were not actually stated. Mark unknowns as `TBD`; an empty section is correct when nothing was said. External claims carry a source URL + recency marker; inferences carry a confidence level.
+
+See the anti-fabrication and search-completeness hard rules in `references/ai-first-rules.md`.
+
 ### Match the vault's voice
 Read existing notes in the same folder before writing new ones.
 Match: frontmatter schema, heading style, list formatting, tone, emoji usage (or lack of it).

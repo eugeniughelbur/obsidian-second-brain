@@ -43,6 +43,8 @@ Use the obsidian-second-brain skill. Execute `/notebooklm [topic]`:
 
 **AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md`. The saved synthesis at `Research/NotebookLM/YYYY-MM-DD - <slug>.md` follows the template baked into the script (preamble, frontmatter, vault-baseline links, response verbatim). Do not strip those.
 
+**Anti-fabrication:** Search exhaustively before claiming any note, person, or file is absent - false absence is the most common failure mode - and never invent facts, entities, or dates (mark unknowns as `TBD`). See the anti-fabrication and search-completeness hard rules in `references/ai-first-rules.md`.
+
 **Why Gemini File Search and not the browser:** NotebookLM has no public API for personal Google accounts. Gemini File Search (generally available, plain API key, same Gemini model family) gives the same architectural shape: source-grounded retrieval, multi-document context, citation-style synthesis. One HTTP call, no manual paste step.
 
 **Cost:** $0.15 per million tokens indexed, storage free, generation at standard Gemini token rates. For a 12-note vault bundle (~30K tokens), expect $0.01-0.05 per run.
