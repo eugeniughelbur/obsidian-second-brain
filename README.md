@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
-    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 34 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
+    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 37 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
   </a>
 </p>
 
@@ -34,14 +34,14 @@
   <br /><br />
   <em>Every source updates existing pages instead of just appending new ones. Contradictions reconcile automatically. Your vault compounds while you sleep.</em>
   <br /><br />
-  <em>34 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
+  <em>37 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
   <br /><br />
   <em>live research from X, the web, and YouTube &middot; 4 scheduled agents &middot; 4 role presets</em>
   <br /><br />
   <em>write-time AI-first validator &middot; <code>/create-command</code> interview flow &middot; multilingual trigger schema</em>
   <br /><br />
   <a href="#what-happens-when-you-install-this">See it in action</a> &middot;
-  <a href="#34-commands">All commands</a> &middot;
+  <a href="#37-commands">All commands</a> &middot;
   <a href="#install">Install</a> &middot;
   <a href="#choose-your-preset">Presets</a> &middot;
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain/discussions">Discussions</a>
@@ -216,7 +216,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 ```
   +------------------------------------------+
   |                                          |
-  |   LAYER 1: Operations (21 commands)      |
+  |   LAYER 1: Operations (24 commands)      |
   |   Claude remembers everything            |
   |                                          |
   +------------------------------------------+
@@ -251,7 +251,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 
 ---
 
-## 34 Commands
+## 37 Commands
 
 ### Operations -- Claude remembers
 
@@ -263,6 +263,9 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 | `/obsidian-reconcile` | Finds contradictions and resolves them. The vault maintains its own truth. |
 | `/obsidian-export` | Clean JSON/markdown snapshot any AI tool can read |
 | `/obsidian-daily` | Creates or updates today's daily note |
+| `/obsidian-agenda` | Reads Google Calendar and writes an AI-first snapshot (conflicts, focus blocks, attendee links) |
+| `/obsidian-schedule` | Creates or moves a Google Calendar event from a task or standalone, links it back to the task |
+| `/obsidian-meeting` | Generates a meeting note from a calendar event (attendees, time, link pre-filled) |
 | `/obsidian-log` | Logs a work session, links it everywhere |
 | `/obsidian-task` | Adds task to the right board with priority and due date |
 | `/obsidian-person` | Creates or updates a person note |
@@ -638,7 +641,7 @@ Yes. The repo ships a build script that compiles the platform-neutral source int
 Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, iCloud, Syncthing, and Git-based sync all work without modification.
 
 ### Do I need API keys to use this?
-No. The original 27 vault commands (`/obsidian-save`, `/obsidian-daily`, etc.) work without any API keys. Only the 7 research commands (`/x-read`, `/x-pulse`, `/research`, `/research-deep`, `/notebooklm`, `/youtube`, `/podcast`) require API keys for xAI Grok, Perplexity, Google Gemini, and optionally YouTube Data API v3 / OpenAI Whisper. Without keys, those commands degrade gracefully. They exit with a clear setup message.
+Mostly no. The vault commands (`/obsidian-save`, `/obsidian-daily`, etc.) need no API keys. `/research` and `/research-deep` are also key-free now - with no Perplexity key they automatically fall back to free, key-less sources (Wikipedia, HackerNews, arXiv, Reddit, and more) and Claude synthesizes the dossier. The remaining research commands (`/x-read`, `/x-pulse`, `/notebooklm`, `/youtube`, `/podcast`) need their respective keys (xAI Grok, Perplexity, Google Gemini, optionally YouTube Data API v3 / OpenAI Whisper) and exit with a clear setup message when one is missing. The calendar commands (`/obsidian-agenda`, `/obsidian-schedule`, `/obsidian-meeting`) need the Google Calendar MCP connector rather than an API key.
 
 ### How is this different from Notion AI or Mem?
 Notion AI and Mem are closed-source SaaS products that own your data. This skill stores everything as plain markdown in your local Obsidian vault, with no vendor lock-in. The AI is on top of your data, not behind it. You can switch tools or stop using the skill at any point and still have your full vault.

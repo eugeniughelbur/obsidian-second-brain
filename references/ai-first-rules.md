@@ -223,6 +223,39 @@ related-projects: [...]
 ai-first: true
 ```
 
+### `type: agenda-snapshot`
+Written by `/obsidian-agenda`. A re-derivable point-in-time view of the calendar - Google Calendar is the source of truth, not this note. `fetched-at` is the recency anchor.
+```yaml
+date: YYYY-MM-DD              # date the snapshot was generated
+type: agenda-snapshot
+range: "YYYY-MM-DD..YYYY-MM-DD"
+range-label: today           # today | tomorrow | week | next-week | day | range
+calendar-source: google-calendar
+calendars: [primary]
+fetched-at: "YYYY-MM-DDTHH:MM:SS+HH:MM"   # ISO 8601 with offset
+event-count: 0
+conflict-count: 0
+tags: [agenda, calendar]
+ai-first: true
+```
+
+### `type: meeting`
+Written by `/obsidian-meeting` from a calendar event. Notes / Decisions / Action items sections start empty - never fabricate them (see the anti-fabrication hard rule).
+```yaml
+date: YYYY-MM-DD
+type: meeting
+event-id: ""                 # Google Calendar event id (links the note to the event)
+event-url: ""
+conference-url: ""
+start: "YYYY-MM-DDTHH:MM:SS+HH:MM"
+end: "YYYY-MM-DDTHH:MM:SS+HH:MM"
+duration-min: 0
+organizer: ""
+attendees: ["[[People/...]]", ...]
+tags: [meeting]
+ai-first: true
+```
+
 ---
 
 ## Preamble Templates by Type
