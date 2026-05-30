@@ -1,7 +1,7 @@
 [project]
 name = "obsidian-second-brain-research"
 version = "0.8.0"
-description = "Research toolkit for obsidian-second-brain — Grok, Perplexity, Gemini, and YouTube research that saves to your vault"
+description = "Research toolkit for obsidian-second-brain - Grok, Perplexity, Gemini, and YouTube research that saves to your vault"
 requires-python = ">=3.10"
 dependencies = [
     "openai>=1.40.0",
@@ -20,6 +20,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100

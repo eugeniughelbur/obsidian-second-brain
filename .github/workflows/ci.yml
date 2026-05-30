@@ -14,9 +14,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      # The smoke tests run scripts/build.sh (pure bash) and scripts/vault_health.py
-      # (stdlib only) via subprocess, so pytest is the only dependency needed.
-      - name: Install pytest
-        run: python -m pip install --upgrade pip pytest
+      # build.sh is pure bash and vault_health.py is stdlib-only, but the
+      # free-research source library imports `requests`, so install that too.
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest requests
       - name: Run smoke tests
         run: pytest -q
