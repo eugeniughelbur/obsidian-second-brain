@@ -1067,6 +1067,29 @@ To list or remove scheduled agents:
 /schedule remove obsidian-morning
 ```
 
+### Running commands headless (`claude -p`) - important gotcha
+
+Custom slash commands do NOT expand in non-interactive mode. A cron job or launchd
+job that runs `claude -p "/obsidian-daily"` will send the literal text `/obsidian-daily`
+as a prompt - Claude never loads the command file, so nothing happens.
+
+The reliable pattern for any headless run (cron, launchd, a wrapper script) is to point
+Claude at the command file and tell it to carry out the instructions:
+
+```bash
+# Wrong - the slash command is not expanded in -p mode:
+claude -p "/obsidian-daily"
+
+# Right - read the command file and execute its steps:
+cd "$VAULT" && claude --dangerously-skip-permissions \
+  -p "Read ~/.claude/commands/obsidian-daily.md and carry out its instructions exactly."
+```
+
+Because `~/.claude/commands/obsidian-daily.md` is symlinked from this repo (see Testing
+locally in the README), a scheduled run always uses the current command logic. Export an
+explicit `PATH` in launchd jobs - launchd strips the environment, so `claude` and `python3`
+may not be found otherwise.
+
 ---
 
 ## Background Agent (PostCompact Hook)
