@@ -7,7 +7,9 @@ Generate a visual architecture diagram (Mind Map, Infographic, or Slide Deck) of
 
 ## System Overview
 
-obsidian-second-brain is a Claude Code skill that turns an Obsidian vault into a personal AI operating system. As of v0.5: 6 layers, 31 slash commands, 4 scheduled agents, 1 background agent, a research toolkit (Grok + Perplexity + YouTube), and a central config file (_CLAUDE.md) that ties everything together. Section 0 of `_CLAUDE.md` enforces the AI-first vault rule - every note is designed for future-Claude retrieval, not human reading.
+obsidian-second-brain is a cross-CLI skill that turns an Obsidian vault into a personal AI operating system. It ships 37 commands across four categories (vault management 14, thinking tools 10, research toolkit 8, meta 5); the 3 Google Calendar commands are Claude Code only, so the Codex / Gemini / OpenCode builds ship 34. Plus 4 scheduled agents, 1 (opt-in) background agent, a research toolkit (key-less by default, with Grok + Perplexity + Gemini when keyed), and a central config file (_CLAUDE.md) that ties everything together. Section 0 of `_CLAUDE.md` enforces the AI-first vault rule - every note is designed for future-Claude retrieval, not human reading.
+
+> Note: the per-layer breakdown below describes the v0.5-era structure (including older folder names like `People/` and `Daily/`). It predates the wiki-style vault layout and the category taxonomy above and is pending a rewrite. Treat the command counts in this section as historical; the canonical counts are in the paragraph above and in `SKILL.md`.
 
 ---
 

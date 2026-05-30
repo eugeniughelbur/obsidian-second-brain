@@ -14,7 +14,7 @@ Owner: Eugeniu Ghelbur. AI Automation Engineer at Single Grain.
 
 - Claude sessions start from zero every time. This skill solves that by storing context in the Obsidian vault and letting the AI read, write, and reason over it across sessions.
 - Notes accumulate unconnected. This skill propagates every write across people, projects, kanban boards, and daily notes automatically.
-- Research findings get lost. The research toolkit (5 commands) saves every X read, X pulse, web research, and YouTube extraction directly to the vault as structured notes.
+- Research findings get lost. The research toolkit (8 commands) saves every X read, X pulse, web research (key-less by default), YouTube and podcast transcript, and vault-grounded synthesis directly to the vault as structured notes.
 - Vaults are usually optimized for humans browsing in Obsidian. This skill treats the vault as an AI knowledge graph: future-Claude (or future-Codex/Gemini) is the primary reader.
 - Different AI users use different CLIs. The same vault works whether the user is on Claude Code, Codex CLI, Gemini CLI, or OpenCode — no rewriting commands per platform.
 
@@ -41,8 +41,8 @@ The complete analysis of how this skill extends Karpathy's pattern, including th
 
 ## The 37 commands (organized by category)
 
-**Vault (11)** — daily writing, capture, find, kanban, recall:
-obsidian-board, obsidian-capture, obsidian-daily, obsidian-find, obsidian-log, obsidian-person, obsidian-project, obsidian-recap, obsidian-save, obsidian-task, obsidian-world.
+**Vault (14)** - daily writing, capture, find, kanban, calendar, recall:
+obsidian-agenda, obsidian-board, obsidian-capture, obsidian-daily, obsidian-find, obsidian-log, obsidian-meeting, obsidian-person, obsidian-project, obsidian-recap, obsidian-save, obsidian-schedule, obsidian-task, obsidian-world. (obsidian-agenda / obsidian-schedule / obsidian-meeting are Claude Code only - they use the Google Calendar MCP connector.)
 
 **Thinking (10)** — synthesis, decisions, learning, reviews:
 obsidian-adr, obsidian-challenge, obsidian-connect, obsidian-decide, obsidian-emerge, obsidian-graduate, obsidian-learn, obsidian-reconcile, obsidian-review, obsidian-synthesize.
@@ -59,7 +59,7 @@ Plus 4 scheduled agents (morning, nightly, weekly, health-check) and 2 hook scri
 
 The repo is structured around a build-time adapter pattern:
 
-- `commands/` — 32 platform-neutral source files with frontmatter declaring `description`, `category` (vault/thinking/research/meta), and `triggers_en` (natural-language trigger phrases). The schema is extensible to other languages via `triggers_es`, `triggers_it`, `triggers_fr`, `triggers_de`, `triggers_pt`, `triggers_ru`, `triggers_ja`.
+- `commands/` - 37 platform-neutral source files with frontmatter declaring `description`, `category` (vault/thinking/research/meta), `triggers_en` (natural-language trigger phrases), and an optional `exclude` (per-platform opt-out; the 3 Google Calendar commands set it to ship Claude Code only). The schema is extensible to other languages via `triggers_es`, `triggers_it`, `triggers_fr`, `triggers_de`, `triggers_pt`, `triggers_ru`, `triggers_ja`.
 - `adapters/lib.sh` — shared parsing, path rewriting, tool-name neutralization, grouped routing-table emission, multilingual trigger emission.
 - `adapters/claude-code/adapter.sh` — identity copy (Claude Code's slash-command format matches the source).
 - `adapters/codex-cli/adapter.sh` — emits `AGENTS.md` with auto-generated routing table grouped by category and trigger phrase reference grouped by language. Commands go under `.codex/commands/`.
@@ -140,7 +140,7 @@ Yes. Run `bash scripts/build.sh --platform <name>` to compile the source for tha
 Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, iCloud, Syncthing, and Git-based sync all work without modification.
 
 ### Do I need API keys to use this?
-No. The 27 vault commands work without any API keys. Only the 5 research commands (x-read, x-pulse, research, research-deep, youtube) require API keys for xAI Grok, Perplexity, and optionally YouTube Data API v3. Without keys, those commands degrade gracefully.
+Mostly no. The 29 non-research commands work without any API keys, and `/research` + `/research-deep` fall back to free, key-less sources when no Perplexity key is set. The other research commands (x-read, x-pulse, notebooklm, youtube, podcast) need keys for xAI Grok, Perplexity, Google Gemini, and optionally YouTube Data API v3 / OpenAI Whisper, and degrade gracefully when a key is missing. The 3 Google Calendar commands need the Google Calendar MCP connector rather than an API key.
 
 ### How is this different from Notion AI or Mem?
 Notion AI and Mem are closed-source SaaS products that own your data. This skill stores everything as plain markdown in your local Obsidian vault, with no vendor lock-in. The AI is on top of your data, not behind it.
