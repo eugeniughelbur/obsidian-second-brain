@@ -303,13 +303,15 @@ Powered by xAI Grok (live X access) + Perplexity Sonar (web research) + YouTube.
 |---|---|
 | `/x-read [url]` | Deep-read an X post: verbatim post + thread + TL;DR + claims + reply sentiment + voices |
 | `/x-pulse [topic]` | Scan X for what's trending: themes, voices, hooks, post ideas |
-| `/research [topic]` | Web research with citations: full dossier with recency markers and open questions |
-| `/research-deep [topic]` | Vault-first synthesis (open web): scans your vault, finds gaps, fills them via Perplexity + Grok, propagates updates across people/projects/ideas |
+| `/research [topic]` | Web research with citations: full dossier with recency markers and open questions. Uses Perplexity when keyed, free key-less sources (Wikipedia, HackerNews, arXiv, Reddit, and more) otherwise |
+| `/research-deep [topic]` | Vault-first synthesis (open web): scans your vault, finds gaps, fills them via Perplexity + Grok (or free key-less sources when unkeyed), propagates updates across people/projects/ideas |
 | `/notebooklm [topic]` | Vault-grounded synthesis via Gemini File Search. Uploads top 12 vault notes, returns a grounded answer with citations. No browser, one HTTP call. Pairs with `/research-deep` for dual-track research. |
 | `/youtube [url]` | Extract transcript + metadata + top comments → AI-first summary |
 | `/podcast [url]` | Apple Podcasts or RSS → transcript (RSS tag / Whisper / show-notes) + AI-first summary |
 
 **Setup:** copy `.env.example` to `~/.config/obsidian-second-brain/.env`, add your keys (xAI, Perplexity, YouTube optional, OpenAI optional for podcast Whisper). Run `install.sh` and answer "y" to the research prompt to do this automatically.
+
+**No keys? `/research` and `/research-deep` still work.** With no `PERPLEXITY_API_KEY` set they automatically fall back to free, key-less sources (Wikipedia, HackerNews, arXiv, Reddit, Lobsters, dev.to, OpenAlex, Semantic Scholar, CrossRef, DuckDuckGo) and Claude synthesizes the dossier. Pass `--free` to force it even when keyed, or `--academic` to restrict to scholarly sources. The other research commands (`/x-read`, `/x-pulse`, `/notebooklm`, `/youtube`) still need their respective keys.
 
 <details>
 <summary><strong>See the thinking tools in action</strong></summary>
