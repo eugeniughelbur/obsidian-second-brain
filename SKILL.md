@@ -83,9 +83,6 @@ python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset 
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset creator
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset researcher
 
-# With style override:
-python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --style obsidian
-
 # With assistant mode (maintaining vault for someone else):
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --mode assistant --subject "Boss Name"
 ```
