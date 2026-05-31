@@ -54,12 +54,12 @@
 </p>
 
 <p align="center">
-  <strong>From the blog</strong>
+  <strong>From the blog</strong> &middot; <a href="https://theaioperator.io">The AI Operator &rarr;</a>
 </p>
 
 <p align="center">
-  <strong>Origin story:</strong> <a href="https://theaioperator.io/p/i-built-this-for-myself-then-1374">"I built this for myself. Then 1,374 strangers cloned it."</a><br />
-  <em>Two disconnected tools &middot; the institutional-amnesia problem &middot; 1,000+ stars in 7 weeks</em>
+  <strong>Latest:</strong> <a href="https://theaioperator.io/p/huge-update-on-obsidian-second-brain">"HUGE update on obsidian-second-brain: The Architect"</a><br />
+  <em>v0.10 ships <code>/obsidian-architect</code> &middot; document your codebase into your vault &middot; the full before-and-after</em>
 </p>
 
 <p align="center">
@@ -68,30 +68,28 @@
 </p>
 
 <p align="center">
-  <strong>One post per Tuesday on Obsidian + AI workflows, agent patterns, and bringing AI into real work.</strong><br />
-  <a href="https://theaioperator.io">Subscribe to The AI Operator &rarr;</a>
+  <strong>Origin story:</strong> <a href="https://theaioperator.io/p/i-built-this-for-myself-then-1374">"I built this for myself. Then 1,374 strangers cloned it."</a><br />
+  <em>Two disconnected tools &middot; the institutional-amnesia problem &middot; 1,000+ stars in 7 weeks</em>
 </p>
 
 <p align="center">
-  <strong>Research toolkit · dual-track</strong><br/>
-  <code>/x-read</code> · <code>/x-pulse</code> · <code>/research</code> · <code>/research-deep</code> · <code>/notebooklm</code> · <code>/youtube</code> · <code>/podcast</code>
+  <em>One post per Tuesday on Obsidian + AI workflows and bringing AI into real work.</em>
 </p>
 
 <p align="center">
-  <em><strong>Open-web track</strong> · <code>/research-deep</code> via Perplexity + Grok. Pulls fresh signal from outside.<br/>
-  <strong>Source-grounded track</strong> · <code>/notebooklm</code> via Gemini File Search. Reads your own vault.<br/>
+  <strong>Research toolkit &middot; dual-track</strong><br/>
+  <code>/x-read</code> &middot; <code>/x-pulse</code> &middot; <code>/research</code> &middot; <code>/research-deep</code> &middot; <code>/notebooklm</code> &middot; <code>/youtube</code> &middot; <code>/podcast</code>
+</p>
+
+<p align="center">
+  <em><strong>Open-web track</strong> &middot; <code>/research-deep</code> via Perplexity + Grok. Pulls fresh signal from outside.<br/>
+  <strong>Source-grounded track</strong> &middot; <code>/notebooklm</code> via Gemini File Search. Reads your own vault.<br/>
   Run both for high-stakes topics. <strong>Contradictions across the two are where the insight is.</strong></em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/eugeniughelbur">
-    <img src="https://github.com/eugeniughelbur.png" width="72" height="72" alt="Eugeniu Ghelbur" style="border-radius: 50%;" />
-  </a>
-</p>
-
-<p align="center">
-  Built by <strong>Eugeniu Ghelbur</strong> · AI Automation Engineer @ Single Grain<br />
-  <em>building in public · sharing what works</em>
+  Built by <a href="https://github.com/eugeniughelbur"><strong>Eugeniu Ghelbur</strong></a> &middot; AI Automation Engineer @ Single Grain<br />
+  <em>building in public &middot; sharing what works</em>
 </p>
 
 <div align="center">
