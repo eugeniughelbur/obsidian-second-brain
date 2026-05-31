@@ -12,6 +12,12 @@ Usage:
   python scripts/sweep_non_ascii.py                    # dry-run, show what would change
   python scripts/sweep_non_ascii.py --apply            # write changes
   python scripts/sweep_non_ascii.py --apply file.md    # single file
+  python scripts/sweep_non_ascii.py --check            # CI gate: exit 1 if any prose violations
+
+In --check mode the script exits non-zero when a banned substitution character
+appears in prose (anything the sweep would rewrite). Characters inside code
+fences and inline backtick spans are intentionally preserved and never fail the
+check.
 """
 import re
 import subprocess
@@ -102,8 +108,9 @@ def process_file(path: Path, apply: bool) -> tuple[int, int]:
     return changed, skipped
 
 
-def main() -> None:
+def main() -> int:
     apply = '--apply' in sys.argv
+    check = '--check' in sys.argv
     extra_args = [a for a in sys.argv[1:] if not a.startswith('--')]
 
     if extra_args:
@@ -133,6 +140,20 @@ def main() -> None:
             total_changed += changed
             total_skipped += skipped
 
+    if check:
+        if total_changed > 0:
+            print(
+                f'\nCHECK FAILED: {total_changed} banned substitution character(s) in prose '
+                f'across {touched_files} file(s).\n'
+                f'Fix with: python scripts/sweep_non_ascii.py --apply'
+            )
+            return 1
+        print(
+            f'\nCHECK PASSED: no banned substitution characters in prose. '
+            f'({total_skipped} preserved inside code fences/spans.)'
+        )
+        return 0
+
     mode = 'Applied' if apply else 'Dry-run'
     print(
         f'\n{mode}: {total_changed} line(s) across {touched_files} file(s). '
@@ -140,7 +161,8 @@ def main() -> None:
     )
     if not apply:
         print('Run with --apply to write changes.')
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

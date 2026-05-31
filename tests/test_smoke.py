@@ -76,3 +76,40 @@ def test_vault_health_json_reports_clean_linked_vault(tmp_path):
     assert payload["total_issues"] == 0
     assert payload["counts"]["Broken links"] == 0
     assert payload["counts"]["Orphans"] == 0
+
+
+def test_substitution_check_passes_on_repo():
+    """The repo source must be free of banned substitution characters in prose
+    (the CI gate). Characters inside code fences/spans are allowed."""
+    result = subprocess.run(
+        [sys.executable, "scripts/sweep_non_ascii.py", "--check"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_substitution_check_flags_prose_em_dash(tmp_path):
+    """--check must fail (exit 1) when a banned character appears in prose, and
+    must NOT fail when it only appears inside an inline code span."""
+    # Build the em-dash from its code point so this test's own source stays
+    # ASCII (the CI gate scans .py files too); the written fixtures get the
+    # real character.
+    em = "\u2014"
+    bad = tmp_path / "bad.md"
+    bad.write_text(f"A prose line with an em{em}dash.\n", encoding="utf-8")
+    flagged = subprocess.run(
+        [sys.executable, "scripts/sweep_non_ascii.py", "--check", str(bad)],
+        cwd=REPO_ROOT, check=False, capture_output=True, text=True,
+    )
+    assert flagged.returncode == 1, flagged.stdout
+
+    ok = tmp_path / "ok.md"
+    ok.write_text(f"A filename in code: `2026-01-01 {em} note.md` is fine.\n", encoding="utf-8")
+    passed = subprocess.run(
+        [sys.executable, "scripts/sweep_non_ascii.py", "--check", str(ok)],
+        cwd=REPO_ROOT, check=False, capture_output=True, text=True,
+    )
+    assert passed.returncode == 0, passed.stdout

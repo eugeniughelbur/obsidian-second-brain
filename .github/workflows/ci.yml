@@ -20,3 +20,8 @@ jobs:
         run: python -m pip install --upgrade pip pytest requests
       - name: Run smoke tests
         run: pytest -q
+      # Fail the build if a banned substitution character (em-dash, curly quote,
+      # Unicode math, ...) appears in prose in any tracked source file. Characters
+      # inside code fences / backtick spans are preserved and never fail.
+      - name: Lint substitution characters
+        run: python scripts/sweep_non_ascii.py --check

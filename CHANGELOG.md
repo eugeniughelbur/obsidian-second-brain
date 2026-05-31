@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **CI gate for substitution characters.** `scripts/sweep_non_ascii.py` gained a `--check` mode that exits non-zero when a banned substitution character (em-dash, en-dash, curly quotes, Unicode math, ellipsis, non-breaking space) appears in prose in any tracked `.md`/`.py`/`.sh` file. Characters inside code fences and inline backtick spans are preserved and never fail the check. Wired into `.github/workflows/ci.yml` so the rule is enforced on every push and PR (complements the write-time `validate-ai-first.sh` hook, which only covers vault notes). Two new smoke tests lock the behavior. (FORK_INSIGHTS.md #49; pattern from the johanvillalbab fork, generalized to the full banned-character set.)
+
 ## [0.9.0] - 2026-05-31
 
 ### Changed
