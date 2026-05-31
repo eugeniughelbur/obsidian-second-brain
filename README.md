@@ -656,6 +656,12 @@ Mostly no. The vault commands (`/obsidian-save`, `/obsidian-daily`, etc.) need n
 ### How is this different from Notion AI or Mem?
 Notion AI and Mem are closed-source SaaS products that own your data. This skill stores everything as plain markdown in your local Obsidian vault, with no vendor lock-in. The AI is on top of your data, not behind it. You can switch tools or stop using the skill at any point and still have your full vault.
 
+### Can it document my codebase?
+Yes - that is the headline of v0.10 ("The Architect"). The `/obsidian-architect` command scans a software project (languages, modules, dependencies, entry points) and writes maintained architecture notes into your vault: an overview with a diagram, one note per module, and a key-decisions note mined from your git history. Re-running it refreshes only the generated content and never overwrites the notes you added by hand, so the docs stay current as the code changes. It puts "how does this project work, and why" in the same vault as your ideas and decisions.
+
+### How does the code documentation stay current without overwriting my edits?
+`/obsidian-architect` writes generated content inside sentinel markers (`<!-- @generated -->` blocks). On a re-run it replaces only what is inside those blocks and leaves your `<!-- @user -->` blocks (and anything outside the markers) untouched. So you can hand-annotate the architecture notes and re-run the scan as the code evolves without losing your additions.
+
 ### What is the AI-first vault rule?
 The principle that vault notes are written for future-Claude to retrieve and reason over, not for human reading. Notes have machine-readable structure, recency markers per claim, mandatory `[[wikilinks]]`, source URLs preserved verbatim, and confidence levels. See [`references/ai-first-rules.md`](references/ai-first-rules.md) for the full specification with frontmatter schemas per note type.
 

@@ -90,7 +90,7 @@ body:
     id: version
     attributes:
       label: Skill version (release tag or commit SHA)
-      placeholder: "v0.6.0 or 3d748cf"
+      placeholder: "v0.10.0 or 3d748cf"
     validations:
       required: true
 

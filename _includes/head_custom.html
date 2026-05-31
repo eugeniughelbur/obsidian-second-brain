@@ -15,11 +15,20 @@
   "applicationCategory": "DeveloperApplication",
   "applicationSubCategory": "AI CLI skill",
   "operatingSystem": "macOS, Linux",
-  "description": "A cross-CLI skill that turns any Obsidian vault into a living AI-first second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini CLI, and OpenCode from one platform-neutral source via a build-time adapter pattern. 43 commands across 4 categories (vault, thinking, research, meta). Includes a write-time AI-first validator hook and a /create-command interview flow. Open-source, MIT licensed.",
+  "description": "A cross-CLI skill that turns any Obsidian vault into a living AI-first second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini CLI, and OpenCode from one platform-neutral source via a build-time adapter pattern. 43 commands across 4 categories (vault, thinking, research, meta), including /obsidian-architect, which scans a codebase and writes maintained architecture notes into your vault. Key-less web research, Google Calendar commands, anti-hallucination guards, and a write-time AI-first validator hook. Open-source, MIT licensed.",
   "url": "https://github.com/eugeniughelbur/obsidian-second-brain",
   "downloadUrl": "https://github.com/eugeniughelbur/obsidian-second-brain",
   "license": "https://opensource.org/licenses/MIT",
   "softwareVersion": "0.10.0",
+  "releaseNotes": "v0.10.0 The Architect: /obsidian-architect scans a codebase into maintained, self-refreshing architecture notes; plus key-less research, Google Calendar commands, anti-hallucination guards, and CI.",
+  "featureList": [
+    "Save conversations to linked vault notes (people, projects, decisions, tasks)",
+    "Self-rewriting vault: ingest sources, reconcile contradictions, synthesize patterns",
+    "Document a codebase into the vault with /obsidian-architect (refresh-safe)",
+    "Key-less web research with free fallback sources",
+    "Google Calendar agenda, scheduling, and reconciliation",
+    "Runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode from one source"
+  ],
   "offers": {
     "@type": "Offer",
     "price": "0",
@@ -36,6 +45,62 @@
     ]
   },
   "isAccessibleForFree": true,
-  "keywords": "Claude Code skill, Obsidian skill, Obsidian Claude skill, Obsidian Claude Code skill, Claude Obsidian skill, Codex CLI skill, OpenAI Codex CLI, Gemini CLI skill, Google Gemini CLI, OpenCode skill, cross-CLI Obsidian skill, second brain, AI second brain, personal knowledge management, PKM, vault management, AI-first vault, Anthropic Claude, slash commands, build-time adapter pattern, AGENTS.md, multi-platform AI skill"
+  "keywords": "Claude Code skill, Obsidian skill, Obsidian Claude skill, Obsidian Claude Code skill, Claude Obsidian skill, Codex CLI skill, OpenAI Codex CLI, Gemini CLI skill, Google Gemini CLI, OpenCode skill, cross-CLI Obsidian skill, second brain, AI second brain, personal knowledge management, PKM, vault management, AI-first vault, codebase documentation, document codebase with AI, Anthropic Claude, slash commands, build-time adapter pattern, AGENTS.md, multi-platform AI skill"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is obsidian-second-brain?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "obsidian-second-brain is an open-source skill that turns any Obsidian vault into an AI-first second brain you operate by talking to Claude Code (and Codex CLI, Gemini CLI, or OpenCode). It reads, writes, and reasons over your notes: it saves conversations as linked notes, rewrites existing pages instead of just appending, reconciles contradictions, and surfaces patterns. 43 commands, MIT licensed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it an Obsidian plugin or a Claude Code skill?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It is a Claude Code skill (and a Codex CLI, Gemini CLI, and OpenCode skill), not an Obsidian plugin. It runs in your AI CLI and operates on the vault's markdown files directly, so it works alongside any Obsidian setup without installing an Obsidian plugin."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can it document my codebase?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. As of v0.10 (The Architect), the /obsidian-architect command scans a software project and writes maintained architecture notes into your vault: an overview with a diagram, one note per module, and the key decisions. Re-running it refreshes the generated content while leaving your hand-edits untouched, so the docs stay current as the code changes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need API keys to use it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Mostly no. The vault commands need no API keys, and /research and /research-deep fall back to free, key-less sources (Wikipedia, HackerNews, arXiv, Reddit, and more) when no Perplexity key is set. Only the other research commands (x-read, x-pulse, notebooklm, youtube, podcast) need their respective keys."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work with Codex CLI, Gemini CLI, or OpenCode?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. One platform-neutral source compiles into platform-specific builds via a build-time adapter pattern: Claude Code (slash commands), Codex CLI and OpenCode (AGENTS.md), and Gemini CLI (GEMINI.md). The same commands work across all four."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is it different from Notion AI or Mem?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Notion AI and Mem are hosted apps that answer questions about notes you store in their cloud. obsidian-second-brain is an open-source skill over plain markdown files you own: the vault rewrites itself (updates pages, reconciles contradictions, synthesizes patterns), runs across multiple AI CLIs, and now documents your code too. Nothing is locked in a vendor's database."
+      }
+    }
+  ]
 }
 </script>

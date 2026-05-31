@@ -1,12 +1,12 @@
 title: obsidian-second-brain
 description: >-
-  A 34-command cross-CLI skill that turns any Obsidian vault into a living
+  A 43-command cross-CLI skill that turns any Obsidian vault into a living
   AI-first second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini
   CLI, and OpenCode from one platform-neutral source. Vault management,
-  thinking tools, scheduled agents, a research toolkit (live X, web,
-  YouTube, podcasts, vault-grounded synthesis via Gemini), a write-time
-  AI-first validator hook, and an interview-driven /create-command flow
-  for user-built extensions.
+  thinking tools, scheduled agents, key-less web research, Google Calendar
+  commands, and /obsidian-architect - which scans a codebase and writes
+  maintained architecture notes into your vault. Plus a write-time AI-first
+  validator hook and an interview-driven /create-command flow.
 theme: jekyll-theme-cayman
 plugins:
   - jekyll-seo-tag
