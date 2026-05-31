@@ -113,3 +113,26 @@ def test_substitution_check_flags_prose_em_dash(tmp_path):
         cwd=REPO_ROOT, check=False, capture_output=True, text=True,
     )
     assert passed.returncode == 0, passed.stdout
+
+
+def test_architect_scan_emits_manifest(tmp_path):
+    """architect_scan.py must produce a JSON manifest with the expected shape
+    on a minimal project (no network, no install)."""
+    proj = tmp_path / "proj"
+    (proj / "src" / "billing").mkdir(parents=True)
+    (proj / "src" / "billing" / "charge.py").write_text("def charge():\n    pass\n", encoding="utf-8")
+    (proj / "pyproject.toml").write_text(
+        '[project]\nname = "paymentbot"\ndependencies = ["requests"]\n', encoding="utf-8"
+    )
+
+    result = subprocess.run(
+        [sys.executable, "scripts/architect_scan.py", "--path", str(proj)],
+        cwd=REPO_ROOT, check=False, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    data = _json_from_stdout(result.stdout)
+    assert data["name"] == "paymentbot"
+    assert data["kind"] == "python"
+    assert any(m["name"] == "billing" for m in data["modules"])
+    assert "requests" in data["dependencies"]
+    assert any(lang["language"] == "Python" for lang in data["languages"])

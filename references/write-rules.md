@@ -179,6 +179,30 @@ For kanban boards: find the correct column heading, insert the new item above th
 
 ---
 
+## Sentinel-safe regeneration
+
+For notes that a command generates AND a human may hand-edit (architecture docs, dashboards, any note meant to be refreshed by re-running a command), use sentinel markers so a refresh never destroys human edits:
+
+```
+<!-- @generated:start -->
+...machine-generated content - safe to overwrite on the next run...
+<!-- @generated:end -->
+
+<!-- @user:start -->
+...human notes - NEVER overwritten by a refresh...
+<!-- @user:end -->
+```
+
+Rules on refresh:
+1. Read the existing note.
+2. Replace ONLY the content between `@generated:start` and `@generated:end`.
+3. Never touch `@user` blocks, and never touch anything outside the markers (treat it as human-owned).
+4. On the first run (no markers yet), wrap the content you generate in `@generated` markers so future refreshes are safe.
+
+This lets a command be idempotent and re-runnable without the user fearing it will wipe their additions. Used by `/obsidian-architect`; available to any command that maintains a regenerable note.
+
+---
+
 ## Search Before Write
 
 Before creating any note:

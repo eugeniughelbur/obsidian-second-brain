@@ -270,6 +270,31 @@ tags: [recurring-task]
 ai-first: true
 ```
 
+### `type: architecture-overview`
+Written by `/obsidian-architect`. The top-level map of a codebase: stack, modules, one diagram, personas. Lives under `Projects/<name>/Architecture/`.
+```yaml
+date: YYYY-MM-DD
+type: architecture-overview
+project: "[[Projects/...]]"
+stack: []                    # languages / frameworks detected
+scanned-commit: ""           # the git short-commit the docs reflect (recency anchor)
+tags: [architecture]
+ai-first: true
+```
+
+### `type: architecture-module`
+Written by `/obsidian-architect`, one per core module: what it does, what it depends on, its role.
+```yaml
+date: YYYY-MM-DD
+type: architecture-module
+project: "[[Projects/...]]"
+module: ""                   # module name
+path: ""                     # path within the codebase
+scanned-commit: ""
+tags: [architecture]
+ai-first: true
+```
+
 ---
 
 ## Preamble Templates by Type
