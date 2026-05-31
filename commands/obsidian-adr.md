@@ -6,7 +6,7 @@ triggers_en: ["log this decision", "ADR", "record decision", "decision record"]
 
 Use the obsidian-second-brain skill. Execute `/obsidian-adr $ARGUMENTS`:
 
-The optional argument is the decision topic. If not provided, infer from recent conversation context.
+The optional argument is the decision topic. If not provided, infer from recent conversation context. To surface decisions already made in code but never recorded, run `python scripts/mine_commit_decisions.py --repo <project> --json` from the skill repo - it scans git history for decision-shaped commits ("switch to", "replace", "adopt", "rename", "migrate") and returns ADR candidates you can write up here.
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
 2. Identify the structural decision:
