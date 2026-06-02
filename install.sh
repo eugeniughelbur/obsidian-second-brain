@@ -33,8 +33,18 @@ SKILL_LINK="$SKILLS_DIR/obsidian-second-brain"
 if [ -e "$SKILL_LINK" ]; then
   echo "Skill already linked at $SKILL_LINK"
 else
-  ln -s "$SKILL_DIR" "$SKILL_LINK"
-  echo "Skill linked at $SKILL_LINK"
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*)
+      echo "Windows detected: symlinks require Developer Mode or Admin rights."
+      echo "For the cleanest setup, clone the repo directly into the skills folder:"
+      echo "  git clone https://github.com/eugeniughelbur/obsidian-second-brain ~/.claude/skills/obsidian-second-brain"
+      echo "Then re-run install.sh from that location."
+      ;;
+    *)
+      ln -s "$SKILL_DIR" "$SKILL_LINK"
+      echo "Skill linked at $SKILL_LINK"
+      ;;
+  esac
 fi
 
 # ── Research toolkit setup (optional) ──────────────────────────────
