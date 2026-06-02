@@ -65,10 +65,21 @@ Blocked by: none | description
 
 ## Step 5 - update vault notes
 
-For each project note, inject or overwrite a `## Last overview` section with the synthesized status and timestamp. This makes the note self-aware of when it was last reviewed.
+For each project note, inject or overwrite a `## Last overview` section with the synthesized status and timestamp. This makes the note self-aware of when it was last reviewed. Use this format:
+
+```markdown
+## Last overview
+
+**Reviewed:** YYYY-MM-DD (source: /obsidian-projects)
+
+**Status:** active | stalled | idle | blocked | archived
+**Last session:** YYYY-MM-DD - one sentence on what was done (source: git | vault | docs)
+**Next action:** specific next step, or "unclear - check vault note"
+**Blocked by:** none | description
+```
 
 If a project note doesn't exist yet but was discoverable via git (e.g. the repo folder exists but has no matching vault note), mention it at the end as "untracked repos found". Do not create notes automatically.
 
 ---
 
-**AI-first rule:** Every vault write MUST follow `references/ai-first-rules.md` — `## For future Claude` preamble, rich frontmatter, `[[wikilinks]]` for every project referenced, recency markers on git-sourced facts (e.g. `(as of 2026-05-21, git log)`), sources noted inline.
+**AI-first rule:** Every vault write MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter, `[[wikilinks]]` for every project referenced, recency markers on git-sourced facts (e.g. `(as of 2026-05-21, git log)`), sources noted inline.

@@ -142,7 +142,7 @@ def write_bases(vault: Path, style: str = "obsidian", preset_folders: list[str] 
     """Create Bases/ with premade .base files stamped for the vault style.
 
     Skips any base whose target folder is absent from the preset and never
-    overwrites an existing file — safe to call on re-runs.
+    overwrites an existing file - safe to call on re-runs.
     """
     folder_map = WIKI_FOLDERS if style == "wiki" else OBSIDIAN_FOLDERS
     bases_dir = vault / "Bases"
