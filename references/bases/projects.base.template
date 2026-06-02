@@ -1,0 +1,87 @@
+filters:
+  and:
+    - file.inFolder("{{PROJECTS_FOLDER}}")
+    - file.ext == "md"
+    - note.type == "project"
+formulas:
+  status_icon: if(status == "active", "🟢", if(status == "stalled", "🟡", if(status == "planning", "⚪", if(status == "on-hold", "⏸️", if(status == "completed", "✅", if(status == "archived", "📦", "❔"))))))
+  days_since_update: if(updated, (today() - date(updated)).days, "")
+properties:
+  formula.status_icon:
+    displayName: " "
+  formula.days_since_update:
+    displayName: Stale (days)
+  status:
+    displayName: Status
+  tags:
+    displayName: Tags
+  repo:
+    displayName: Repo
+views:
+  - type: table
+    name: Active
+    filters:
+      and:
+        - status == "active"
+    order:
+      - formula.status_icon
+      - file.basename
+      - tags
+      - updated
+    columnSize:
+      formula.status_icon: 40
+      file.basename: 183
+  - type: table
+    name: Stalled
+    filters:
+      and:
+        - status == "stalled"
+    order:
+      - file.basename
+      - tags
+      - updated
+      - formula.days_since_update
+  - type: table
+    name: Planning
+    filters:
+      and:
+        - status == "planning"
+    order:
+      - file.basename
+      - tags
+      - created
+      - repo
+  - type: table
+    name: On Hold
+    filters:
+      or:
+        - status == "on-hold"
+    order:
+      - file.basename
+      - tags
+      - updated
+      - formula.days_since_update
+  - type: table
+    name: Archived
+    filters:
+      and:
+        - status == "archived"
+    order:
+      - file.basename
+      - tags
+      - updated
+  - type: table
+    name: All
+    groupBy:
+      property: status
+      direction: ASC
+    order:
+      - formula.status_icon
+      - file.basename
+      - status
+      - tags
+      - updated
+      - formula.days_since_update
+    columnSize:
+      formula.status_icon: 70
+      file.basename: 165

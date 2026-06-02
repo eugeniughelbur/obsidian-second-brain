@@ -1,0 +1,61 @@
+filters:
+  and:
+    - file.inFolder("{{TASKS_FOLDER}}")
+    - file.ext == "md"
+    - note.type == "task"
+formulas:
+  days_until_due: if(due, (date(due) - today()).days, "")
+  overdue: if(due, (today() - date(due)).days > 0, false)
+properties:
+  formula.days_until_due:
+    displayName: Due in (days)
+  formula.overdue:
+    displayName: Overdue
+  status:
+    displayName: Status
+  priority:
+    displayName: Priority
+  due:
+    displayName: Due
+  project:
+    displayName: Project
+  tags:
+    displayName: Tags
+views:
+  - type: table
+    name: Open
+    filters:
+      and:
+        - status != "done"
+        - status != "cancelled"
+    order:
+      - formula.overdue
+      - due
+      - priority
+      - file.basename
+      - project
+    columnSize:
+      file.basename: 200
+      project: 150
+  - type: table
+    name: Done
+    filters:
+      and:
+        - status == "done"
+    order:
+      - updated
+      - file.basename
+  - type: table
+    name: All
+    groupBy:
+      property: status
+      direction: ASC
+    order:
+      - priority
+      - due
+      - file.basename
+      - project
+      - tags
+    columnSize:
+      file.basename: 200
+      project: 150

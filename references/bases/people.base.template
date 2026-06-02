@@ -1,0 +1,30 @@
+filters:
+  and:
+    - file.inFolder("{{PEOPLE_FOLDER}}")
+    - file.ext == "md"
+    - note.type == "person"
+formulas:
+  days_since_update: if(updated, (today() - date(updated)).days, "")
+properties:
+  formula.days_since_update:
+    displayName: Stale (days)
+  role:
+    displayName: Role
+  company:
+    displayName: Company
+  tags:
+    displayName: Tags
+views:
+  - type: table
+    name: All
+    order:
+      - file.basename
+      - role
+      - company
+      - tags
+      - updated
+      - formula.days_since_update
+    columnSize:
+      file.basename: 180
+      role: 150
+      company: 150

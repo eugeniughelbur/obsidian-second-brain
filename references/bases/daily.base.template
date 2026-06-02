@@ -1,0 +1,18 @@
+filters:
+  and:
+    - file.inFolder("{{DAILY_FOLDER}}")
+    - file.ext == "md"
+    - note.type == "daily"
+properties:
+  tags:
+    displayName: Tags
+views:
+  - type: table
+    name: Recent
+    order:
+      - file.basename
+    direction: DESC
+    columnSize:
+      file.basename: 140
+  - type: calendar
+    name: Calendar

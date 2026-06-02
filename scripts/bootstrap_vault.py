@@ -45,6 +45,30 @@ for _stream in (sys.stdout, sys.stderr):
 TODAY = date.today().isoformat()
 YEAR = date.today().year
 
+TEMPLATE_DIR = Path(__file__).parent.parent / "references" / "bases"
+
+# Maps template filename → (output filename, placeholder to replace)
+BASE_TEMPLATES: dict[str, tuple[str, str]] = {
+    "projects.base.template": ("Projects.base", "{{PROJECTS_FOLDER}}"),
+    "people.base.template":   ("People.base",   "{{PEOPLE_FOLDER}}"),
+    "tasks.base.template":    ("Tasks.base",    "{{TASKS_FOLDER}}"),
+    "daily.base.template":    ("Daily.base",    "{{DAILY_FOLDER}}"),
+}
+
+OBSIDIAN_FOLDERS = {
+    "{{PROJECTS_FOLDER}}": "Projects",
+    "{{PEOPLE_FOLDER}}":   "People",
+    "{{TASKS_FOLDER}}":    "Tasks",
+    "{{DAILY_FOLDER}}":    "Daily",
+}
+
+WIKI_FOLDERS = {
+    "{{PROJECTS_FOLDER}}": "wiki/projects",
+    "{{PEOPLE_FOLDER}}":   "wiki/entities",
+    "{{TASKS_FOLDER}}":    "wiki/tasks",
+    "{{DAILY_FOLDER}}":    "wiki/daily",
+}
+
 
 # ── Preset definitions ────────────────────────────────────────────────────────
 # Each preset declares its folder list, kanban boards, _CLAUDE.md folder map,
@@ -112,6 +136,37 @@ def write(path: Path, content: str):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content.strip() + "\n", encoding="utf-8")
     print(f"  ✓ {path}")
+
+
+def write_bases(vault: Path, style: str = "obsidian", preset_folders: list[str] | None = None) -> None:
+    """Create Bases/ with premade .base files stamped for the vault style.
+
+    Skips any base whose target folder is absent from the preset and never
+    overwrites an existing file — safe to call on re-runs.
+    """
+    folder_map = WIKI_FOLDERS if style == "wiki" else OBSIDIAN_FOLDERS
+    bases_dir = vault / "Bases"
+    bases_dir.mkdir(exist_ok=True)
+
+    for template_name, (output_name, placeholder) in BASE_TEMPLATES.items():
+        target = bases_dir / output_name
+        if target.exists():
+            continue
+
+        folder = folder_map[placeholder]
+        if preset_folders is not None and not any(
+            f == folder or f.startswith(folder + "/") for f in preset_folders
+        ):
+            continue
+
+        template_path = TEMPLATE_DIR / template_name
+        if not template_path.exists():
+            print(f"  ⚠️  template not found: {template_path}")
+            continue
+
+        content = template_path.read_text(encoding="utf-8")
+        target.write_text(content.replace(placeholder, folder), encoding="utf-8")
+        print(f"  ✓ {target}")
 
 
 def render_kanban(columns: list) -> str:
@@ -1128,6 +1183,10 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
     write_core_templates(vault)
     write_preset_extras(vault, preset_key)
 
+    # ── Bases ─────────────────────────────────────────────────────────────────
+    write_bases(vault, style="obsidian", preset_folders=folders)
+    print("📊 Bases created")
+
     # ── .obsidian stub ────────────────────────────────────────────────────────
     (vault / ".obsidian").mkdir(exist_ok=True)
     if not (vault / ".obsidian/app.json").exists():
@@ -1135,7 +1194,7 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
 
     print(f"\n✅ Vault bootstrapped at: {vault}")
     print("\n📋 Recommended Obsidian plugins:")
-    print("   • Dataview  - powers the dashboard queries")
+    print("   • Bases     - powers the Bases/ live views (core plugin, enable in Settings)")
     print("   • Templater - powers the Templates/ folder")
     print("   • Kanban    - powers the Boards/ folder")
     print("   • Calendar  - daily note navigation")

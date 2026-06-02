@@ -24,8 +24,21 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - Write `log.md` at the vault root as a thin pointer file: explains the per-day structure, points at `Logs/`, and ships the entry template (do NOT put log entries in `log.md` itself)
    - Write today's `Logs/YYYY-MM-DD.md` with the init entry: `**HH:MM** - init | Vault initialized with _CLAUDE.md, index.md, Logs/`
    - Per-day file format: frontmatter (`type: log`, `date`, `ai-first: true`) + `**HH:MM** - action | description` entries, append-only
-7. Write `_CLAUDE.md`, `index.md`, root `log.md` (pointer), and `Logs/YYYY-MM-DD.md` (today's entries)
-8. Confirm what was written and tell the user to restart their Claude session so the new files take effect
+7. Create `Bases/` at the vault root if it does not exist. Stamp the four premade base files from `~/.claude/skills/obsidian-second-brain/references/bases/`:
+
+   | Template | Output file | Obsidian-style folder | Wiki-style folder |
+   |---|---|---|---|
+   | `projects.base.template` | `Bases/Projects.base` | `Projects` | `wiki/projects` |
+   | `people.base.template` | `Bases/People.base` | `People` | `wiki/entities` |
+   | `tasks.base.template` | `Bases/Tasks.base` | `Tasks` | `wiki/tasks` |
+   | `daily.base.template` | `Bases/Daily.base` | `Daily` | `wiki/daily` |
+
+   Detect vault style from the folder structure discovered in step 1: if `wiki/` exists at the root, use wiki-style folder names; otherwise use obsidian-style. For each template, replace the `{{FOLDER}}` placeholder with the correct folder name, then write to `Bases/`.
+
+   Skip any base file that already exists in `Bases/` - never overwrite.
+
+8. Write `_CLAUDE.md`, `index.md`, root `log.md` (pointer), `Logs/YYYY-MM-DD.md` (today's entries), and any new `Bases/*.base` files
+9. Confirm what was written and tell the user to restart their Claude session so the new files take effect
 
 If `_CLAUDE.md` already exists: show a diff of what would change and ask before overwriting.
 If `index.md` already exists: regenerate it (it's always a fresh catalog of current vault state).
