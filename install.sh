@@ -35,10 +35,14 @@ if [ -e "$SKILL_LINK" ]; then
 else
   case "$(uname -s)" in
     MINGW*|MSYS*|CYGWIN*)
-      echo "Windows detected: symlinks require Developer Mode or Admin rights."
-      echo "For the cleanest setup, clone the repo directly into the skills folder:"
-      echo "  git clone https://github.com/eugeniughelbur/obsidian-second-brain ~/.claude/skills/obsidian-second-brain"
-      echo "Then re-run install.sh from that location."
+      if MSYS=winsymlinks:nativestrict ln -s "$SKILL_DIR" "$SKILL_LINK" 2>/dev/null; then
+        echo "Skill linked at $SKILL_LINK"
+      else
+        echo "Symlink failed (requires Developer Mode). For the cleanest setup,"
+        echo "clone the repo directly into the skills folder:"
+        echo "  git clone https://github.com/eugeniughelbur/obsidian-second-brain ~/.claude/skills/obsidian-second-brain"
+        echo "Then re-run install.sh from that location."
+      fi
       ;;
     *)
       ln -s "$SKILL_DIR" "$SKILL_LINK"
