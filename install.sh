@@ -15,13 +15,13 @@ echo "Installing obsidian-second-brain..."
 mkdir -p "$COMMANDS_DIR"
 mkdir -p "$SKILLS_DIR"
 
-# Link or copy commands to ~/.claude/commands/
+# Copy commands to ~/.claude/commands/
 echo "Installing slash commands..."
 for file in "$SKILL_DIR/commands/"*.md; do
   name=$(basename "$file")
   dest="$COMMANDS_DIR/$name"
   if [ -f "$dest" ]; then
-    echo "  skipping $name (already exists)"
+    echo "  skipping $name (already exists, run update.sh to refresh)"
   else
     cp "$file" "$dest"
     echo "  installed $name"

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from collections import Counter, defaultdict
@@ -212,12 +213,17 @@ def update_index(vault: Path, block: str) -> bool:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--vault", required=True, type=Path)
+    ap.add_argument("--vault", required=False, type=Path,
+                    default=os.environ.get("OBSIDIAN_VAULT"),
+                    help="Path to vault root (default: $OBSIDIAN_VAULT)")
     ap.add_argument("--print-only", action="store_true", help="Print block to stdout, do not modify index.md")
     ap.add_argument("--json", action="store_true", help="Emit raw aggregates as JSON (machine-readable)")
     args = ap.parse_args()
 
-    vault = args.vault.resolve()
+    if not args.vault:
+        ap.error("--vault is required or set OBSIDIAN_VAULT env var")
+
+    vault = Path(args.vault).resolve()
     notes = walk_vault(vault)
     stats = compute(notes)
 
