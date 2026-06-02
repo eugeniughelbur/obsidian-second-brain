@@ -106,7 +106,7 @@ See `references/vault-schema.md` for full structural details.
 ## Core Operating Principles
 
 ### AI-first vault rule (applies to every note)
-The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 43 commands - must follow `references/ai-first-rules.md`:
+The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 44 commands - must follow `references/ai-first-rules.md`:
 
 1. **Self-contained context** - each note explains itself; don't rely on backlinks alone
 2. **"For future Claude" preamble** - 2-3 sentence summary so Claude can decide relevance in 10 seconds
@@ -563,6 +563,16 @@ Steps:
 4. Fill in everything inferable from the conversation: description, goals, key people, current status
 5. Add a card to the relevant kanban board in the `📥 Backlog` or `🔨 In Progress` column
 6. Link from today's daily note
+
+---
+
+### `/obsidian-projects [optional: project name]`
+
+**Live status overview across all tracked projects.**
+
+Reads `_CLAUDE.md` for the projects folder, then scans it for notes with `type: project` or a `repo:` field. For each project, spawns a parallel subagent that runs three checks: reads the vault note (status, last activity, next action, blockers), runs `git log` and `git status` if a `repo:` path is set, and looks for `NOTES.md` / `TODO.md` in the repo root. Merges the three into one status block (active / stalled / idle / blocked / archived inferred from activity recency), prints the full overview to the conversation ordered active-first, then injects a `## Last overview` section into each project note.
+
+If a project name argument is given, shows deep context for that one project only.
 
 ---
 

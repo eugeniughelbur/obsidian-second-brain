@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
-    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 43 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
+    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 44 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
   </a>
 </p>
 
@@ -34,7 +34,7 @@
   <br /><br />
   <em>Every source updates existing pages instead of just appending new ones. Contradictions reconcile automatically. Your vault compounds while you sleep.</em>
   <br /><br />
-  <em>43 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
+  <em>44 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
   <br /><br />
   <em>live research from X, the web, and YouTube &middot; 4 scheduled agents &middot; 4 role presets</em>
   <br /><br />
@@ -241,7 +241,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
   +------------------------------------------+
 ```
 
-43 commands total. The 3 Google Calendar commands (in Operations) are Claude Code only, so the Codex / Gemini / OpenCode builds ship 39.
+44 commands total. The 3 Google Calendar commands (in Operations) are Claude Code only, so the Codex / Gemini / OpenCode builds ship 40.
 
 **Layer 1** saves, organizes, ingests, reconciles, exports, schedules your calendar, and maintains your vault.
 **Layer 2** challenges your ideas, surfaces hidden patterns, bridges unrelated domains, and graduates ideas into projects.
@@ -251,7 +251,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 
 ---
 
-## 43 Commands
+## 44 Commands
 
 ### Operations -- Claude remembers
 
@@ -278,6 +278,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 | `/obsidian-review` | Structured weekly or monthly review |
 | `/obsidian-board` | Kanban board view and updates |
 | `/obsidian-project` | Project note with board and daily links |
+| `/obsidian-projects` | Live project status from git + local docs -- infers all context from vault notes, no config required |
 | `/obsidian-health` | Vault audit -- contradictions, gaps, stale claims, orphans |
 | `/obsidian-adr` | Decision records -- the vault knows why it's structured this way |
 | `/obsidian-visualize` | Generates a visual canvas map of your second brain |
@@ -643,7 +644,7 @@ An Obsidian plugin runs inside Obsidian and is written in TypeScript against Obs
 Run the one-line installer from the Install section below. It clones the repo to `~/.claude/skills/obsidian-second-brain` and symlinks the slash commands into `~/.claude/commands/` so Claude Code picks them up automatically. Restart Claude Code after install. The skill loads on every session that touches an Obsidian vault.
 
 ### Does this work with Codex CLI, Gemini CLI, or OpenCode?
-Yes. The repo ships a build script that compiles the platform-neutral source into four platform-specific outputs: Claude Code (slash commands + `CLAUDE.md`), Codex CLI (`AGENTS.md` + `.codex/commands/`), Gemini CLI (`GEMINI.md` + `.gemini/commands/`), and OpenCode (`AGENTS.md` + `.opencode/commands/`). Run `bash scripts/build.sh --platform codex-cli` (or another platform name), then copy the resulting `dist/<platform>/` tree into your vault. The non-Claude builds auto-generate a routing table that maps natural-language triggers to command files, so the same 39 cross-platform commands work no matter which CLI you use (the 3 Google Calendar commands are Claude Code only, since they depend on the claude.ai Calendar connector). The vault rules (AI-first notes, frontmatter, wikilinks, recency markers) are identical across all four platforms.
+Yes. The repo ships a build script that compiles the platform-neutral source into four platform-specific outputs: Claude Code (slash commands + `CLAUDE.md`), Codex CLI (`AGENTS.md` + `.codex/commands/`), Gemini CLI (`GEMINI.md` + `.gemini/commands/`), and OpenCode (`AGENTS.md` + `.opencode/commands/`). Run `bash scripts/build.sh --platform codex-cli` (or another platform name), then copy the resulting `dist/<platform>/` tree into your vault. The non-Claude builds auto-generate a routing table that maps natural-language triggers to command files, so the same 40 cross-platform commands work no matter which CLI you use (the 3 Google Calendar commands are Claude Code only, since they depend on the claude.ai Calendar connector). The vault rules (AI-first notes, frontmatter, wikilinks, recency markers) are identical across all four platforms.
 
 ### Does this work with Obsidian Sync?
 Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, iCloud, Syncthing, and Git-based sync all work without modification.

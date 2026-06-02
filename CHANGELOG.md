@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`/obsidian-projects` - live project status from git + local docs.** Reads `_CLAUDE.md` for the projects folder path, scans it for notes with `type: project` or a `repo:` field, and spawns a parallel subagent per project that checks the vault note, runs `git log` / `git status` (if a `repo:` path is set), and reads `NOTES.md` / `TODO.md` in the repo root. Merges the three into one status block (active / stalled / idle / blocked / archived inferred from activity recency), prints the full overview to the conversation ordered active-first, and injects a `## Last overview` section into each project note. An optional argument narrows the run to one named project. No central config block required - repo path lives in each note's `repo:` field, folder path comes from `_CLAUDE.md`. Four `.base` templates added to `references/bases/` (projects, people, tasks, daily) with `{{FOLDER}}` placeholders; `/obsidian-init` and `bootstrap_vault.py` stamp the correct paths at vault creation time and never touch the files again.
+
 ### Changed
 
 - **SEO / AEO / GEO / LLM refresh - every discoverability surface brought current with v0.10.0 (43 commands, The Architect).** The JSON-LD `SoftwareApplication` description now leads with `/obsidian-architect` + key-less research and gained `featureList` and `releaseNotes`. Added a **`FAQPage` JSON-LD** (six Q&As incl. "Can it document my codebase?") so answer engines / AI Overviews can extract and cite. `_config.yml` Pages description 34 -> 43 and re-pointed at the architect angle. `llms.txt`: intro now surfaces `/obsidian-architect` and key-less research, and the release history is completed (v0.8.0, v0.9.0, v0.10.0). README gained FAQs on documenting a codebase and the refresh-safe sentinel behavior. GitHub About description and the bug-report version placeholder refreshed. (The `examples/sample-vault/` "v0.9.0" mentions are a fictional sample app, intentionally left.)
