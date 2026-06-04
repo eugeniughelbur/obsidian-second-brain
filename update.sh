@@ -13,15 +13,22 @@ else
   echo "Not a git repo - skipping pull. Update the files in $SKILL_DIR manually."
 fi
 
-# Refresh command files
+# Symlinked commands pick up git pull automatically.
+# Copied commands (Windows without Developer Mode) need an explicit refresh.
 echo "Updating slash commands..."
 updated=0
 for file in "$SKILL_DIR/commands/"*.md; do
   name=$(basename "$file")
-  cp "$file" "$COMMANDS_DIR/$name"
-  echo "  updated $name"
-  updated=$((updated + 1))
+  dest="$COMMANDS_DIR/$name"
+  if [ -L "$dest" ]; then
+    : # symlink - already current after git pull
+  else
+    cp "$file" "$dest"
+    echo "  updated $name"
+    updated=$((updated + 1))
+  fi
 done
+[ "$updated" -gt 0 ] && echo "  $updated command(s) refreshed (copied, not symlinked)"
 
 echo ""
-echo "Done. $updated command(s) updated. Restart Claude Code to pick up the changes."
+echo "Done. Restart Claude Code to pick up the changes."
