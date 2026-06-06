@@ -6,7 +6,7 @@ This is the connector half of [Issue #60](https://github.com/eugeniughelbur/obsi
 
 ## Status
 
-v0. The vault logic (`vault_ops.py`) is pure stdlib and unit-tested. The MCP wiring (`server.py`) needs the `mcp` package and has not yet been exercised against a live client - see "Testing" below.
+v0, live-tested at the protocol level. The vault logic (`vault_ops.py`) is pure stdlib and unit-tested, and the full MCP round-trip (a real client connecting over stdio, discovering tools, and calling search / read / save) passes via `live_test.py`. The one thing not yet done is driving it from an actual Hermes instance - see "Testing" below.
 
 ## Tools exposed
 
@@ -47,11 +47,19 @@ For Hermes specifically, add the server to its MCP config; Hermes picks the tool
 
 ## Testing
 
-- `vault_ops.py` is covered by a standalone harness (search / read / save / path-guard) - no `mcp` install needed.
-- Live-test checklist (before calling this done):
-  - [ ] `uv run --with mcp python server.py` starts without error.
-  - [ ] An MCP client lists the three tools.
-  - [ ] Client calls `obsidian_search`, gets results; `obsidian_read_note` returns content; `obsidian_save_note` writes a valid AI-first note to `Inbox/`.
+`vault_ops.py` is covered by a standalone harness (search / read / save / path-guard) - no `mcp` install needed. `live_test.py` runs the full MCP round-trip with a real client:
+
+```bash
+# read-only (safe against a real vault)
+OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with mcp python live_test.py "your query"
+# also write one test note to Inbox/
+OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with mcp python live_test.py --save "your query"
+```
+
+Live-test checklist:
+  - [x] Server starts and an MCP client completes the handshake.
+  - [x] Client lists the three tools.
+  - [x] Client calls `obsidian_search` (results), `obsidian_read_note` (content), `obsidian_save_note` (writes a valid AI-first note to `Inbox/`). Verified 2026-06-06 via `live_test.py` against both a throwaway vault and a real vault (read-only).
   - [ ] Connect from a real Hermes instance and confirm the tools appear via `discover_mcp_tools()`.
 
 ## Notes
