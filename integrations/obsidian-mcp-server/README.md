@@ -10,11 +10,23 @@ v0, live-tested at the protocol level. The vault logic (`vault_ops.py`) is pure 
 
 ## Tools exposed
 
+Data tools (deterministic primitives):
+
 | Tool | What it does |
 |---|---|
 | `obsidian_search(query, limit=6)` | Ranked keyword search across vault notes; returns snippets + paths |
 | `obsidian_read_note(path)` | Read a full note by vault-relative path (path-traversal guarded) |
 | `obsidian_save_note(title, content, type, tags)` | Save a new AI-first note to the vault `Inbox/` |
+| `obsidian_capture(text, tags)` | Quick-capture an idea as a lightweight `type: idea` note |
+
+Skill tools (the higher-level behaviors, per Issue #60 - "use the skills, not just file search"):
+
+| Tool | What it does |
+|---|---|
+| `obsidian_list_skills()` | List the obsidian-second-brain commands available as skills (name + description) |
+| `obsidian_get_skill(name)` | Return a command's playbook (step-by-step instructions) for the agent to execute, using the data tools above for actual vault I/O |
+
+The skill tools expose the command playbooks (e.g. `obsidian-ingest`, `idea-discovery`, `obsidian-find`) so the connecting agent runs the real skill behavior with its own model - ingest, for instance, is multi-step (it rewrites and links existing pages), so it runs as an agent-executed skill rather than a single function. Niche / agent-only / Claude-only commands (challenge, health, the scheduled agents, and the Google Calendar commands) are excluded from the exposed set. Override the commands source with `OBSIDIAN_COMMANDS_DIR` if the server is deployed away from the repo.
 
 Saved notes follow `references/ai-first-rules.md` (frontmatter, `## For future Claude` preamble, `source: mcp` marker) so connector-written notes are distinguishable from hand-authored ones.
 

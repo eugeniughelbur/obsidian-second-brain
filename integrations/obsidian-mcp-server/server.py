@@ -59,5 +59,33 @@ def obsidian_save_note(
     return json.dumps(vault_ops.save_note(title, content, note_type=type, tags=tags))
 
 
+@mcp.tool()
+def obsidian_capture(text: str, tags: list[str] | None = None) -> str:
+    """Quick-capture an idea or thought as a lightweight note (type: idea) in the vault."""
+    return json.dumps(vault_ops.capture_idea(text, tags=tags))
+
+
+@mcp.tool()
+def obsidian_list_skills() -> str:
+    """List the obsidian-second-brain skills (commands) available to run.
+
+    Use this to discover higher-level behaviors beyond raw search/read/save -
+    e.g. ingest a source, capture and graduate ideas, reconcile contradictions.
+    Then call obsidian_get_skill(name) to get the steps.
+    """
+    return json.dumps({"skills": vault_ops.list_skills()})
+
+
+@mcp.tool()
+def obsidian_get_skill(name: str) -> str:
+    """Get a skill's playbook (step-by-step instructions) by name.
+
+    Returns instructions you should then execute yourself, using the other
+    obsidian_* tools for the actual vault reads and writes. Example names:
+    'obsidian-ingest', 'idea-discovery', 'obsidian-find', 'obsidian-save'.
+    """
+    return json.dumps(vault_ops.get_skill(name))
+
+
 if __name__ == "__main__":
     mcp.run()

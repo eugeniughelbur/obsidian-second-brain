@@ -130,6 +130,76 @@ def save_note(
     return {"saved": str(path.relative_to(vault))}
 
 
+def capture_idea(text: str, *, tags: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Quick idea capture: a lightweight idea note (type: idea) to the Inbox."""
+    text = (text or "").strip()
+    if not text:
+        return {"error": "text is required"}
+    title = text.split("\n", 1)[0][:60]
+    return save_note(title, text, note_type="idea", tags=tags or ["idea", "capture"])
+
+
+# Commands not worth exposing over MCP: meta/setup, Claude-only Google Calendar
+# connector commands, and the niche ones flagged on Issue #60 (challenge, health).
+_EXCLUDED_SKILLS = {
+    "create-command",
+    "obsidian-init",
+    "obsidian-export",
+    "obsidian-visualize",
+    "obsidian-challenge",
+    "obsidian-health",
+    "obsidian-calendar",
+    "obsidian-agenda",
+    "obsidian-meeting",
+    "obsidian-schedule",
+}
+
+
+def list_skills() -> List[Dict[str, Any]]:
+    """List the obsidian-second-brain commands exposable as skills (name + description)."""
+    cmds = _commands_dir()
+    if cmds is None or not cmds.is_dir():
+        return []
+    out: List[Dict[str, Any]] = []
+    for md in sorted(cmds.glob("*.md")):
+        name = md.stem
+        if name in _EXCLUDED_SKILLS:
+            continue
+        meta, _ = _parse_command(md)
+        out.append(
+            {
+                "name": name,
+                "description": meta.get("description", ""),
+                "category": meta.get("category", ""),
+            }
+        )
+    return out
+
+
+def get_skill(name: str) -> Dict[str, Any]:
+    """Return a command's playbook (instructions) so the agent can run the skill."""
+    name = (name or "").strip().lstrip("/")
+    if not name:
+        return {"error": "name is required"}
+    if name in _EXCLUDED_SKILLS:
+        return {"error": f"skill '{name}' is not exposed over MCP"}
+    cmds = _commands_dir()
+    md = (cmds / f"{name}.md") if cmds else None
+    if md is None or not md.is_file():
+        return {"error": f"unknown skill: {name}"}
+    meta, body = _parse_command(md)
+    note = (
+        "Run this skill using the MCP tools on this server for vault I/O: "
+        "obsidian_search (find/recall), obsidian_read_note (read), "
+        "obsidian_save_note / obsidian_capture (write). Follow the steps below."
+    )
+    return {
+        "name": name,
+        "description": meta.get("description", ""),
+        "instructions": f"{note}\n\n{body.strip()}",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -140,6 +210,34 @@ def _iter_notes(vault: Path):
         if set(md.relative_to(vault).parts) & _SKIP_DIRS:
             continue
         yield md
+
+
+def _commands_dir() -> Optional[Path]:
+    """Locate the skill's commands/ dir: env override, else repo root relative to this file."""
+    env = os.environ.get("OBSIDIAN_COMMANDS_DIR", "").strip()
+    if env:
+        p = Path(env).expanduser()
+        return p if p.is_dir() else None
+    # this file: <repo>/integrations/obsidian-mcp-server/vault_ops.py
+    candidate = Path(__file__).resolve().parents[2] / "commands"
+    return candidate if candidate.is_dir() else None
+
+
+def _parse_command(md: Path):
+    """Split a command file into (frontmatter dict, body). Minimal YAML, no deps."""
+    text = _read_safe(md) or ""
+    meta: Dict[str, Any] = {}
+    body = text
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            fm = text[3:end]
+            body = text[end + 4 :]
+            for line in fm.splitlines():
+                if ":" in line and not line.lstrip().startswith(("-", "#", "[")):
+                    key, _, val = line.partition(":")
+                    meta[key.strip()] = val.strip().strip('"').strip("'")
+    return meta, body
 
 
 def _snippet(text: str, terms: List[str]) -> str:
