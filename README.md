@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/eugeniughelbur-obsidian-second-brain-badge.png)](https://mseep.ai/app/eugeniughelbur-obsidian-second-brain)
+
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
     <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 44 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
