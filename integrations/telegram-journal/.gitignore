@@ -1,0 +1,6 @@
+# Never commit the filled-in config or runtime state - only the .example template.
+telegram_journal.env
+*.env
+!*.env.example
+telegram_journal_offset
+telegram_journal_lastimage.json

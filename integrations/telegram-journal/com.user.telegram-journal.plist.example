@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd template. To use it:
+    1. Replace HOME_DIR with your home path (e.g. /Users/you).
+    2. Replace UV_PATH with the output of `which uv` (e.g. /opt/homebrew/bin/uv).
+    3. Replace SCRIPT_PATH with the absolute path to telegram_journal.py.
+    4. Copy to ~/Library/LaunchAgents/com.user.telegram-journal.plist
+    5. Load it:  launchctl load -w ~/Library/LaunchAgents/com.user.telegram-journal.plist
+  On Linux, run the script from cron every minute instead:
+    * * * * * UV_PATH run SCRIPT_PATH >> HOME_DIR/telegram-journal.log 2>&1
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.telegram-journal</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>UV_PATH</string>
+        <string>run</string>
+        <string>SCRIPT_PATH</string>
+    </array>
+
+    <!-- Poll the bot every 60 seconds. -->
+    <key>StartInterval</key>
+    <integer>60</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>HOME_DIR/Library/Logs/telegram-journal.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>HOME_DIR/Library/Logs/telegram-journal.err.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
