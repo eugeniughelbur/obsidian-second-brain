@@ -10,7 +10,7 @@ Last reviewed against commit `ff0319c` (2026-06-05).
 
 obsidian-second-brain is a cross-CLI **skill** (not a plugin, not a hosted service) that turns any Obsidian vault into an AI-first second brain. One platform-neutral command source compiles to four AI CLIs - Claude Code, Codex CLI, Gemini CLI, OpenCode - through a build-time adapter pattern. At runtime a slash command reads and writes the user's vault as plain markdown; commands shell out to Python helpers for anything deterministic (vault health, research fetches, codebase scans).
 
-- **44 commands**, grouped by `category:` frontmatter: vault 17, thinking 13, research 8, meta 6.
+- **45 commands**, grouped by `category:` frontmatter: vault 18, thinking 13, research 8, meta 6.
 - **40 commands are cross-platform.** The 4 Google Calendar commands (`/obsidian-agenda`, `/obsidian-calendar`, `/obsidian-meeting`, `/obsidian-schedule`) carry `exclude: [codex-cli, gemini-cli, opencode]` and ship Claude Code only, because they depend on the Google Calendar MCP.
 - A research toolkit that is key-less by default (free public sources) and uses Grok + Perplexity + Gemini when keys are present.
 - An opt-in background agent plus optional user-scheduled agents.
@@ -38,7 +38,7 @@ The AI-first vault rule ties it all together: every note a command writes is des
 
 | Path | Role |
 |---|---|
-| `commands/` | 44 slash-command definitions, one `.md` each. The platform-neutral source and the product surface. |
+| `commands/` | 45 slash-command definitions, one `.md` each. The platform-neutral source and the product surface. |
 | `references/` | Shared specs the commands link to. `ai-first-rules.md` is the canonical, non-negotiable vault-write spec. |
 | `scripts/` | Python and Shell engine: build orchestrator, vault tooling, research toolkit, codebase scanner. |
 | `adapters/` | Platform translation layer. `lib.sh` plus one `adapter.sh` per CLI. |
@@ -53,7 +53,7 @@ The AI-first vault rule ties it all together: every note a command writes is des
 
 ```
 obsidian-second-brain/
-|-- commands/            # 44 command .md files (the source)
+|-- commands/            # 45 command .md files (the source)
 |-- references/          # ai-first-rules.md (canonical) + schemas + templates + bases/
 |-- scripts/             # build.sh, lib.sh, vault tooling, research/, architect_scan.py, ...
 |-- adapters/            # lib.sh + {claude-code,codex-cli,gemini-cli,opencode}/adapter.sh

@@ -1,6 +1,6 @@
 ---
 description: Review and process everything captured on the go from the Telegram journal bot - voice, text, images, PDFs, links - waiting in the catchup queue. You pull it when you are back at the laptop; nothing is processed autonomously.
-category: capture
+category: vault
 triggers_en: ["catch up", "catchup", "what did I dump from telegram", "process my captures", "go through my telegram dumps", "anything new from the phone", "process my catchup", "review what I captured", "what did I capture on the go"]
 ---
 

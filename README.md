@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
-    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 44 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
+    <img src="media/banner.png" alt="obsidian-second-brain: one brain, four CLIs, 45 commands. A cross-CLI skill for Obsidian that runs on Claude Code, Codex CLI, Gemini CLI, and OpenCode." width="100%" />
   </a>
 </p>
 
@@ -34,7 +34,7 @@
   <br /><br />
   <em>Every source updates existing pages instead of just appending new ones. Contradictions reconcile automatically. Your vault compounds while you sleep.</em>
   <br /><br />
-  <em>44 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
+  <em>45 commands &middot; auto-synthesis &middot; thinking tools that argue with you</em>
   <br /><br />
   <em>live research from X, the web, and YouTube &middot; 4 scheduled agents &middot; 4 role presets</em>
   <br /><br />
@@ -241,7 +241,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
   +------------------------------------------+
 ```
 
-44 commands total. The 4 Google Calendar commands (in Operations) are Claude Code only, so the Codex / Gemini / OpenCode builds ship 40.
+45 commands total. The 4 Google Calendar commands (in Operations) are Claude Code only, so the Codex / Gemini / OpenCode builds ship 40.
 
 **Layer 1** saves, organizes, ingests, reconciles, exports, schedules your calendar, and maintains your vault.
 **Layer 2** challenges your ideas, surfaces hidden patterns, bridges unrelated domains, and graduates ideas into projects.
@@ -251,7 +251,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 
 ---
 
-## 44 Commands
+## 45 Commands
 
 ### Operations -- Claude remembers
 
@@ -273,6 +273,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 | `/obsidian-person` | Creates or updates a person note |
 | `/obsidian-decide` | Logs decisions to the right project note |
 | `/obsidian-capture` | Zero-friction idea capture |
+| `/obsidian-catchup` | Process captures dumped from the Telegram bot (voice/text/image/PDF/link) into the vault |
 | `/obsidian-find` | Smart search with context |
 | `/obsidian-recap` | Summary of a day, week, or month |
 | `/obsidian-review` | Structured weekly or monthly review |

@@ -60,7 +60,7 @@ Now restart Claude Code and your slash commands will use the local checkout.
 
 ### ✨ New slash commands
 
-This is the most common contribution. The skill currently has 44 commands across 4 layers; adding a 45th is a clear path.
+This is the most common contribution. The skill currently has 45 commands across 4 layers; adding a 45th is a clear path.
 
 **Required steps:**
 1. **Open a feature request issue first.** Get a thumbs-up before building. Saves you wasted work if the command isn't a fit.
@@ -131,7 +131,7 @@ triggers_es: ["guarda esto", "guarda la conversación", "guarda al vault"]
 
 When you rebuild (`bash scripts/build.sh`), the new language automatically appears as its own section under `## Trigger phrases` in the dispatcher files (`AGENTS.md`, `GEMINI.md`). No adapter code changes needed.
 
-Translation PRs welcome for any of the 44 commands. Send one language at a time, full coverage. Open `commands/*.md`, add your `triggers_<code>:` line under the existing `triggers_en:`, and open a PR titled `Add <Language> trigger phrases`.
+Translation PRs welcome for any of the 45 commands. Send one language at a time, full coverage. Open `commands/*.md`, add your `triggers_<code>:` line under the existing `triggers_en:`, and open a PR titled `Add <Language> trigger phrases`.
 
 ### 🐧 Cross-platform support
 

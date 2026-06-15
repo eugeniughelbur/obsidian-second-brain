@@ -106,7 +106,7 @@ See `references/vault-schema.md` for full structural details.
 ## Core Operating Principles
 
 ### AI-first vault rule (applies to every note)
-The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 44 commands - must follow `references/ai-first-rules.md`:
+The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 45 commands - must follow `references/ai-first-rules.md`:
 
 1. **Self-contained context** - each note explains itself; don't rely on backlinks alone
 2. **"For future Claude" preamble** - 2-3 sentence summary so Claude can decide relevance in 10 seconds
@@ -486,6 +486,21 @@ Steps:
 3. If new: create `Ideas/Title.md` with minimal frontmatter (`date`, `tags: [idea]`)
 4. Write the idea with any supporting context from the conversation
 5. Add a brief mention in today's daily note under an Ideas or Captures section
+
+---
+
+### `/obsidian-catchup [today|week|all]`
+
+**Process what the Telegram journal bot captured on the go.** The laptop-side companion to the `integrations/telegram-journal/` bot, which captures voice/text/image/PDF/link from your phone and appends each to a `catchup.md` queue in the vault.
+
+Steps:
+1. Read `catchup.md` in the vault root - each unchecked `- [ ]` line is an unprocessed capture (`date time | kind | summary | -> where`).
+2. Collect the unchecked items, applying the timeframe filter (`today` / `week` / `all`, default `all`). If none, say so and stop.
+3. Show them grouped by age (Today / This week / Older), flagging stale ones.
+4. Process WITH the user (not autonomously): open each linked note, propose **integrate** (fold into the right note per the AI-first rule) / **keep** / **discard**, confirm, then write.
+5. Check the item off (`- [x]` + processed date); never delete queue history.
+
+Pull, not push: nothing is processed until you run this, so nothing surprises you. The phone is for fast dumb capture; this is where it becomes integrated knowledge.
 
 ---
 
