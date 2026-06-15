@@ -46,6 +46,14 @@ back online.
 
 ## Setup
 
+**Fast path:** create the bot (step 1 below) to get a token, then run the installer - it prompts for your keys, writes the locked config, installs the background job (launchd on macOS / prints a cron line on Linux), and does a test run:
+
+```bash
+cd integrations/telegram-journal && ./setup.sh
+```
+
+Re-runnable (it skips an existing config). The manual steps below are the same thing by hand if you prefer.
+
 **1. Create the bot.** In Telegram, message **@BotFather**, send `/newbot`, pick a name and a
 username ending in `bot`. Copy the token it gives you.
 
