@@ -16,6 +16,21 @@ the AI-first note rules, so future-Claude can read what you captured.
   note, finance, or today's note), saves the file into `wiki/attachments/`, embeds it, and
   replies where it went. Reply `move <where>` (e.g. `move daily`, `move Acme Corp`) to
   re-file the last image.
+- **PDF / document** -> Claude reads the PDF, writes an AI-first literature note (summary,
+  key points, why it matters) to `Research/Papers/`, saves + embeds the file, and links it
+  from today's note.
+- **Link** (YouTube / X / article) -> dispatched to the matching obsidian-second-brain
+  research command (`/youtube`, `/x-read`, `/research`), which saves its own AI-first note.
+  (Requires `OBSIDIAN_SKILL_REPO` set to your clone of this repo.)
+
+Two behaviors worth knowing:
+- **Fill-links:** when a capture references a `[[person/company/project]]` that has no note
+  yet, the bot creates that note *filled with real content* (typed + filed; unknowns marked
+  TBD, nothing fabricated) - never an empty link. It only ever creates new notes.
+- **Catchup queue:** every capture is also logged to a `catchup.md` queue in the vault. Back
+  at your laptop, run **`/obsidian-catchup`** to review and integrate the captures together
+  (integrate / keep / discard), on your schedule. Pull, not push - nothing is processed
+  autonomously.
 
 It only ever reads your messages and writes notes. Nothing is deleted. If the computer is
 off or offline, Telegram holds the message (up to ~24h) and it is processed when you are
