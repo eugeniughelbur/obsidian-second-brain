@@ -34,7 +34,7 @@ jobs:
           publish_results: true # makes the score publicly checkable
 
       - name: "Upload artifact"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: SARIF file
           path: results.sarif
