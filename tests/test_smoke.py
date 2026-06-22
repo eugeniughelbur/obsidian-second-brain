@@ -139,6 +139,71 @@ def test_health_normalizes_dashes_in_links(tmp_path):
     )
 
 
+def _load_vault_ops():
+    """Import the MCP connector's vault_ops module (pure stdlib, no mcp dep)."""
+    import importlib
+
+    mod_dir = REPO_ROOT / "integrations" / "obsidian-mcp-server"
+    sys.path.insert(0, str(mod_dir))
+    try:
+        return importlib.import_module("vault_ops")
+    finally:
+        sys.path.remove(str(mod_dir))
+
+
+def test_mcp_vault_ops_save_read_search_roundtrip(tmp_path, monkeypatch):
+    """The MCP connector's core data tools must round-trip against a real vault:
+    save_note writes an AI-first note (frontmatter + preamble + source: mcp marker)
+    to Inbox/, read_note returns it, search finds it. Pure stdlib path - exercises
+    the logic the MCP server wraps without needing the mcp package."""
+    vault_ops = _load_vault_ops()
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault))
+
+    saved = vault_ops.save_note(
+        "Hermes connector test",
+        "A note about the Hermes agent reading the vault over MCP.",
+        note_type="note",
+        tags=["mcp", "hermes"],
+    )
+    rel = saved["saved"]
+    assert rel.startswith("Inbox/")
+
+    note = (vault / rel).read_text(encoding="utf-8")
+    assert "ai-first: true" in note
+    assert "source: mcp" in note
+    assert "## For future Claude" in note
+
+    read_back = vault_ops.read_note(rel)
+    assert "Hermes agent" in read_back["content"]
+
+    hits = vault_ops.search("hermes", limit=5)
+    assert any(h["path"] == rel for h in hits)
+
+
+def test_mcp_vault_ops_read_guards_path_escape(tmp_path, monkeypatch):
+    """read_note must refuse paths that escape the vault root."""
+    vault_ops = _load_vault_ops()
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (tmp_path / "secret.md").write_text("outside the vault\n", encoding="utf-8")
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault))
+
+    assert vault_ops.read_note("../secret.md").get("error")
+
+
+def test_mcp_vault_ops_skills_exclude_niche(monkeypatch):
+    """list_skills exposes the real commands but never the niche/agent-only ones,
+    and get_skill blocks the excluded set (the #60 contract)."""
+    vault_ops = _load_vault_ops()
+    names = {s["name"] for s in vault_ops.list_skills()}
+    assert "obsidian-save" in names
+    assert names.isdisjoint({"obsidian-health", "obsidian-challenge", "create-command"})
+    assert vault_ops.get_skill("obsidian-health").get("error")
+    assert "instructions" in vault_ops.get_skill("obsidian-save")
+
+
 def test_architect_scan_emits_manifest(tmp_path):
     """architect_scan.py must produce a JSON manifest with the expected shape
     on a minimal project (no network, no install)."""
