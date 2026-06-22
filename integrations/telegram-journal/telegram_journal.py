@@ -8,7 +8,9 @@ telegram_journal.py - voice / text / image journaling from Telegram into the Obs
 Run by launchd every 60s. Each run polls the journal bot for new messages
 (offset-tracked, no reprocessing) and handles them:
 
-  - voice / audio -> OpenAI Whisper transcription -> tidy -> today's daily note
+  - voice / audio -> Whisper transcription (OpenAI API by default, or fully on-box
+                     via local openai-whisper - set TRANSCRIBE_BACKEND=local) -> tidy
+                     -> today's daily note
   - text          -> tidy -> today's daily note (bot commands like /start are ignored)
   - image (photo) -> Claude vision reads it, decides where it belongs (a person note,
                      a project note, finance, or today's note), saves the file into the
@@ -16,7 +18,8 @@ Run by launchd every 60s. Each run polls the journal bot for new messages
                      to re-file the last image.
 
 Config/secrets come from ~/.config/obsidian-second-brain/telegram_journal.env
-(KEY=VALUE lines): TELEGRAM_JOURNAL_BOT_TOKEN, OPENAI_API_KEY, ANTHROPIC_API_KEY, VAULT_PATH
+(KEY=VALUE lines): TELEGRAM_JOURNAL_BOT_TOKEN, OPENAI_API_KEY (only when
+TRANSCRIBE_BACKEND=openai, the default), ANTHROPIC_API_KEY, VAULT_PATH
 This file holds no secrets and is safe to read or share.
 """
 import os
@@ -51,6 +54,11 @@ OPENAI = os.environ.get("OPENAI_API_KEY", "")
 ANTHROPIC = os.environ.get("ANTHROPIC_API_KEY", "")
 OWNER = os.environ.get("VAULT_OWNER", "").strip()  # so notes about the owner route to daily
 WHISPER_HINT = os.environ.get("WHISPER_HINT", "")  # proper nouns to bias transcription
+# Voice transcription backend: "openai" (default, uses OPENAI_API_KEY) or "local"
+# (on-box openai-whisper CLI, no key needed - needs `whisper` + ffmpeg on PATH).
+TRANSCRIBE_BACKEND = os.environ.get("TRANSCRIBE_BACKEND", "openai").strip().lower()
+WHISPER_LOCAL_MODEL = os.environ.get("WHISPER_LOCAL_MODEL", "base").strip()  # tiny|base|small|medium|large
+WHISPER_BIN = os.environ.get("WHISPER_BIN", "whisper").strip()  # path to the whisper CLI if not on PATH
 VAULT = pathlib.Path(os.environ.get("VAULT_PATH", "")).expanduser()
 SKILL_REPO = pathlib.Path(os.environ.get(
     "OBSIDIAN_SKILL_REPO", "~/obsidian-second-brain")).expanduser()
@@ -120,6 +128,13 @@ def download(file_id):
 def transcribe(file_id):
     audio, suffix = download(file_id)
     suffix = suffix or ".oga"
+    if TRANSCRIBE_BACKEND == "local":
+        return transcribe_local(audio, suffix)
+    return transcribe_openai(audio, suffix)
+
+
+def transcribe_openai(audio, suffix):
+    """Transcribe via the OpenAI Whisper API (needs OPENAI_API_KEY)."""
     files = {"file": (f"voice{suffix}", audio), "model": (None, "whisper-1")}
     if WHISPER_HINT:
         files["prompt"] = (None, WHISPER_HINT)
@@ -131,6 +146,31 @@ def transcribe(file_id):
     )
     r.raise_for_status()
     return r.json().get("text", "").strip()
+
+
+def transcribe_local(audio, suffix):
+    """Transcribe on-box with the openai-whisper CLI - no API key, nothing leaves the
+    machine. Needs `whisper` (pip install openai-whisper) and ffmpeg on PATH. Same engine
+    /obsidian-ingest uses for local audio. WHISPER_LOCAL_MODEL picks the model size and
+    WHISPER_HINT biases spelling of proper nouns."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        src = pathlib.Path(tmp) / f"voice{suffix}"
+        src.write_bytes(audio)
+        cmd = [WHISPER_BIN, str(src), "--model", WHISPER_LOCAL_MODEL,
+               "--output_format", "txt", "--output_dir", tmp, "--fp16", "False"]
+        if WHISPER_HINT:
+            cmd += ["--initial_prompt", WHISPER_HINT]
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
+        except FileNotFoundError:
+            raise RuntimeError(
+                f"local transcription needs the '{WHISPER_BIN}' CLI - "
+                "pip install openai-whisper (and install ffmpeg), or set WHISPER_BIN")
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"whisper failed: {(e.stderr or '').strip()[-300:]}")
+        out = pathlib.Path(tmp) / f"{src.stem}.txt"
+        return out.read_text().strip() if out.exists() else ""
 
 
 def llm(content, max_tokens=700):

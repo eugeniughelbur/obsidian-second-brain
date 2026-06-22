@@ -9,8 +9,9 @@ the AI-first note rules, so future-Claude can read what you captured.
 
 ## What it does
 
-- **Voice / audio** -> transcribed with OpenAI Whisper -> tidied by Claude -> appended to
-  today's daily note under `## Voice journal`.
+- **Voice / audio** -> transcribed with Whisper -> tidied by Claude -> appended to today's
+  daily note under `## Voice journal`. Transcription runs on the OpenAI Whisper API by
+  default, or fully on-box with no API key - see [Local transcription](#local-transcription).
 - **Text** -> tidied by Claude -> same daily note. (Bot commands like `/start` are ignored.)
 - **Image** -> Claude vision reads it, decides where it belongs (a person note, a project
   note, finance, or today's note), saves the file into `wiki/attachments/`, embeds it, and
@@ -39,7 +40,8 @@ back online.
 ## Requirements
 
 - A Telegram bot token (free, from @BotFather)
-- An OpenAI API key (voice transcription)
+- For voice: either an OpenAI API key (default), or a local Whisper setup with no key
+  (`pip install openai-whisper` + ffmpeg) - see [Local transcription](#local-transcription)
 - An Anthropic API key with billing (text tidy + image reading)
 - [`uv`](https://docs.astral.sh/uv/) to run the script (handles the one dependency itself)
 - A scheduler: macOS `launchd` (template included) or Linux `cron`
@@ -108,11 +110,42 @@ You should see it process the message and reply on Telegram.
 Image routing targets only **notes that already exist**; if it is unsure it parks the entry
 in today's note and tells you - so it never creates junk notes.
 
+## Local transcription
+
+Want voice notes to stay on your machine (no OpenAI key, nothing leaves the box)? Switch
+the transcription backend to local Whisper - the same `openai-whisper` engine
+`/obsidian-ingest` uses for audio. The installer asks; to set it by hand, add these to your
+config and clear the OpenAI key:
+
+```bash
+TRANSCRIBE_BACKEND=local
+WHISPER_LOCAL_MODEL=base   # tiny | base | small | medium | large
+# OPENAI_API_KEY=          # not needed in local mode
+```
+
+One-time install of the engine (and ffmpeg, which Whisper uses to decode the audio):
+
+```bash
+pip install openai-whisper
+# macOS:  brew install ffmpeg
+# Debian/Ubuntu:  sudo apt-get install ffmpeg
+```
+
+Notes:
+- First run with a given model downloads its weights (a few hundred MB for `base`), then
+  it is cached. Bigger models are more accurate but slower; `base` is a good default, and
+  on a CPU-only always-on server `tiny`/`base` keep each note fast.
+- `WHISPER_HINT` still works (it is passed as Whisper's `--initial_prompt`).
+- If the `whisper` binary is not on the poller's PATH (common under launchd/cron), set
+  `WHISPER_BIN` to its absolute path.
+- Anthropic is still used for the text tidy + image reading; only the voice step goes local.
+
 ## Cost
 
-Roughly per message: one Whisper transcription (voice only) plus one Claude Haiku call
-(tidy or image read). Small - cents per day for normal personal use. You pay your own API
-usage.
+OpenAI backend: roughly per message, one Whisper transcription (voice only) plus one Claude
+Haiku call (tidy or image read). Small - cents per day for normal personal use. You pay your
+own API usage. Local backend: voice transcription is free (runs on your hardware); only the
+Claude Haiku tidy/image call costs anything.
 
 ## Security
 

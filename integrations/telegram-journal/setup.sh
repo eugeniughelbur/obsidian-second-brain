@@ -28,7 +28,18 @@ if [ -f "$CONFIG" ]; then
 else
   echo "Creating your config. Leave optional fields blank to skip."
   read -r -p "  Telegram bot token (from @BotFather): " BOT
-  read -r -p "  OpenAI API key (voice transcription): " OAI
+  read -r -p "  Transcribe voice locally (on-box, no OpenAI key)? [y/N]: " LOCAL
+  if [[ "$LOCAL" =~ ^[Yy] ]]; then
+    BACKEND=local
+    OAI=""
+    echo "    Local Whisper: needs the 'whisper' CLI (pip install openai-whisper) and ffmpeg on PATH."
+    read -r -p "    Whisper model size (tiny|base|small|medium|large) [base]: " WMODEL
+    WMODEL="${WMODEL:-base}"
+  else
+    BACKEND=openai
+    WMODEL=base
+    read -r -p "  OpenAI API key (voice transcription): " OAI
+  fi
   read -r -p "  Anthropic API key (text/image - needs billing): " ANT
   read -r -p "  Absolute path to your Obsidian vault: " VP
   read -r -p "  Your name (optional, routes self-notes to daily): " OWN
@@ -38,6 +49,8 @@ else
   ( umask 077; cat > "$CONFIG" <<EOF
 TELEGRAM_JOURNAL_BOT_TOKEN=$BOT
 OPENAI_API_KEY=$OAI
+TRANSCRIBE_BACKEND=$BACKEND
+WHISPER_LOCAL_MODEL=$WMODEL
 ANTHROPIC_API_KEY=$ANT
 VAULT_PATH=$VP
 VAULT_OWNER=$OWN
