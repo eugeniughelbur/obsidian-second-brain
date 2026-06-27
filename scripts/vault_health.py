@@ -26,7 +26,7 @@ from datetime import date
 from pathlib import Path
 
 TODAY = date.today()
-EXCLUDE_DIRS = {".obsidian", ".trash", "_trash", ".git", "Templates"}
+EXCLUDE_DIRS = {".obsidian", ".trash", "_trash", ".git", ".claude", "Templates"}
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 # A note whose entire body was accidentally saved inside a ```markdown code fence:
 # the first non-blank line opens a fence and the real frontmatter (---) lives INSIDE it.
