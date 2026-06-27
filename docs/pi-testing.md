@@ -30,6 +30,13 @@ You should see:
 pytest -q tests/test_smoke.py::test_pi_build_generates_package -v
 ```
 
+## Research toolkit setup
+
+If you run any `/research`, `/x-read`, `/youtube`, `/notebooklm`, or `/podcast`
+prompt template, copy `.env.example` to `~/.config/obsidian-second-brain/.env`,
+set permissions to `600`, and fill in the required API keys. Pi reads the same
+environment variables as the other platforms.
+
 ## Coverage note
 
 The adapter tests are smoke tests that run the build script as a subprocess.

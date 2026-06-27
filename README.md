@@ -626,6 +626,11 @@ The Pi build emits a native Pi package: prompt templates under `.pi/prompts/`
 and a discovery skill under `.pi/skills/obsidian-second-brain/`. It has no
 background-agent equivalent - run `/obsidian-nightly` manually or via cron.
 
+**Research toolkit keys:** If you use `/research`, `/x-read`, `/youtube`, etc.,
+copy `.env.example` to `~/.config/obsidian-second-brain/.env`, set permissions
+to `600`, and paste in the required API keys. Pi reads the same environment
+variables as the other platforms.
+
 ### Run on Hermes / open models
 
 The skill is model-agnostic. The OpenCode build (and the Codex / Gemini builds) are plain instruction files, so they run on whatever model the host CLI is pointed at - including open models like [Nous Research Hermes](https://github.com/NousResearch/hermes-agent). No separate build, no code changes. You set the model on OpenCode's side.

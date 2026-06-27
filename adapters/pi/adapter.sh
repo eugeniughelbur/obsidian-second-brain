@@ -209,9 +209,11 @@ templates will be available, and the discovery skill loads via
 
 ## Research toolkit
 
-The research commands need the same API keys as the other platforms. Copy
-`.env.example` to `~/.config/obsidian-second-brain/.env` and fill in the keys,
-or set the environment variables before running Pi.
+The research commands (`/research`, `/research-deep`, `/x-read`, `/x-pulse`,
+`/youtube`, `/notebooklm`, `/podcast`) need the same API keys as the other
+platforms. Copy `.env.example` to `~/.config/obsidian-second-brain/.env`, set
+permissions to `600`, and paste in the required keys. Pi reads those same
+environment variables, or you can export them before running Pi.
 
 ## Background agents
 
