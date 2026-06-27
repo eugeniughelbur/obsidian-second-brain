@@ -87,6 +87,45 @@ def test_hermes_build_generates_native_skills():
     assert "on_session_end" in hooks_doc.read_text(encoding="utf-8")
 
 
+def test_pi_build_generates_package():
+    """The pi adapter must emit a valid Pi package: package.json with pi
+    prompts/skills entries, prompt templates with frontmatter, and a discovery
+    skill with valid Agent Skills frontmatter."""
+    result = subprocess.run(
+        ["bash", "scripts/build.sh", "--platform", "pi"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+    package_json = REPO_ROOT / "dist/pi/package.json"
+    assert package_json.is_file()
+    manifest = json.loads(package_json.read_text(encoding="utf-8"))
+    assert manifest["name"] == "obsidian-second-brain-pi"
+    assert ".pi/prompts" in manifest.get("pi", {}).get("prompts", [])
+    assert ".pi/skills" in manifest.get("pi", {}).get("skills", [])
+
+    prompt = REPO_ROOT / "dist/pi/.pi/prompts/obsidian-save.md"
+    assert prompt.is_file()
+    head = prompt.read_text(encoding="utf-8")[:300]
+    assert "---" in head
+    assert "description:" in head
+
+    skill = REPO_ROOT / "dist/pi/.pi/skills/obsidian-second-brain/SKILL.md"
+    assert skill.is_file()
+    skill_head = skill.read_text(encoding="utf-8")[:400]
+    assert "name: obsidian-second-brain" in skill_head
+    assert "description:" in skill_head
+
+    # Paths should be rewritten for the Pi layout, not left pointing at Claude.
+    prompt_body = prompt.read_text(encoding="utf-8")
+    assert "~/.claude/skills/obsidian-second-brain" not in prompt_body
+    assert ".pi/skills/obsidian-second-brain" in prompt_body
+
+
 def test_vault_health_json_reports_clean_linked_vault(tmp_path):
     """A minimal two-note vault with reciprocal wikilinks should report zero
     issues: no orphans, no broken links, no missing frontmatter."""

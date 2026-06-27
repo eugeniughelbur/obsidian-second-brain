@@ -37,6 +37,7 @@ Available platforms:
   gemini-cli    - Gemini CLI (GEMINI.md + .gemini/commands/)
   opencode      - OpenCode (AGENTS.md + .opencode/commands/)
   hermes        - Nous Research Hermes Agent (native skills, skills/<category>/)
+  pi            - Pi Coding Agent (package.json + .pi/prompts/ + .pi/skills/)
 EOF
       exit 0
       ;;
