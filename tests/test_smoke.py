@@ -467,6 +467,19 @@ def test_mcp_vault_ops_skills_exclude_niche(monkeypatch):
     assert "instructions" in vault_ops.get_skill("obsidian-save")
 
 
+def test_mcp_vault_ops_get_skill_rejects_path_traversal(monkeypatch):
+    """get_skill must reject names that are not flat slugs, so a crafted name
+    cannot escape the commands/ dir via path traversal (lstrip('/') alone does
+    not remove '..' segments)."""
+    vault_ops = _load_vault_ops()
+    for bad in ("../../etc/passwd", "foo/bar", "a.b", "../obsidian-save", "with space"):
+        res = vault_ops.get_skill(bad)
+        assert res.get("error"), f"expected error for {bad!r}"
+        assert "instructions" not in res
+    # a legitimate flat slug still resolves
+    assert "instructions" in vault_ops.get_skill("obsidian-save")
+
+
 def test_mcp_vault_ops_update_note_guarded_edit(tmp_path, monkeypatch):
     """update_note appends a section and merges scalar frontmatter on an existing
     note, preserves the tags block, stamps `updated`, and refuses a path escape
