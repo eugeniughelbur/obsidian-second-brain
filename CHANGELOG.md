@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **`vault_health.py` - links to non-markdown vault files and `.md`-extension links no longer counted as wanted notes, plus a Windows console crash fix.** A real-vault `/obsidian-health` run surfaced two resolver blind spots left after the #82 sweep. (1) Only `.md` note stems were indexed, so links to real non-markdown vault files (`[[Bases/Tasks.base]]`, `[[map.canvas]]`, `[[control-center.html]]`) and links written with an explicit `.md` extension (`[[_CLAUDE.md]]`) were reported as wanted notes on every scan - a full-file index (`index_vault_files`, lowercased relative paths + bare filenames of every non-excluded file) now backs `check_wanted_notes`. (2) The orphan check had the mirror-image gap: an incoming link carrying the `.md` extension (`[[note.md]]`) did not count as a link to that note, so a linked note could still be flagged orphaned - the extension is now stripped before matching. Also fixed: the human-readable report crashed with `UnicodeEncodeError` on Windows consoles using a legacy codepage (cp1252 cannot encode the emoji icons) - stdout/stderr are now reconfigured with `errors="replace"` so the report degrades to replacement characters instead of crashing. Guarded by a smoke test (`test_health_resolves_asset_links_and_md_extension_links`).
+
 ## [0.11.1] - 2026-06-28
 
 ### Added

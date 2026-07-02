@@ -50,6 +50,25 @@ def parse_aliases(frontmatter: str) -> list:
     return [m.strip().strip('"\'').lower() for m in ALIAS_ITEM_RE.findall(block.group(1))]
 
 
+def index_vault_files(vault: Path) -> set:
+    """Lowercased relative paths and bare filenames of every non-excluded vault file.
+
+    Wikilinks can target non-markdown assets ([[Bases/Tasks.base]], [[map.canvas]],
+    [[control-center.html]]) or carry an explicit extension ([[_CLAUDE.md]]). The
+    .md-note stem index alone cannot resolve those, so broken-link checks also
+    consult this full-file index.
+    """
+    files = set()
+    for f in vault.rglob("*"):
+        if any(p in EXCLUDE_DIRS for p in f.relative_to(vault).parts):
+            continue
+        if not f.is_file():
+            continue
+        files.add(f.relative_to(vault).as_posix().lower())
+        files.add(f.name.lower())
+    return files
+
+
 def load_vault(vault: Path) -> dict:
     notes = {}
     for md in vault.rglob("*.md"):
@@ -135,8 +154,13 @@ def check_orphans(notes: dict) -> list:
     all_links = set()
     for note in notes.values():
         for link in note["links"]:
-            all_links.add(link.lower())
-            all_links.add(link.lower().replace(" ", "-"))
+            lk = link.lower()
+            # An incoming link may carry the .md extension ([[note.md]]); it still
+            # targets the same note, so strip it before matching against stems.
+            if lk.endswith(".md"):
+                lk = lk[:-3]
+            all_links.add(lk)
+            all_links.add(lk.replace(" ", "-"))
 
     # also treat aliases as resolvable targets
     alias_set = set()
@@ -287,6 +311,9 @@ def check_wanted_notes(notes: dict, vault: Path) -> list:
     worth writing, so they are reported as info, not warnings. Named after
     MediaWiki's "Wanted pages"."""
     all_stems = {note["stem"].lower(): rel for rel, note in notes.items()}
+    # Full-file index so links to non-markdown assets and links written with an
+    # explicit extension resolve instead of being flagged broken.
+    all_files = index_vault_files(vault)
     # also index stems with em-dashes normalized to regular hyphens so a
     # wikilink written with `-` still matches a filename written with `-`
     all_stems_dash_norm = {
@@ -323,6 +350,7 @@ def check_wanted_notes(notes: dict, vault: Path) -> list:
                 or link_stem in all_aliases
                 or link_norm in all_aliases
                 or link_dash_norm in all_stems_dash_norm
+                or link.lower() in all_files
             )
             if not resolved:
                 potential_folder = vault / link
@@ -425,6 +453,13 @@ def print_report(result: dict):
 
 
 def main():
+    # Windows consoles often default to a legacy codepage (cp1252) that cannot
+    # encode the report's emoji icons; degrade to replacement characters instead
+    # of crashing. The platform encoding is kept so captured output stays decodable.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
+
     parser = argparse.ArgumentParser(description="Obsidian vault health checker")
     parser.add_argument("--path", required=True, help="Path to the vault")
     parser.add_argument("--json", action="store_true", help="Output as JSON (for Claude)")

@@ -285,6 +285,34 @@ def test_health_wanted_notes_ignore_code_examples(tmp_path):
     assert not any("Related Project" in m or "Placeholder" in m for m in wanted), wanted
 
 
+def test_health_resolves_asset_links_and_md_extension_links(tmp_path):
+    """Links to non-markdown vault files ([[Bases/Tasks.base]], [[map.canvas]]) and
+    links written with an explicit .md extension ([[Guide.md]]) must resolve rather
+    than be counted as wanted notes, and vendored agent docs under .claude/ must be
+    excluded from the scan entirely."""
+    (tmp_path / "Bases").mkdir()
+    (tmp_path / "Bases" / "Tasks.base").write_text("views: []\n", encoding="utf-8")
+    (tmp_path / "map.canvas").write_text("{}\n", encoding="utf-8")
+    (tmp_path / "Home.md").write_text(
+        "# Home\n\nSee [[Bases/Tasks.base]], [[map.canvas]], and [[Guide.md]].\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "Guide.md").write_text(
+        "---\ntype: note\n---\n# Guide\n\nBack to [[Home]].\n", encoding="utf-8"
+    )
+    skills = tmp_path / ".claude" / "skills" / "demo"
+    skills.mkdir(parents=True)
+    (skills / "SKILL.md").write_text(
+        "# Demo skill\n\nUse [[Note Name]] and embed [[image.png]].\n", encoding="utf-8"
+    )
+
+    data = _run_health_json(tmp_path)
+    assert data["total_notes"] == 2, data["total_notes"]  # .claude/ docs are not vault notes
+    assert data["counts"]["Wanted notes"] == 0, data["issues"]
+    # Guide.md is linked from Home via [[Guide.md]]; the extension must not hide it.
+    assert data["counts"]["Orphans"] == 0, data["issues"]
+
+
 def _load_vault_ops():
     """Import the MCP connector's vault_ops module (pure stdlib, no mcp dep)."""
     import importlib
