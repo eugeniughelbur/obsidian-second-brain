@@ -36,22 +36,18 @@ Try these methods in order. Use the first one available:
 If `hooks/load_vault_context.py` is wired as a SessionStart hook in `~/.claude/settings.json`, `_CLAUDE.md` is injected into context automatically at session start. Skip step 1 below.
 To wire it: `bash scripts/setup.sh "/path/to/vault"` or run `/obsidian-setup`.
 
-**Method A - MCP server (`mcp-obsidian`):**
-If the MCP tools (`get_file_contents`, `list_files_in_vault`, `search`, `append_content`, `write_file`) are available, use them.
+**Method A - Direct filesystem (default, always works):**
+Use standard file tools (Read, Write, Edit, Glob) against the vault path. The vault is plain markdown, so every operation in this skill works this way with no setup. This is the normal path in Claude Code - the commands below use these tools directly.
 
-**Method B - Direct filesystem (fallback, always works):**
-Use standard file tools (Read, Write, Edit, Glob) against the vault path. The vault is plain markdown - all operations work without MCP, just more verbosely.
-
-If MCP is not installed, silently use filesystem access. Tell the user ONCE (first time only):
-
-> "For faster vault access on large vaults, consider installing mcp-obsidian: `claude mcp add obsidian-vault -s user -- npx -y mcp-obsidian \"/path/to/your/vault\"`. Everything works without it."
+**Method B - MCP server (optional, mainly for non-Claude-Code clients):**
+This repo ships its own MCP server at `integrations/obsidian-mcp-server/` that exposes the vault as tools (`obsidian_search`, `obsidian_read_note`, `obsidian_save_note`, `obsidian_capture`, plus curator tools). It exists so other MCP clients - Hermes Agent, Claude Desktop, Cursor - can use the vault as a knowledge layer; in Claude Code itself, Method A is simpler and preferred. If those `obsidian_*` tools happen to be available in your client, you may use them instead of raw file tools. Setup lives in `integrations/obsidian-mcp-server/README.md` (it is `uv run --with mcp python .../server.py` with `OBSIDIAN_VAULT_PATH` set, not an `npx` package).
 
 ### 1. First time in a vault → read `_CLAUDE.md`
 
-Before doing anything in a vault, check if `_CLAUDE.md` exists at the vault root:
+Before doing anything in a vault, check if `_CLAUDE.md` exists at the vault root and read it:
 
 ```
-get_file_contents("_CLAUDE.md")
+Read <vault>/_CLAUDE.md
 ```
 
 If it exists: follow its rules exactly - they override the defaults in this skill. Where `_CLAUDE.md` is silent, fall back to the defaults below.
@@ -62,10 +58,10 @@ If the SessionStart hook is active, `_CLAUDE.md` is already in context - skip th
 ### 2. First time with a new user → run discovery
 
 ```
-list_files_in_vault()
+Glob <vault>/**/*.md
 ```
 
-Scan the structure to understand: folder names, template locations, naming conventions, frontmatter patterns. Then read 2-3 existing notes with `get_file_contents(path)` to calibrate writing style before creating anything new.
+Scan the structure to understand: folder names, template locations, naming conventions, frontmatter patterns. Then read 2-3 existing notes to calibrate writing style before creating anything new.
 
 ### 3. Bootstrap a new vault
 
@@ -87,7 +83,7 @@ python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset 
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --mode assistant --subject "Boss Name"
 ```
 
-Then configure `mcp-obsidian` to point at the new vault path and restart Claude.
+Then just point the skill at the new vault path (Method A above). If you use the optional bundled MCP server, set `OBSIDIAN_VAULT_PATH` to the new path and restart the client.
 
 **Presets** customize the vault for different use cases:
 - **`executive`** - Decisions, people, meetings, strategic planning. Kanban: OKRs, Quarterly, Weekly.
@@ -663,7 +659,7 @@ Steps:
 **Bootstraps `_CLAUDE.md` for the vault - the operating manual.**
 
 Steps:
-1. Call `list_files_in_vault()` to map the full structure
+1. Glob the vault (`<vault>/**/*.md`) to map the full structure
 2. Spawn parallel subagents to discover vault context simultaneously:
    - **Dashboard agent**: read `Home.md` or equivalent dashboard
    - **Templates agent**: read all files in `Templates/`
@@ -671,7 +667,7 @@ Steps:
    - **Samples agent**: read one existing note per major folder to capture naming conventions and frontmatter patterns
 3. Merge all agent results into a complete picture of the vault
 4. Generate a complete `_CLAUDE.md` using the template in `references/claude-md-template.md`, filled with real values from the vault
-5. Write it to `_CLAUDE.md` at the vault root via `append_content("_CLAUDE.md", content)`
+5. Write it to `_CLAUDE.md` at the vault root (Write tool, or `obsidian_save_note` if using the bundled MCP server)
 6. Confirm what was written and tell the user to restart their Claude session so the new file takes effect
 
 If `_CLAUDE.md` already exists: show a diff of what would change and ask before overwriting.
@@ -1002,21 +998,23 @@ Plain English: "notebooklm this", "ask my notebook about X", "ground a research 
 
 ---
 
-### `/youtube [url]`
+### `/youtube [url] [--visual]`
 
-**Extract and summarize a YouTube video.** Transcript (free, no API key) + metadata + top comments (Data API v3, optional) → summarized via Grok.
+**Extract and summarize a YouTube video.** Transcript (free, no API key) + metadata + top comments (Data API v3, optional) → summarized via Grok. Add `--visual` to also *watch* the video: scene-change frame extraction Claude reads with its own vision.
 
 Steps:
 1. Parse video ID from URL or 11-char ID
-2. Run `uv run -m scripts.research.youtube_extract "<url>"`
+2. Run `uv run -m scripts.research.youtube_extract "<url>"` (add `--visual` for the frame layer, `--max-frames N` to cap frames read, default 24)
 3. Fetches transcript via `youtube-transcript-api`
 4. If `YOUTUBE_API_KEY` set: also fetches title, channel, view counts, top comments
 5. Sends transcript + comments to Grok for AI-first summary: TL;DR, Key Points, Notable Quotes, Themes, Comment Sentiment, Worth Following Up On
-6. **Default save: auto-saves** to `Research/YouTube/YYYY-MM-DD — <video-title-slug>.md`
+6. **Default save: auto-saves** to `Research/YouTube/YYYY-MM-DD - <video-title-slug>.md`
 
-Plain English: "summarize this YouTube video", "extract this video", or just paste a YouTube URL with a question.
+**`--visual` layer:** downloads the video (yt-dlp, <=720p) and extracts one frame per scene change (ffmpeg scene detection, not a fixed timer), so on-screen text, code, diagrams, slides, UI, and b-roll are captured. Hero frames are copied into `Research/YouTube/attachments/<slug>/` and embedded in the note; the full keyframe set is left on disk. The script prints a `FRAMES-FOR-CLAUDE` block - Claude then reads those frames (its own vision, no extra API call) and fills the note's `## Visual notes` section keyed by timestamp. Requires `yt-dlp` + `ffmpeg` on PATH; if missing or download fails, the visual layer is skipped and the transcript summary still saves. The pipeline is ported from claude-watch/claude-video (MIT).
 
-If the video has no captions and no API key set, the script fails with a clear message.
+Plain English: "summarize this YouTube video", "extract this video", "watch this video", "what's on screen", or just paste a YouTube URL with a question. Use `--visual` when the ask is about what is *shown*, not just said.
+
+If the video has no captions and no API key set, the transcript path fails with a clear message; `--visual` can still read the video.
 
 ---
 

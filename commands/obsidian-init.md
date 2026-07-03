@@ -6,7 +6,7 @@ triggers_en: ["init vault", "bootstrap vault", "setup vault", "scan vault"]
 
 Use the obsidian-second-brain skill. Execute `/obsidian-init`:
 
-1. Call `list_files_in_vault()` to map the full vault structure
+1. Glob the vault (`<vault>/**/*.md`) to map the full vault structure
 2. Spawn parallel subagents to discover vault context simultaneously:
    - **Dashboard agent**: read `Home.md` or equivalent dashboard
    - **Templates agent**: read all files in `Templates/`

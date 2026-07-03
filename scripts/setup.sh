@@ -185,26 +185,29 @@ fi
 
 # ── optional: MCP server (Claude Code only) ───────────────────────────────────
 
-step "4. MCP server (optional - Claude Code only)..."
-echo "   The obsidian-vault MCP server gives Claude faster vault access."
-echo "   Without it, Claude reads/writes vault files directly (works fine)."
+step "4. MCP server (optional)..."
+echo "   This repo ships its own MCP server (integrations/obsidian-mcp-server/)."
+echo "   It is optional: in Claude Code, Claude reads/writes vault files directly"
+echo "   and everything works without it. The server is mainly useful for other"
+echo "   MCP clients (Claude Desktop, Cursor, Hermes). It needs 'uv' on PATH."
 echo ""
+MCP_CMD="claude mcp add obsidian-second-brain -s user -e OBSIDIAN_VAULT_PATH=\"$VAULT\" -- uv run --with mcp python \"$SKILL_DIR/integrations/obsidian-mcp-server/server.py\""
 REPLY=n
 if [[ -t 0 ]]; then
-  read -r -p "   Configure MCP server for Claude Code? [y/N] " REPLY
+  read -r -p "   Configure the bundled MCP server? [y/N] " REPLY
 fi
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-  if command -v claude &>/dev/null; then
-    claude mcp add obsidian-vault -s user -- npx -y mcp-obsidian "$VAULT"
+  if command -v claude &>/dev/null && command -v uv &>/dev/null; then
+    claude mcp add obsidian-second-brain -s user -e OBSIDIAN_VAULT_PATH="$VAULT" -- uv run --with mcp python "$SKILL_DIR/integrations/obsidian-mcp-server/server.py"
     green "   MCP server configured"
   else
-    yellow "   claude CLI not found - skipping MCP setup"
+    yellow "   claude and/or uv CLI not found - skipping MCP setup"
     echo "   Run manually when ready:"
-    echo "   claude mcp add obsidian-vault -s user -- npx -y mcp-obsidian \"$VAULT\""
+    echo "   $MCP_CMD"
   fi
 else
   echo "   Skipped. Run later if you want it:"
-  echo "   claude mcp add obsidian-vault -s user -- npx -y mcp-obsidian \"$VAULT\""
+  echo "   $MCP_CMD"
 fi
 
 # ── done ─────────────────────────────────────────────────────────────────────

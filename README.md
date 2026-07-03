@@ -175,7 +175,7 @@ Perplexity Sonar Pro pulls a deep dossier with citations: summary, key facts (ev
 Scans your vault for what you already know. Identifies gaps. Spawns 3-5 targeted searches via Perplexity (web) and Grok (X discourse). Synthesizes a delta report: what's new, what's confirmed, contradictions to resolve, recommended vault updates. Vault baseline doesn't get re-researched. Only gaps get filled.
 
 **You hit a great YouTube video:** `/youtube https://youtu.be/...`
-Free transcript via youtube-transcript-api. Optional metadata + top comments via YouTube Data API v3. Grok summarizes into TL;DR, Key Points, Notable Quotes (verbatim), Themes, Comment Sentiment, and Worth Following Up On. Saved as an AI-first note in your vault.
+Free transcript via youtube-transcript-api. Optional metadata + top comments via YouTube Data API v3. Grok summarizes into TL;DR, Key Points, Notable Quotes (verbatim), Themes, Comment Sentiment, and Worth Following Up On. Saved as an AI-first note in your vault. Add `--visual` to also *watch* it: scene-change frame extraction (ffmpeg) that Claude reads with its own vision to capture on-screen text, code, diagrams, and demos the transcript misses.
 
 **You never open Obsidian.** Everything happens through Claude.
 
@@ -312,7 +312,7 @@ Powered by xAI Grok (live X access) + Perplexity Sonar (web research) + YouTube.
 | `/research [topic]` | Web research with citations: full dossier with recency markers and open questions. Uses Perplexity when keyed, free key-less sources (Wikipedia, HackerNews, arXiv, Reddit, and more) otherwise |
 | `/research-deep [topic]` | Vault-first synthesis (open web): scans your vault, finds gaps, fills them via Perplexity + Grok (or free key-less sources when unkeyed), propagates updates across people/projects/ideas |
 | `/notebooklm [topic]` | Vault-grounded synthesis via Gemini File Search. Uploads top 12 vault notes, returns a grounded answer with citations. No browser, one HTTP call. Pairs with `/research-deep` for dual-track research. |
-| `/youtube [url]` | Extract transcript + metadata + top comments → AI-first summary |
+| `/youtube [url] [--visual]` | Extract transcript + metadata + top comments → AI-first summary. `--visual` adds scene-change frame extraction Claude reads with its own vision |
 | `/podcast [url]` | Apple Podcasts or RSS → transcript (RSS tag / Whisper / show-notes) + AI-first summary |
 
 **Setup:** copy `.env.example` to `~/.config/obsidian-second-brain/.env`, add your keys (xAI, Perplexity, YouTube optional, OpenAI optional for podcast Whisper). Run `install.sh` and answer "y" to the research prompt to do this automatically.
@@ -459,9 +459,11 @@ Pair with `/research-deep` on the same topic. Open-web view + vault-grounded vie
 
 ---
 
-**`/youtube https://youtu.be/...`**
+**`/youtube https://youtu.be/...` (add `--visual` to watch, not just read)**
 
 Free transcript via youtube-transcript-api + optional metadata + comments via YouTube Data API v3 (free tier). Grok summarizes into TL;DR, Key Points, Notable Quotes (verbatim), Themes, Comment Sentiment, and Worth Following Up On. ~$0.04 for the Grok call. Frontmatter includes view count, channel, published date, like count for Dataview queries.
+
+`--visual` downloads the video (yt-dlp, <=720p) and extracts one frame per scene change (ffmpeg scene detection, not a fixed timer), so on-screen text, code, diagrams, slides, UI, and b-roll are captured. Claude reads the frames with its own vision (no extra API call) and writes a timestamp-keyed `## Visual notes` section; hero frames are embedded in the note. Requires `yt-dlp` + `ffmpeg` on PATH; skips gracefully if missing. `--max-frames N` caps frames read (default 24). Pipeline ported from [claude-watch](https://github.com/taoufik123-collab/claude-watch) / [claude-video](https://github.com/bradautomates/claude-video) (MIT).
 
 ---
 
