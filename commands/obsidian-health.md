@@ -7,7 +7,7 @@ triggers_en: ["vault health", "check vault", "audit vault", "vault diagnostics"]
 Use the obsidian-second-brain skill. Execute `/obsidian-health`:
 
 1. Read `_CLAUDE.md` first to find the vault path
-2. Run: `python ~/.claude/skills/obsidian-second-brain/scripts/vault_health.py --path ~/path/to/vault --json`
+2. Run: `python scripts/vault_health.py --path ~/path/to/vault --json`
    (replace vault path with the one from `_CLAUDE.md`)
 3. Parse the JSON output and split findings into categories
 4. Spawn parallel subagents to handle each category simultaneously:
