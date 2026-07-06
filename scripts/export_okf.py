@@ -23,6 +23,7 @@ Usage:
   uv run scripts/export_okf.py --path "/path/to/Vault" [--out _export/okf]
 """
 import argparse
+import html
 import os
 import re
 import sys
@@ -81,6 +82,7 @@ def clean_desc(s):
         inner = m.group(2)
         disp = inner.split("|", 1)[1] if "|" in inner else inner
         return disp.split("#", 1)[0].strip()
+    s = html.unescape(s)  # decode &gt; &amp; &quot; etc. so markup-strip below catches them
     s = WIKILINK_RE.sub(_wl, s)
     s = re.sub(r"[*_`>#]+", "", s)
     s = re.sub(r"\s+", " ", s).strip()
@@ -116,13 +118,24 @@ def infer_type(fm, rel):
     return "note"
 
 
+# YAML indicator characters that are unsafe as the FIRST char of a plain scalar
+_YAML_LEAD = set("&*@`!|>%?:#-[]{},\"'")
+
+
 def yaml_val(v):
-    """Render a value for OKF frontmatter (lists inline, strings quoted if needed)."""
+    """Render a value for OKF frontmatter (lists inline, strings quoted if needed).
+
+    Quotes (and fully escapes) any scalar that YAML would otherwise misparse:
+    values containing `: # "`, leading/trailing whitespace, an empty string, or a
+    leading YAML indicator char (e.g. `@sentropic/...`, `&gt; ...`). In the quoted
+    branch backslashes are escaped BEFORE quotes, so source `\\(` / `\\"` from
+    markdown-escaped links stay valid inside a double-quoted YAML scalar.
+    """
     if isinstance(v, list):
         return "[" + ", ".join(str(x) for x in v) + "]"
     s = str(v)
-    if any(c in s for c in ':#"') or s != s.strip():
-        return '"' + s.replace('"', '\\"') + '"'
+    if s == "" or s != s.strip() or (s[0] in _YAML_LEAD) or any(c in s for c in ':#"'):
+        return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
     return s
 
 
@@ -207,8 +220,9 @@ def main():
     for rel, (src, fm, body) in notes.items():
         top = pathlib.PurePath(rel).parts[0] if len(pathlib.PurePath(rel).parts) > 1 else "."
         groups.setdefault(top, []).append(rel)
-    idx = ["---", "type: index", f"title: {yaml_val(vault.name + ' (OKF bundle)')}",
-           f"timestamp: {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}", "---", "",
+    # §6: index.md carries no frontmatter; §11: the bundle-root index MAY declare okf_version
+    # (the only frontmatter key permitted in any index.md).
+    idx = ['---', 'okf_version: "0.1"', "---", "",
            f"# {vault.name} - OKF bundle", "",
            f"{written} concepts. Exported by obsidian-second-brain (OKF v0.1 compatible).", ""]
     for top in sorted(groups):
