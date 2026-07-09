@@ -630,7 +630,7 @@ requires-dist = [
     { name = "openai", specifier = ">=1.40.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.32.0" },
-    { name = "tavily-python", specifier = ">=0.3.0" },
+    { name = "tavily-python", specifier = ">=0.5.0" },
     { name = "youtube-transcript-api", specifier = ">=0.6.2" },
 ]
 

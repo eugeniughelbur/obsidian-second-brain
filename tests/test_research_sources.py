@@ -36,13 +36,14 @@ def test_library_imports_without_vault_path():
     from scripts.research.lib.sources.reddit import RedditSource
     from scripts.research.lib.sources.semantic_scholar import SemanticScholarSource
     from scripts.research.lib.sources.wikipedia import WikipediaSource
+    from scripts.research.lib.sources.tavily import TavilySource
 
     names = {
         ArxivSource.name, CrossRefSource.name, DevToSource.name, DuckDuckGoSource.name,
         HackerNewsSource.name, LobstersSource.name, OpenAlexSource.name, RedditSource.name,
-        SemanticScholarSource.name, WikipediaSource.name,
+        SemanticScholarSource.name, WikipediaSource.name, TavilySource.name,
     }
-    assert len(names) == 10  # all source names distinct
+    assert len(names) == 11  # all source names distinct
 
 
 def test_result_json_roundtrip():
