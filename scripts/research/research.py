@@ -76,7 +76,7 @@ def _free_sources(academic: bool):
     from .lib.sources.reddit import RedditSource
     from .lib.sources.wikipedia import WikipediaSource
 
-    return [
+    sources = [
         DuckDuckGoSource(),
         WikipediaSource(),
         HackerNewsSource(),
@@ -84,6 +84,13 @@ def _free_sources(academic: bool):
         ArxivSource(),
         SemanticScholarSource(),
     ]
+
+    if os.environ.get("TAVILY_API_KEY", "").strip():
+        from .lib.sources.tavily import TavilySource
+
+        sources.append(TavilySource())
+
+    return sources
 
 
 def run_free(topic: str, academic: bool) -> int:

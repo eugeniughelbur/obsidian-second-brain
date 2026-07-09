@@ -90,6 +90,35 @@ def test_cache_roundtrip(tmp_path, monkeypatch):
     assert cache.get("hackernews", "rust async", ttl_hours=0) is None
 
 
+def test_tavily_source_search(monkeypatch):
+    """TavilySource wraps tavily-python and returns Result objects."""
+    from unittest.mock import MagicMock, patch
+
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-key")
+
+    fake_response = {
+        "results": [
+            {"title": "Tavily Result", "url": "https://example.com", "content": "A snippet"},
+        ]
+    }
+
+    mock_client = MagicMock()
+    mock_client.search.return_value = fake_response
+
+    with patch("tavily.TavilyClient", return_value=mock_client):
+        from scripts.research.lib.sources.tavily import TavilySource
+
+        src = TavilySource()
+        results = src.search("test query", n=5)
+
+    assert len(results) == 1
+    assert results[0].source == "tavily"
+    assert results[0].title == "Tavily Result"
+    assert results[0].url == "https://example.com"
+    assert results[0].snippet == "A snippet"
+    mock_client.search.assert_called_once_with(query="test query", max_results=5)
+
+
 class _FakeSource:
     def __init__(self, name, rows=None, raises=False):
         self.name = name

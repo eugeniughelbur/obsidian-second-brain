@@ -1,0 +1,8 @@
+Using Python 3.11.15 environment at: /app/.venv
+Resolved 13 packages in 719ms
+Downloading tiktoken (1.1MiB)
+ Downloaded tiktoken
+Prepared 3 packages in 135ms
+error: Failed to install: tavily_python-0.7.26-py3-none-any.whl (tavily-python==0.7.26)
+  Caused by: Failed to create directory `/app/.venv/lib/python3.11/site-packages/tavily`
+  Caused by: failed to create directory `/app/.venv/lib/python3.11/site-packages/tavily`: Read-only file system (os error 30)

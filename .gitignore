@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
 .python-version
 
 # Local config (never commit)
