@@ -27,7 +27,19 @@ from datetime import date
 from pathlib import Path
 
 TODAY = date.today()
-EXCLUDE_DIRS = {".obsidian", ".trash", "_trash", ".git", ".claude", "_export", "Templates"}
+EXCLUDE_DIRS = {
+    ".obsidian",
+    ".trash",
+    "_trash",
+    ".git",
+    ".claude",
+    ".agents",
+    ".codex",
+    "_export",
+    "Templates",
+}
+FILE_INDEX_EXCLUDE_DIRS = EXCLUDE_DIRS - {"Templates"}
+EXCLUDE_ROOT_FILES = {"AGENTS.md", "INSTALL.md"}
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 # A note whose entire body was accidentally saved inside a ```markdown code fence:
 # the first non-blank line opens a fence and the real frontmatter (---) lives INSIDE it.
@@ -60,7 +72,10 @@ def index_vault_files(vault: Path) -> set:
     """
     files = set()
     for f in vault.rglob("*"):
-        if any(p in EXCLUDE_DIRS for p in f.relative_to(vault).parts):
+        parts = f.relative_to(vault).parts
+        if any(p in FILE_INDEX_EXCLUDE_DIRS for p in parts):
+            continue
+        if len(parts) == 1 and parts[0] in EXCLUDE_ROOT_FILES:
             continue
         if not f.is_file():
             continue
@@ -75,6 +90,8 @@ def load_vault(vault: Path) -> dict:
         parts = md.relative_to(vault).parts
         # Also skip any template folder (Templates, 20_Templates, ...): its
         # <%...%> Templater syntax is intentional, not a "template leftover" bug.
+        if len(parts) == 1 and parts[0] in EXCLUDE_ROOT_FILES:
+            continue
         if any(p in EXCLUDE_DIRS or p.lower().endswith("templates") for p in parts):
             continue
         rel = str(md.relative_to(vault))
@@ -364,6 +381,7 @@ def check_wanted_notes(notes: dict, vault: Path) -> list:
                 or link_norm in all_aliases
                 or link_dash_norm in all_stems_dash_norm
                 or link.lower() in all_files
+                or f"{link.lower()}.md" in all_files
             )
             if not resolved:
                 potential_folder = vault / link

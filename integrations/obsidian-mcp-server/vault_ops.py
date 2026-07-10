@@ -277,7 +277,7 @@ def save_note(
         f"{content}\n"
     )
     path.write_text(body, encoding="utf-8")
-    return {"saved": str(path.relative_to(vault))}
+    return {"saved": path.relative_to(vault).as_posix()}
 
 
 def capture_idea(text: str, *, tags: Optional[List[str]] = None) -> Dict[str, Any]:

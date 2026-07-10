@@ -19,6 +19,7 @@ CAPABILITY_VOCAB="read write edit bash webfetch websearch task todo"
 parse_frontmatter() {
   local file="$1" key="$2"
   awk -v key="$key" '
+    { sub(/\r$/, "") }
     /^---$/ { fm++; next }
     fm == 1 {
       sub(/^[[:space:]]+/, "")
@@ -38,6 +39,7 @@ parse_frontmatter() {
 command_body() {
   local file="$1"
   awk '
+    { sub(/\r$/, "") }
     fm < 2 && /^---$/ { fm++; next }
     fm >= 2 { print }
   ' "$file"

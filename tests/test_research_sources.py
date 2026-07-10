@@ -81,6 +81,7 @@ def test_source_config_defaults_and_env(monkeypatch):
 
 def test_cache_roundtrip(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     assert cache.get("hackernews", "rust async", ttl_hours=24) is None  # miss
     rows = [Result(source="hackernews", title="t", url="u", points=1)]
     cache.put("hackernews", "rust async", rows)

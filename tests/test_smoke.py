@@ -37,16 +37,23 @@ def test_codex_cli_build_generates_expected_files():
         check=False,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
 
     assert result.returncode == 0, result.stderr
     assert (REPO_ROOT / "dist/codex-cli/AGENTS.md").is_file()
     skill = REPO_ROOT / "dist/codex-cli/.agents/skills/obsidian-save/SKILL.md"
     assert skill.is_file()
-    # Native skills require name + description frontmatter for discovery.
-    head = skill.read_text(encoding="utf-8")[:400]
+    # Native skills require discovery frontmatter plus the complete command body.
+    content = skill.read_text(encoding="utf-8")
+    head = content[:400]
     assert "name: obsidian-save" in head
     assert "description:" in head
+    assert "Triggers: save this" in head
+    assert "Use the obsidian-second-brain skill. Execute `/obsidian-save`:" in content
+    # Calendar depends on a Claude-only MCP and is explicitly excluded from Codex.
+    assert not (REPO_ROOT / "dist/codex-cli/.agents/skills/obsidian-calendar").exists()
 
 
 def test_hermes_build_generates_native_skills():
@@ -59,6 +66,8 @@ def test_hermes_build_generates_native_skills():
         check=False,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
 
     assert result.returncode == 0, result.stderr
@@ -97,6 +106,8 @@ def test_pi_build_generates_package():
         check=False,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
 
     assert result.returncode == 0, result.stderr
@@ -268,6 +279,35 @@ def test_health_excludes_export_bundle(tmp_path):
     data = _run_health_json(tmp_path)
     assert data["total_notes"] == 1, data["total_notes"]
     assert not [i for i in data["issues"] if i["type"] == "duplicate"]
+
+
+def test_health_excludes_codex_support_directories(tmp_path):
+    """Generated Codex skills and references are runtime support files, not vault
+    notes. Scanning them pollutes every health metric with duplicate/orphan noise."""
+    (tmp_path / ".agents" / "skills" / "demo").mkdir(parents=True)
+    (tmp_path / ".codex" / "references").mkdir(parents=True)
+    (tmp_path / "Templates").mkdir()
+    (tmp_path / ".agents" / "skills" / "demo" / "SKILL.md").write_text(
+        "# Demo skill\n\nUse [[Missing Skill Example]].\n", encoding="utf-8"
+    )
+    (tmp_path / ".codex" / "references" / "Rules.md").write_text(
+        "# Rules\n\nUse [[Missing Reference Example]].\n", encoding="utf-8"
+    )
+    (tmp_path / "AGENTS.md").write_text("# Runtime manual\n", encoding="utf-8")
+    (tmp_path / "INSTALL.md").write_text("# Install hint\n", encoding="utf-8")
+    (tmp_path / "Templates" / "Daily Note.md").write_text(
+        "# Daily template\n", encoding="utf-8"
+    )
+    (tmp_path / "Home.md").write_text(
+        "---\ndate: 2026-07-10\ntype: home\ntags: [home]\nai-first: true\n---\n"
+        "## For future Claude\nThis is the test vault home.\n\n"
+        "# Home\n\nUse [[Templates/Daily Note]].\n",
+        encoding="utf-8",
+    )
+
+    data = _run_health_json(tmp_path)
+    assert data["total_notes"] == 1, data["total_notes"]
+    assert data["counts"]["Wanted notes"] == 0, data["issues"]
 
 
 def test_health_wanted_notes_ignore_code_examples(tmp_path):
