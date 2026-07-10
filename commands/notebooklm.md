@@ -2,6 +2,7 @@
 description: Vault-first source-grounded research via Gemini File Search. One command, no browser. The grounded parallel to /research-deep (which is open-web via Perplexity).
 category: research
 triggers_en: ["notebooklm", "research grounded", "ground research in vault", "ask my notebook", "source-grounded research"]
+triggers_es: ["notebooklm", "investigación fundamentada en mis notas", "basa esto en mi vault", "pregúntale a mis notas", "investigación con fuentes propias"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/notebooklm [topic]`:

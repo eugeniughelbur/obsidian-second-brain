@@ -2,6 +2,7 @@
 description: Red-team your current idea against your own vault history - finds contradictions, past failures, and flawed assumptions
 category: thinking
 triggers_en: ["challenge this", "grill me on this", "red team my idea", "stress test this"]
+triggers_es: ["cuestiona esta idea", "ponme a prueba con esto", "haz de abogado del diablo con mi idea", "pon esto a prueba"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-challenge $ARGUMENTS`:

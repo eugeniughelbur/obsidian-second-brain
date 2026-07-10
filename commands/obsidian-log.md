@@ -2,6 +2,7 @@
 description: Log this work or dev session to the vault - infers project from context
 category: vault
 triggers_en: ["log this work", "log this session", "log this dev session", "obsidian log"]
+triggers_es: ["registra este trabajo", "registra esta sesión", "registra esta sesión de desarrollo", "obsidian log"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-log`:

@@ -2,6 +2,7 @@
 description: Review vault learnings, prune stale ones, surface active patterns - the vault's lessons compound or expire
 category: thinking
 triggers_en: ["review learnings", "what have I learned", "show lessons", "prune learnings"]
+triggers_es: ["revisa los aprendizajes", "qué he aprendido", "muéstrame las lecciones", "poda los aprendizajes"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-learn $ARGUMENTS`:

@@ -3,6 +3,7 @@ description: One calendar command with four modes - agenda (read a snapshot), re
 category: vault
 exclude: [codex-cli, gemini-cli, opencode, hermes]
 triggers_en: ["review my agenda", "check my calendar", "what's on my schedule", "what's on the calendar", "agenda for this week", "calendar check", "reconcile calendar", "what's not on my calendar", "am I missing anything on my calendar", "create a meeting note", "log this meeting", "meeting note for", "prep this meeting", "schedule a meeting", "book a meeting", "put this on my calendar", "schedule this task", "find a time for"]
+triggers_es: ["revisa mi agenda", "revisa mi calendario", "qué tengo esta semana", "concilia mi calendario con el vault", "qué me falta en el calendario", "crea una nota de reunión", "registra esta reunión", "prepárame para esta reunión", "agenda una reunión", "reserva una reunión", "pon esto en mi calendario", "agenda esta tarea", "búscame un hueco para"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-calendar $ARGUMENTS`:

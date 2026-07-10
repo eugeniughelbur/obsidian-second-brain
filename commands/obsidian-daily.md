@@ -2,6 +2,7 @@
 description: Create or update today's daily note - pulls calendar events, overdue tasks, and conversation context
 category: vault
 triggers_en: ["todays note", "create todays daily", "open daily", "today daily note"]
+triggers_es: ["nota de hoy", "crea la diaria de hoy", "abre mi diaria", "la nota diaria de hoy"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-daily`:

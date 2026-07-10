@@ -2,6 +2,7 @@
 description: Extract metadata, transcript, and summary from a podcast episode, saved as an AI-first note in the vault
 category: research
 triggers_en: ["summarize this podcast", "podcast episode summary", "extract podcast", "what's in this episode"]
+triggers_es: ["resume este pódcast", "resumen del episodio", "extrae este pódcast", "qué dice este episodio"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/podcast [url]`:

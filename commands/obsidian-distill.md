@@ -2,6 +2,7 @@
 description: Condense a long note or source into key claims, each tagged with provenance back to the exact source block it came from
 category: thinking
 triggers_en: ["distill this", "condense this note", "summarize with sources", "distill this source", "boil this down with provenance"]
+triggers_es: ["destila esto", "condensa esta nota", "resúmelo con fuentes", "destila esta fuente", "resume esto sin perder la trazabilidad"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-distill $ARGUMENTS`:

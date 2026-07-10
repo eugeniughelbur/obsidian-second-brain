@@ -2,6 +2,7 @@
 description: Convene a panel of distinct perspectives on a decision - one independent verdict per lens, then a synthesis. A multi-persona complement to /obsidian-challenge
 category: thinking
 triggers_en: ["convene a panel", "advisor panel", "get multiple perspectives on", "panel review", "what would the experts say about"]
+triggers_es: ["convoca un panel", "panel de asesores", "dame varias perspectivas sobre esto", "revisión en panel", "qué dirían los expertos sobre esto"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-panel [decision or question]`:

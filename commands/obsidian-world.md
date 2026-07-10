@@ -2,6 +2,7 @@
 description: Load your identity, values, priorities, and current state in one shot - with progressive context levels to avoid burning tokens
 category: vault
 triggers_en: ["load context", "what is going on", "where am I", "load my world"]
+triggers_es: ["carga el contexto", "qué está pasando", "dónde estoy", "carga mi mundo"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-world`:

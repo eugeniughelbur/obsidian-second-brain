@@ -2,6 +2,7 @@
 description: Web research with citations - Perplexity Sonar when an API key is set, free key-less sources (Wikipedia, HackerNews, arXiv, Reddit, and more) otherwise. Deep dossier with summary, facts, timeline, players, contrarian views, open questions
 category: research
 triggers_en: ["research this", "look up", "find information about", "perplexity research"]
+triggers_es: ["investiga esto", "búscalo", "busca información sobre", "investigación con perplexity"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/research [topic]`:
