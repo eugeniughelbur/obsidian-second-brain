@@ -140,8 +140,12 @@ def main() -> int:
     if args.files:
         files = [Path(f) for f in args.files]
     else:
+        # core.quotepath=false: git otherwise octal-escapes and quotes non-ASCII
+        # filenames, and the quoted string is not a real path - the sweep then
+        # warns 'unreadable' on files that exist (seen on CI with the sample
+        # vault's em-dash filenames).
         result = subprocess.run(
-            ['git', 'ls-files', '*.md', '*.py', '*.sh'],
+            ['git', '-c', 'core.quotepath=false', 'ls-files', '*.md', '*.py', '*.sh'],
             capture_output=True, text=True,
         )
         files = [Path(f) for f in result.stdout.splitlines() if f.strip()]

@@ -17,8 +17,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-BANNED = "—–±“”‘’≥≤≠"
-ALLOW_MARKER = "Em-dash (`—`)"  # the specimen row in ai-first-rules.md
+# Written as escapes so this file itself passes the repo-wide sweep -
+# the guards must not trip over the guard.
+BANNED = "\u2014\u2013\u00b1\u201c\u201d\u2018\u2019\u2265\u2264\u2260"
+ALLOW_MARKER = "Em-dash (`\u2014`)"  # the specimen row in ai-first-rules.md
 
 
 def test_instruction_files_carry_no_banned_characters():
