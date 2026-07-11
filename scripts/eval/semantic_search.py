@@ -143,18 +143,69 @@ def _mean_pool(vectors: list[list[float]]) -> list[float]:
     return [sum(v[i] for v in vectors) / n for i in range(dim)]
 
 
-def embed_note(text: str) -> list[float]:
-    """Embed a whole note: split into safe-sized chunks, embed each, average them.
+_FM_RE = re.compile(r"^---\n(.*?)\n---\n?", re.DOTALL)
+_FM_LIST_RE = re.compile(r"^(aliases|related-people|related-projects|tags):\s*\[(.+?)\]\s*$", re.MULTILINE)
+_FM_TYPE_RE = re.compile(r"^type:\s*[\"\']?([A-Za-z0-9_-]+)", re.MULTILINE)
 
-    A note longer than the model's token limit cannot be embedded in one call, so
-    we chunk it and mean-pool - representing the entire note, not just its opening.
-    Chunk count is capped so a giant transcript stays fast (the cap still covers
-    ~9600 chars, far more than any preamble + first sections)."""
+
+def prepare_note_text(stem: str, text: str) -> tuple[str, str]:
+    """Return (identity_header, cleaned_body) for embedding.
+
+    The header names the note (title, type, aliases, related people/projects) so
+    every chunk stays reachable by described role, not just by title words. The
+    body drops frontmatter and empty template sections - a daily note that is
+    mostly unfilled scaffolding must not have its one real paragraph diluted by
+    boilerplate headings (stress-test fix 13/24)."""
+    fm = ""
+    m = _FM_RE.match(text)
+    if m:
+        fm = m.group(1)
+        text = text[m.end():]
+    bits = [stem]
+    tm = _FM_TYPE_RE.search(fm)
+    if tm:
+        bits.append(tm.group(1))
+    for _, items in _FM_LIST_RE.findall(fm):
+        bits.extend(i.strip().strip("\"\'[]") for i in items.split(",") if i.strip())
+    header = " | ".join(dict.fromkeys(b for b in bits if b)) + "\n"
+    # Drop sections that contain no prose: a heading directly followed by another
+    # heading (or EOF) is template scaffolding, not content.
+    lines = text.splitlines()
+    kept: list[str] = []
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            nxt = next((l for l in lines[i + 1:] if l.strip()), "")
+            if not nxt or nxt.lstrip().startswith("#"):
+                continue
+        kept.append(line)
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+    return header, body
+
+
+def embed_note(text: str) -> list[float]:
+    """Embed a whole note into ONE mean-pooled vector (legacy shape; kept for
+    compatibility - build_index stores per-chunk vectors via embed_note_chunks)."""
+    vecs = embed_note_chunks(text)
+    return _mean_pool(vecs) if vecs else []
+
+
+def embed_note_chunks(text: str, header: str = "") -> list[list[float]]:
+    """Embed a note as per-chunk vectors (stress-test fix 13/24).
+
+    Mean-pooling a long note produced one averaged mumble: a 10-section dossier
+    answering a query in section 7 has one strong vector and nine unrelated ones,
+    and the average drowns the signal 9-to-1. Chunks are scored independently at
+    query time (best chunk wins), so each chunk carries the note's identity
+    header (title/type/aliases/related) - a mid-dossier section must still know
+    who it is about."""
     text = text.strip()
     if not text:
         return []
-    chunks = [text[i:i + _CHUNK_CHARS] for i in range(0, len(text), _CHUNK_CHARS)][:_MAX_CHUNKS]
-    return _mean_pool([embed(c) for c in chunks])
+    body_room = max(200, _CHUNK_CHARS - len(header))
+    chunks = [text[i:i + body_room] for i in range(0, len(text), body_room)][:_MAX_CHUNKS]
+    # 6 decimals is far beyond cosine's discrimination needs and halves the
+    # on-disk index (float repr is the bulk of the JSON).
+    return [[round(x, 6) for x in embed(header + c)] for c in chunks]
 
 
 # --------------------------------------------------------------------------- #
@@ -186,7 +237,7 @@ def _excluded(rel: str) -> bool:
 def _iter_notes(vault: Path):
     for md in sorted(vault.rglob("*.md")):
         parts = md.relative_to(vault).parts
-        if SKIP_DIRS & set(parts):
+        if any(pt.lower() in SKIP_DIRS or pt.lower().endswith("templates") for pt in parts):
             continue
         if md.name.endswith(".excalidraw.md"):
             continue  # drawings are raw JSON, not prose - they bloat and fail embedding
@@ -202,7 +253,10 @@ def build_index(vault: Path, verbose: bool = True) -> dict:
             cache = json.loads(index_path.read_text())
         except Exception:
             cache = {}
-    old = cache.get("notes", {})
+    # Format 2 = per-chunk vectors with identity headers (fix 13/24). A cache in
+    # the old shape must not be reused: the note text is unchanged but what we
+    # embed for it is not.
+    old = cache.get("notes", {}) if cache.get("format") == 2 else {}
     new: dict = {}
     embedded = reused = skipped = failed = 0
 
@@ -223,22 +277,29 @@ def build_index(vault: Path, verbose: bool = True) -> dict:
             continue
         # An empty/whitespace-only note has no body to embed; fall back to its title
         # (which still carries meaning) so it stays findable. Skip only if even that is empty.
-        embed_text = text if text.strip() else md.stem
+        header, body = prepare_note_text(md.stem, text)
+        # A note that is all scaffolding still embeds its identity header, so it
+        # stays findable by name/aliases. Skip only if even that is empty.
+        embed_text = body if body else header.strip()
         if not embed_text.strip():
             continue
         try:
-            vec = embed_note(embed_text)
+            vecs = embed_note_chunks(embed_text, header=header)
         except Exception as e:  # one bad note must not abort a 1000-note run
             failed += 1
             if verbose:
                 print(f"  [skip] {rel}: {e}", file=sys.stderr)
             continue
-        new[rel] = {"hash": h, "title": md.stem, "vec": vec}
+        tm = _FM_TYPE_RE.search(text[:400])
+        entry = {"hash": h, "title": md.stem, "vecs": vecs}
+        if tm:
+            entry["type"] = tm.group(1).lower()
+        new[rel] = entry
         embedded += 1
         if verbose and embedded % 50 == 0:
             print(f"  embedded {embedded} notes...", file=sys.stderr)
 
-    out = {"model": EMBED_MODEL, "notes": new}
+    out = {"model": EMBED_MODEL, "format": 2, "notes": new}
     index_path.write_text(json.dumps(out), encoding="utf-8")
     if verbose:
         print(
@@ -262,8 +323,13 @@ def load_index(vault: Path) -> dict:
 def semantic_search(query: str, index: dict, limit: int = 10) -> list[dict]:
     """Rank notes by meaning-distance from the query."""
     qvec = embed(query)
+
+    def _score(n: dict) -> float:
+        vecs = n.get("vecs") or ([n["vec"]] if n.get("vec") else [])
+        return max((cosine(qvec, v) for v in vecs), default=0.0)
+
     scored = [
-        {"path": rel, "title": n["title"], "score": cosine(qvec, n["vec"])}
+        {"path": rel, "title": n["title"], "score": _score(n)}
         for rel, n in index["notes"].items()
     ]
     scored.sort(key=lambda r: r["score"], reverse=True)

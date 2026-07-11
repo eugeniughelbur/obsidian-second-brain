@@ -54,7 +54,30 @@ _STOPWORDS = frozenset(
 _SEARCH_DEWEIGHT_PREFIXES = ("raw/",)
 _SEARCH_DEWEIGHT_FILES = {"log.md"}
 # Tunable so retrieval changes can be A/B-measured (set to 1.0 to disable the penalty).
-_SEARCH_DEWEIGHT_FACTOR = float(os.environ.get("OBSIDIAN_SEARCH_DEWEIGHT", "0.15"))
+_SEARCH_DEWEIGHT_FACTOR = float(os.environ.get("OBSIDIAN_SEARCH_DEWEIGHT") or "0.15")
+# Type-aware volume (stress-test fix 13/24): term-dense operational logs took #1
+# on 7 of 12 audit queries, burying canonical notes. Log-ish notes fade to 0.5 -
+# a moderator, not a mute: they lose ties against canon but still win when they
+# are genuinely the best match. Person/entity dossiers get a modest boost.
+_SEARCH_LOG_WEIGHT = float(os.environ.get("OBSIDIAN_SEARCH_LOG_WEIGHT") or "0.5")
+_SEARCH_ENTITY_BOOST = float(os.environ.get("OBSIDIAN_SEARCH_ENTITY_BOOST") or "1.5")
+_LOG_TYPES = {"log", "dev-log", "daily", "worklog"}
+_ENTITY_TYPES = {"person", "entity"}
+_LOG_FOLDERS = {"logs", "daily", "dev logs"}
+_TYPE_RE = re.compile(r"(?m)^type:\s*[\"\']?([A-Za-z0-9_-]+)")
+
+
+def _type_weight(rel: str, text: str) -> float:
+    """Volume knob for a note based on its declared type (folder as fallback)."""
+    m = _TYPE_RE.search(text[:400])
+    ntype = m.group(1).lower() if m else ""
+    if ntype in _ENTITY_TYPES:
+        return _SEARCH_ENTITY_BOOST
+    if ntype in _LOG_TYPES:
+        return _SEARCH_LOG_WEIGHT
+    if not ntype and any(part.lower() in _LOG_FOLDERS for part in rel.split("/")[:-1]):
+        return _SEARCH_LOG_WEIGHT
+    return 1.0
 
 # BM25-style sublinear-TF + length normalization. Env-toggle for A/B (0 = old raw counts).
 _SEARCH_LENGTH_NORM = os.environ.get("OBSIDIAN_SEARCH_LENGTHNORM", "1") != "0"
@@ -145,6 +168,21 @@ def _embed_query(text: str) -> Optional[List[float]]:
     return None
 
 
+# The MCP server is long-running and the per-chunk index is tens of MB: parsing
+# it on every search call would dominate latency. Cache by (path, mtime, size)
+# so an index rebuild is picked up on the next call (stress-test fix 13/24).
+_INDEX_CACHE: Dict[str, Any] = {}
+
+
+def _load_index_cached(index_path: Path) -> dict:
+    st = index_path.stat()
+    key = (str(index_path), st.st_mtime_ns, st.st_size)
+    if _INDEX_CACHE.get("key") != key:
+        _INDEX_CACHE["key"] = key
+        _INDEX_CACHE["index"] = json.loads(index_path.read_text(encoding="utf-8"))
+    return _INDEX_CACHE["index"]
+
+
 def _semantic_fuse(
     query: str, lexical: List[Dict[str, Any]], vault: Path, limit: int,
     enabled: Optional[bool] = None,
@@ -158,16 +196,27 @@ def _semantic_fuse(
     if not index_path.exists():
         return None
     try:
-        index = json.loads(index_path.read_text(encoding="utf-8"))
+        index = _load_index_cached(index_path)
         notes = index.get("notes") or {}
         if not notes:
             return None
         qvec = _embed_query(query)
         if not qvec:
             return None
+        # Best-chunk scoring (fix 13/24): a note is as relevant as its most
+        # relevant section, not the average of everything it contains.
+        def _note_score(rel, n):
+            """A note is as relevant as its most relevant section. Pure max won
+            the measured sweep (vs multiplicative type weights on cosine - which
+            deleted log notes outright, recall halved - vs additive nudges, vs a
+            70/30 max+mean blend): fix 13/24, all variants scored on both case
+            sets before shipping."""
+            vecs = n.get("vecs") or ([n["vec"]] if n.get("vec") else [])
+            return max((_cosine(qvec, v) for v in vecs), default=0.0)
+
         sem = sorted(
-            ({"path": rel, "title": n.get("title", rel), "score": _cosine(qvec, n["vec"])}
-             for rel, n in notes.items() if n.get("vec")),
+            ({"path": rel, "title": n.get("title", rel), "score": _note_score(rel, n)}
+             for rel, n in notes.items() if n.get("vecs") or n.get("vec")),
             key=lambda r: r["score"], reverse=True,
         )[:_FUSE_DEPTH]
         lex_rank = {r["path"]: i for i, r in enumerate(lexical[:min(_FUSE_DEPTH, _FUSE_LEX_DEPTH)])}
@@ -246,6 +295,8 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
             rel = md.relative_to(vault).as_posix()
             if rel in _SEARCH_DEWEIGHT_FILES or rel.startswith(_SEARCH_DEWEIGHT_PREFIXES):
                 score *= _SEARCH_DEWEIGHT_FACTOR
+            else:
+                score *= _type_weight(rel, text)
             scored.append(
                 {
                     "path": rel,
