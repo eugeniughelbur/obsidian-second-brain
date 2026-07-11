@@ -52,10 +52,12 @@ def test_semantic_toggle_reaches_fuse(vault, monkeypatch):
         return real(query, lexical, v, limit, enabled=enabled)
 
     monkeypatch.setattr(vault_ops, "_semantic_fuse", spy)
-    vault_ops.search("zebra", limit=5, semantic=False)
+    vault_ops.search("zebra facts live", limit=5, semantic=False)
     assert seen["enabled"] is False
-    vault_ops.search("zebra", limit=5)
-    assert seen["enabled"] is None  # shipped default follows the env
+    # multi-word: the shipped default follows the env (single tokens dispatch
+    # to lexical since fix 11/24 and are covered in test_query_aware_default)
+    vault_ops.search("zebra facts live", limit=5)
+    assert seen["enabled"] is None
 
 
 def test_lexical_mode_is_pure(vault, monkeypatch):

@@ -75,6 +75,17 @@ _EMBED_KEY = os.environ.get("OBSIDIAN_EMBED_KEY", "")
 _SEMANTIC_ENABLED = os.environ.get("OBSIDIAN_SEARCH_SEMANTIC", "1") != "0"
 _RRF_K = 60
 _FUSE_DEPTH = 25  # how many from each ranking feed the fusion
+# Semantic votes count more than lexical ones in the fusion. Measured on the
+# straightened ruler (fix 11/24): flat 1:1 fusion let noisy term-dense log
+# notes demote answers pure semantic had ranked #1 (paraphrase recall@1
+# 8% fused vs 50% semantic on the audit cases). w=3.0 won the measured
+# sweep: best average MRR across paraphrase + keyword case sets.
+_RRF_SEMANTIC_WEIGHT = float(os.environ.get("OBSIDIAN_RRF_SEMANTIC_WEIGHT") or "3.0")
+# Lexical rank carries signal only near the top: on paraphrase queries the
+# tail of the lexical ranking is term-frequency noise, and letting 25 noisy
+# entries vote demoted semantic answers. Lexical votes are capped to its
+# strongest few; semantic keeps the full fusion depth.
+_FUSE_LEX_DEPTH = int(os.environ.get("OBSIDIAN_RRF_LEX_DEPTH") or "25")
 
 # Bounds keep search fast and reads safe.
 _MAX_FILES_SCANNED = 2000
@@ -153,7 +164,7 @@ def _semantic_fuse(
              for rel, n in notes.items() if n.get("vec")),
             key=lambda r: r["score"], reverse=True,
         )[:_FUSE_DEPTH]
-        lex_rank = {r["path"]: i for i, r in enumerate(lexical[:_FUSE_DEPTH])}
+        lex_rank = {r["path"]: i for i, r in enumerate(lexical[:min(_FUSE_DEPTH, _FUSE_LEX_DEPTH)])}
         sem_rank = {r["path"]: i for i, r in enumerate(sem)}
         snippet = {r["path"]: r.get("snippet", "") for r in lexical}
         title = {r["path"]: r["title"] for r in lexical}
@@ -162,7 +173,7 @@ def _semantic_fuse(
         fused = []
         for p in set(lex_rank) | set(sem_rank):
             s = (1.0 / (_RRF_K + lex_rank[p]) if p in lex_rank else 0.0) \
-                + (1.0 / (_RRF_K + sem_rank[p]) if p in sem_rank else 0.0)
+                + (_RRF_SEMANTIC_WEIGHT / (_RRF_K + sem_rank[p]) if p in sem_rank else 0.0)
             fused.append({"path": p, "title": title.get(p, p), "snippet": snippet.get(p, ""), "score": s})
         fused.sort(key=lambda r: r["score"], reverse=True)
         out = fused[:limit]
@@ -189,6 +200,12 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
         terms = [t for t in re.split(r"\W+", query.lower()) if len(t) > 2]
     if not terms:
         return []
+    # Query-aware dispatch (fix 11/24): a single exact token ("OKF", "docker") is
+    # a lookup, not a question - bare tokens embed near-meaninglessly, and fusing
+    # semantic noise into an exact hit demoted it (OKF: lexical rank 2 -> fused
+    # rank 5 in the audit). Multi-word queries keep the semantic-weighted fusion.
+    if semantic is None and len(terms) == 1:
+        semantic = False
     limit = max(1, min(int(limit), 20))
     scored: List[Dict[str, Any]] = []
     for i, md in enumerate(_iter_notes(vault)):
