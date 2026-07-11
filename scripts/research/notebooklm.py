@@ -109,6 +109,7 @@ date: {date}
 type: research-notebooklm
 tags:
   - research
+  - research-notebooklm
   - notebooklm
   - source-grounded
 ai-first: true

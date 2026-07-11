@@ -27,7 +27,7 @@ A distillation is not a summary. A summary throws the source away; a distillatio
 
 6. Keep inference separate from evidence. If the distillation surfaces a conclusion the source implies but never states, put it under a clearly labelled `## Inferences (not in the source)` section, each marked `confidence: speculation`, so distilled fact and your reasoning never blur.
 
-7. Write the distillation note. Path: `<resolved-folder>/Distill - <source-title> (YYYY-MM-DD).md`. It MUST follow `references/ai-first-rules.md`. Frontmatter includes `type: distillation`, `ai-first: true`, `source` (the verbatim path/URL of what was distilled), `source-blocks` (the count), `date`, `tags: [distillation, thinking]`. Body order:
+7. Write the distillation note. Path: `<resolved-folder>/Distill - <source-title> (YYYY-MM-DD).md`. It MUST follow `references/ai-first-rules.md`. Frontmatter includes `type: distillation`, `ai-first: true`, `source` (the verbatim path/URL of what was distilled), `source-blocks` (the count), `date`, `tags: [distillation, thinking]`, `related-people` and `related-projects` (wikilinks, per the `type: distillation` schema). Body order:
    - `## For future Claude` - 2-3 sentences: what was distilled, why, and that every claim carries a `(src: Bn)` pointer back to the numbered source blocks at the bottom for verification.
    - `## Distilled claims` - the grouped claims with inline provenance tags.
    - `## Inferences (not in the source)` - only if step 6 produced any.

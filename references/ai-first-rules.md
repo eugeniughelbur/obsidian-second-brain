@@ -104,6 +104,9 @@ status: active                # active | planning | completed | archived | on-ho
 tags: [project, ...]
 related-people: ["[[People/...]]", ...]
 related-projects: ["[[Projects/...]]", ...]
+job: Work                     # optional - which job/board context this belongs to
+repo: /path/or/git-url        # optional - enables /obsidian-projects git + docs checks
+graduated-from: "[[Idea]]"    # optional - set by /obsidian-graduate
 ai-first: true
 ```
 
@@ -176,8 +179,49 @@ tags: [review, ...]
 ai-first: true
 ```
 
-### `type: research` / `type: research-deep` / `type: x-read` / `type: x-pulse` / `type: youtube` / `type: podcast`
+### `type: research` / `type: research-deep` / `type: research-notebooklm` / `type: x-read` / `type: x-pulse` / `type: youtube` / `type: podcast`
 See `commands/research*.md`, `commands/x-*.md`, `commands/youtube.md`, and `commands/podcast.md` for the full schemas. All set `ai-first: true` and follow the universal rules.
+
+### `type: learnings-review`
+Output of `/obsidian-learn`, saved to the concepts folder (per `references/folder-map.md`):
+```yaml
+date: YYYY-MM-DD
+type: learnings-review
+tags: [learnings-review, thinking]
+period-days: 30               # the window reviewed
+ai-first: true
+```
+
+### `type: conflict`
+Written by `/obsidian-reconcile` for genuinely ambiguous contradictions, saved to the decisions folder (per `references/folder-map.md`):
+```yaml
+date: YYYY-MM-DD
+type: conflict
+tags: [conflict, decision]
+status: open                  # open | resolved
+sources: [...]                # the conflicting notes, as wikilinks
+ai-first: true
+```
+
+### `type: source` (raw captures)
+Immutable verbatim captures under `raw/`, written by `/obsidian-ingest`. The body is verbatim by design, so the `## For future Claude` preamble is NOT required - this is the raw-source exception, and the validate hook skips `raw/` accordingly:
+```yaml
+date: YYYY-MM-DD
+type: source
+tags: [source, <article|transcript|pdf|video>]
+source_url: ""                # verbatim
+source_type: article
+content_hash: ""
+ai-first: true
+```
+
+## Documented exceptions
+
+Where the full rule is deliberately relaxed. A documented exception is law; an undocumented one is rot - anything not listed here follows the full rule.
+
+- **Capture exception** (`/obsidian-capture`): speed beats completeness at capture time. A captured idea needs only `type: idea`, `date`, `tags: [idea]`, `ai-first: true`, `status: captured`, and a one-line body. Full enrichment (preamble, wikilinks, related-*) happens at graduation via `/obsidian-graduate`, by design.
+- **Kanban exception** (boards): board files are UI surfaces for the Kanban plugin - a `## For future Claude` H2 would render as a phantom column. Boards carry `kanban-plugin: board` frontmatter only and are exempt from the preamble and rich-frontmatter rules; notes ABOUT board items (task notes) follow the full rule. The validate hook skips board files accordingly.
+- **Raw-source exception** (`raw/`): see `type: source` above - frontmatter yes, preamble no, body verbatim.
 
 ### `type: podcast`
 ```yaml
@@ -212,7 +256,7 @@ ai-first: true
 ```
 
 ### `type: synthesis` / `type: emerge` / `type: connect` / `type: challenge`
-Outputs from thinking tools. Each saves to `Knowledge/` or `Ideas/` with:
+Outputs from thinking tools. Each saves to the concepts/ideas folder (resolved per `references/folder-map.md`) with:
 ```yaml
 date: YYYY-MM-DD
 type: <thinking-tool-type>

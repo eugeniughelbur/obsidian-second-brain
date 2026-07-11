@@ -46,7 +46,7 @@ The optional argument is a scope: `recent` (last 30 days, default), `all` (entir
    ## Top 5 Lessons of the Period
    - Most impactful learnings ranked by frequency × recency × consequence
 
-6. Save the report to the concepts folder (resolved per `references/folder-map.md`) as `YYYY-MM-DD - Learnings Review.md`
+6. Save the report to the concepts folder (resolved per `references/folder-map.md`) as `YYYY-MM-DD - Learnings Review.md` (`type: learnings-review`, schema in `references/ai-first-rules.md`)
 7. Append to the operation log: if `Logs/` exists write `**HH:MM** - learn | X active, Y stale, Z superseded, N promotion candidates` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] learn | X active, Y stale, Z superseded, N promotion candidates` to `log.md`
 8. Update today's daily note with a brief summary
 9. Offer to:

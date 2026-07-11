@@ -22,7 +22,7 @@ The optional argument is a timeframe (e.g., "2 weeks", "this month"). Default: l
    - **Unnamed conclusions**: things the notes imply but never state outright (e.g., "you've mentioned onboarding friction in 4 different projects - this is a systemic issue, not a project-specific one")
    - **Emerging directions**: where the vault suggests the user is heading, even if they haven't committed to it
 5. Present findings as a structured "Pattern Report" - each pattern gets: the evidence (cited notes), the interpretation, and a suggested action
-6. Offer to save the pattern report to the ideas/concepts folder (resolved per `references/folder-map.md` - wiki-style `wiki/concepts/`, Obsidian-style `Ideas/`) or a relevant project note
+6. Offer to save the pattern report to the ideas/concepts folder (resolved per `references/folder-map.md` - wiki-style `wiki/concepts/`, Obsidian-style `Ideas/`) or a relevant project note; standalone reports use `type: emerge` (thinking-tool schema in `references/ai-first-rules.md`), named `YYYY-MM-DD - emerge.md`
 7. Log a brief summary in today's daily note
 
 The goal is insight the user cannot see themselves. Do not restate what they already know - surface what they haven't named yet.

@@ -22,6 +22,7 @@ The optional argument is the idea, belief, or plan to challenge. If not provided
    - **Blind spots**: what the user might be ignoring based on their own history
    - **Verdict**: is this position consistent with past experience, or does the vault suggest caution?
 6. Log the challenge in today's daily note under a Thinking section
+7. Offer to save the full challenge report as a standalone note in the concepts/ideas folder (resolved per `references/folder-map.md`), `type: challenge`, thinking-tool schema in `references/ai-first-rules.md`
 
 Do not be agreeable. The entire point is to pressure-test. Cite specific vault files. If you find nothing contradictory, say so honestly - but search thoroughly first.
 

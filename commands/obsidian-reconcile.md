@@ -25,7 +25,7 @@ The optional argument is a topic or entity to focus on. If not provided, scan th
 
 5. Resolve each contradiction:
    - **Clear winner**: rewrite the outdated page with current info. Add a `## History` section noting what changed and why: "Previously stated X (source: raw/articles/old-article.md, 2025-11-01). Updated to Y based on newer evidence (source: raw/articles/new-article.md, 2026-03-15)."
-   - **Genuinely ambiguous**: create `Conflict - Topic.md` in the decisions folder (resolved per `references/folder-map.md`) documenting both sides, the evidence for each, and mark as `status: open` for the user to decide
+   - **Genuinely ambiguous**: create `Conflict - Topic.md` in the decisions folder (resolved per `references/folder-map.md`; `type: conflict`, schema in `references/ai-first-rules.md`) documenting both sides, the evidence for each, and mark as `status: open` for the user to decide
    - **Evolution**: update the entity/concept page to reflect the current state and add the historical context
 
 6. After all resolutions:

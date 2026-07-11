@@ -20,7 +20,7 @@ The optional argument is the idea title, tag, or keyword. If not provided, scan 
    - Past decisions that relate
    - Similar ideas that were previously explored (to avoid reinventing)
 5. Generate a full project spec:
-   - **Project note** in the projects folder (resolved above) with complete frontmatter (date, tags, status: planning, linked idea)
+   - **Project note** in the projects folder (resolved above) with the full `type: project` schema from `references/ai-first-rules.md` (`type: project`, `date`, `updated`, `status: planning`, `tags: [project]`, `related-people`, `related-projects`, `ai-first: true`) plus `graduated-from: "[[Idea Note]]"`
    - **Description**: what this project is and why it matters
    - **Goals**: 3-5 concrete outcomes
    - **Key tasks**: broken into phases with priorities

@@ -12,7 +12,7 @@ The argument is a project name. Handle typos and partial matches.
 1. Read `_CLAUDE.md` first if it exists in the vault root
 2. Search the vault for an existing project matching the name (fuzzy - handle typos)
 3. If found: show what was found, confirm with user, then update with new info from conversation
-4. If not found: create `Project Name.md` in the projects folder (resolved per `references/folder-map.md` - wiki-style `wiki/projects/`, Obsidian-style `Projects/`) with full frontmatter schema (`date`, `tags: [project]`, `status: active`, `job`)
+4. If not found: create `Project Name.md` in the projects folder (resolved per `references/folder-map.md` - wiki-style `wiki/projects/`, Obsidian-style `Projects/`) with the full `type: project` schema from `references/ai-first-rules.md` (`type: project`, `date`, `updated`, `status: active`, `tags: [project]`, `related-people`, `related-projects`, optional `job`, `ai-first: true`)
 5. Fill in everything inferable from the conversation: description, goals, key people, current status
 6. Add a card to the relevant kanban board in the `📥 Backlog` or `🔨 In Progress` column
 7. Link from today's daily note

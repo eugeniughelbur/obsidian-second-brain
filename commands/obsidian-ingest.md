@@ -68,7 +68,7 @@ The argument is a URL, file path, or pasted text. If no argument, ask what to in
 
 5. Save the raw source to `raw/` (immutable - never modify after saving):
    - Create `raw/articles/YYYY-MM-DD - Source Title.md` (or transcripts/, pdfs/, videos/)
-   - Frontmatter: `date`, `tags: [source, <type>]`, `source_url`, `source_type`, `content_hash`
+   - Frontmatter: `type: source`, `date`, `tags: [source, <type>]`, `source_url`, `source_type`, `content_hash`, `ai-first: true` (the raw-source schema in `references/ai-first-rules.md`; the body stays verbatim - preamble not required)
 
 6. **REWRITE the vault** - this is the critical step. Don't just create new pages. Rewrite existing ones.
 

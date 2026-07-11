@@ -22,7 +22,8 @@
 #
 # Scope:
 #   - Only inspects files inside OBSIDIAN_VAULT_PATH (env var)
-#   - Skips raw/, templates/, _export/, .obsidian/, and any path containing
+#   - Skips raw/, templates/, _export/, .obsidian/, boards/ (kanban exception:
+#     an H2 preamble renders as a phantom column), and any path containing
 #     /.git/ - those are system/template paths, not first-class notes
 #   - Skips any file not ending in .md
 #
@@ -52,7 +53,7 @@ esac
 
 # Skip non-first-class paths
 case "$FILE" in
-  */raw/*|*/templates/*|*/_export/*|*/.obsidian/*|*/.git/*|*/.trash/*)
+  */raw/*|*/templates/*|*/_export/*|*/.obsidian/*|*/.git/*|*/.trash/*|*/boards/*|*/Boards/*)
     exit 0 ;;
 esac
 
