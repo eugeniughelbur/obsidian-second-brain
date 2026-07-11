@@ -66,7 +66,7 @@ def walk_vault(vault: Path) -> list[tuple[Path, dict[str, Any]]]:
         if md.name in {"_CLAUDE.md", "log.md", "index.md", "MEMORY.md"}:
             continue
         try:
-            text = md.read_text(encoding="utf-8")
+            text = md.read_text(encoding="utf-8-sig")
         except (UnicodeDecodeError, OSError):
             continue
         fm = parse_frontmatter(text)
@@ -195,7 +195,7 @@ def update_index(vault: Path, block: str) -> bool:
         sys.stderr.write(f"warning: {index} not found - printing block to stdout instead\n")
         print(block)
         return False
-    text = index.read_text(encoding="utf-8")
+    text = index.read_text(encoding="utf-8-sig")
     pattern = re.compile(
         re.escape(STATS_BEGIN) + r".*?" + re.escape(STATS_END),
         re.DOTALL,

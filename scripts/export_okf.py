@@ -163,7 +163,7 @@ def main():
         if not f.is_file():
             continue
         try:
-            fm, body = parse_note(f.read_text(encoding="utf-8", errors="replace"))
+            fm, body = parse_note(f.read_text(encoding="utf-8-sig", errors="replace"))
         except OSError:
             continue
         notes[str(rel)] = (f, fm, body)
@@ -244,7 +244,7 @@ def main():
     # 5) copy log.md if the vault has one
     vlog = vault / "log.md"
     if vlog.exists():
-        (out / "log.md").write_text(vlog.read_text(encoding="utf-8", errors="replace"),
+        (out / "log.md").write_text(vlog.read_text(encoding="utf-8-sig", errors="replace"),
                                     encoding="utf-8")
 
     print(f"OKF bundle written: {out}")

@@ -100,7 +100,7 @@ def load_vault(vault: Path) -> dict:
             continue
         rel = str(md.relative_to(vault))
         try:
-            content = md.read_text(encoding="utf-8", errors="replace")
+            content = md.read_text(encoding="utf-8-sig", errors="replace")
         except OSError:
             continue
         fm_match = FRONTMATTER_RE.match(content)

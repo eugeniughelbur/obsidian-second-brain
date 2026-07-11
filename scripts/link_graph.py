@@ -84,7 +84,7 @@ def build_graph(vault: Path, scope: str | None = None) -> dict:
             continue
         rel = md.relative_to(vault).as_posix()
         try:
-            text = md.read_text(encoding="utf-8", errors="ignore")
+            text = md.read_text(encoding="utf-8-sig", errors="ignore")
         except OSError:
             continue
         fm = _frontmatter(text)
