@@ -78,7 +78,7 @@ If you change an adapter's output layout, update the matching assertion in `test
 
 1. PRs land on `main` only when CI is green and the AI-first rule is upheld.
 2. Move "Unreleased" entries in `CHANGELOG.md` under a new version header with the release date.
-3. Bump version in `pyproject.toml` and `CITATION.cff`.
+3. Bump version in `pyproject.toml`, `CITATION.cff`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json` (metadata + plugin entry; `tests/test_plugin_manifest.py` fails CI if these drift from pyproject).
 4. Tag and push: `git tag v0.X.0 && git push origin v0.X.0`.
 5. Cut a GitHub Release with notes copied from the CHANGELOG entry.
 

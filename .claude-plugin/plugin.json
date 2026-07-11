@@ -1,0 +1,25 @@
+{
+  "name": "obsidian-second-brain",
+  "description": "Operate any Obsidian vault as a living, AI-first second brain: 44 slash commands across vault management, thinking tools, a research toolkit, and scheduled agents.",
+  "version": "0.12.0",
+  "author": {
+    "name": "Eugeniu Ghelbur",
+    "email": "e.ghelbur@gmail.com"
+  },
+  "homepage": "https://github.com/eugeniughelbur/obsidian-second-brain",
+  "license": "MIT",
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": {
+    "obsidian-second-brain": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp",
+        "python",
+        "${CLAUDE_PLUGIN_ROOT}/integrations/obsidian-mcp-server/server.py"
+      ]
+    }
+  }
+}

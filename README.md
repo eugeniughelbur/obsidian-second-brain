@@ -573,7 +573,22 @@ vault/
 
 ### Claude Code (default)
 
-One line (clones the skill, installs the slash commands, offers the research env):
+**Native plugin install (recommended).** Inside any Claude Code session:
+
+```
+/plugin marketplace add eugeniughelbur/obsidian-second-brain
+/plugin install obsidian-second-brain@obsidian-second-brain
+```
+
+That ships all 44 commands, the skill manual, the session-context hook, the opt-in background agent (inert until you arm it - see [hooks/postcompact.hook.example.json](hooks/postcompact.hook.example.json)), and the vault MCP server. Then tell Claude where your vault lives by adding to the `env` section of `~/.claude/settings.json`:
+
+```json
+"env": { "OBSIDIAN_VAULT_PATH": "/path/to/your/vault" }
+```
+
+Restart Claude Code and run `/obsidian-init` inside your vault. Update later with `/plugin update obsidian-second-brain`.
+
+**Classic install (script).** One line (clones the skill, installs the slash commands, offers the research env):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash

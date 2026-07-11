@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Native Claude Code plugin-marketplace install.** The repo is now its own plugin marketplace: `/plugin marketplace add eugeniughelbur/obsidian-second-brain` + `/plugin install obsidian-second-brain@obsidian-second-brain` replaces the clone-and-symlink dance for Claude Code users. The plugin ships all 44 commands (auto-discovered as skills, ~2k always-on tokens), the skill manual, the SessionStart context hook, the PostCompact background agent (still inert without `OBSIDIAN_BG_AGENT_ENABLED=1` - the hard gate is in the script), and the bundled vault MCP server (inline `mcpServers` in `plugin.json`, since `${CLAUDE_PLUGIN_ROOT}` does not expand in a root `.mcp.json`). Verified with a live local install: marketplace add, plugin install, 45 skills + 2 hooks in the inventory, and the MCP server connecting end-to-end. The classic `install.sh`/`setup.sh` path is unchanged and coexists. Fenced in CI by `tests/test_plugin_manifest.py` (manifests parse, versions sync with pyproject, referenced scripts exist, the bg-agent keeps its gate). This closes the audit's top distribution finding ("high-friction install vs one-click marketplace" - the single biggest stars gap).
+
 ## [0.12.0] - 2026-07-11 - The Stress Test
 
 ### Fixed
