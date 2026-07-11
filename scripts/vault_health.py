@@ -52,10 +52,18 @@ DATE_RE = re.compile(r"due:\s*(\d{4}-\d{2}-\d{2})")
 TEMPLATE_RE = re.compile(r"<%.*?%>")
 ALIAS_RE = re.compile(r"^aliases:\s*\n((?:\s+-\s+.+\n?)+)", re.MULTILINE)
 ALIAS_ITEM_RE = re.compile(r"^\s+-\s+(.+)$", re.MULTILINE)
+ALIAS_INLINE_RE = re.compile(r"^aliases:\s*\[(.+)\]\s*$", re.MULTILINE)
 
 
 def parse_aliases(frontmatter: str) -> list:
-    """Extract aliases list from frontmatter text."""
+    """Extract aliases from frontmatter text - block style AND inline style.
+
+    Inline `aliases: [X, Y]` is at least as common in Obsidian vaults as the
+    block form; reading only the block style silently lost aliases, so links to
+    them rang as broken (gap found during stress-test fix 4, closed in 8/24)."""
+    m = ALIAS_INLINE_RE.search(frontmatter)
+    if m:
+        return [a.strip().strip('"\'').lower() for a in m.group(1).split(",") if a.strip()]
     block = ALIAS_RE.search(frontmatter)
     if not block:
         return []
@@ -144,7 +152,16 @@ def _max_pairwise_similarity(notes: dict, files: list) -> float:
     """Largest body-text similarity ratio among a set of notes (first 1000 chars).
     Used as the content signal that separates real duplicates from notes that
     merely share a title."""
-    bodies = [notes[f]["content"][:1000] for f in files]
+    # Compare prose, not skeleton: every AI-first note shares frontmatter keys
+    # and the "## For future Claude" preamble heading, and that shared
+    # boilerplate alone pushed two unrelated notes to 0.80 similarity
+    # (stress-test fix 8/24). Strip what all notes share, compare what's unique.
+    def _prose(rel: str) -> str:
+        text = FRONTMATTER_RE.sub("", notes[rel]["content"], count=1)
+        text = text.replace("## For future Claude", "")
+        return re.sub(r"\s+", " ", text).strip()[:1000]
+
+    bodies = [_prose(f) for f in files]
     best = 0.0
     for i in range(len(bodies)):
         for j in range(i + 1, len(bodies)):
@@ -180,22 +197,24 @@ def check_duplicates(notes: dict) -> list:
 
 
 def check_orphans(notes: dict) -> list:
-    all_links = set()
-    for note in notes.values():
+    # key -> set of source notes that link to it. Tracking the SOURCE matters:
+    # a note's own links must not count as incoming (a self-link is the note
+    # vouching for itself), and exact keys replace the old substring test that
+    # let a short stem like "ai" hide inside "detail" and never ring the alarm
+    # (stress-test fix 8/24). Path-qualified links count via their basename.
+    link_sources: dict[str, set] = defaultdict(set)
+    for src_rel, note in notes.items():
         for link in note["links"]:
             lk = link.lower()
             # An incoming link may carry the .md extension ([[note.md]]); it still
             # targets the same note, so strip it before matching against stems.
             if lk.endswith(".md"):
                 lk = lk[:-3]
-            all_links.add(lk)
-            all_links.add(lk.replace(" ", "-"))
+            for key in {lk, lk.replace(" ", "-"), lk.rsplit("/", 1)[-1]}:
+                link_sources[key].add(src_rel)
 
-    # also treat aliases as resolvable targets
-    alias_set = set()
-    for note in notes.values():
-        for alias in note["aliases"]:
-            alias_set.add(alias.lower())
+    def _has_incoming(rel: str, keys) -> bool:
+        return any(link_sources.get(k, set()) - {rel} for k in keys)
 
     issues = []
     skip_folders = {"Daily", "Dev Logs", "Boards", "Templates", "Life Chapters",
@@ -209,12 +228,7 @@ def check_orphans(notes: dict) -> list:
             continue
         stem_lower = note["stem"].lower()
         stem_norm = stem_lower.replace("-", " ").replace("_", " ")
-        linked = (
-            stem_lower in all_links
-            or stem_norm in all_links
-            or any(stem_lower in lk for lk in all_links)
-            or any(alias in all_links for alias in note["aliases"])
-        )
+        linked = _has_incoming(rel, {stem_lower, stem_norm, *note["aliases"]})
         if not linked:
             issues.append({
                 "type": "orphan",
