@@ -37,7 +37,7 @@ The optional argument is the format: `json` (default), `markdown`, or `okf`.
      "notes": [
        {
          "path": "wiki/entities/Ada Lovelace.md",
-         "title": "Eric Siu",
+         "title": "Ada Lovelace",
          "type": "entity",
          "summary": "CEO of Single Grain...",
          "links_to": ["Single Grain", "Centralized API Gateway"],
