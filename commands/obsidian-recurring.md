@@ -10,7 +10,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-recurring $ARGUMENTS`:
 The argument states the obligation and its cadence (e.g. "pay social benefits, monthly day 20"). Pull blocker/owner detail from the conversation.
 
 1. Read `_CLAUDE.md` first if it exists in the vault root.
-2. Search for an existing note on this obligation before creating one (see the anti-fabrication rule). If one exists, update it instead of duplicating.
+2. Search for an existing note on this obligation before creating one (see the anti-fabrication rule). If one exists, update it instead of duplicating. Save new notes to the tasks folder, resolved per `references/folder-map.md` (wiki-style `wiki/tasks/`, Obsidian-style `Tasks/`).
 3. Build the note with these sections: What, Cadence, Blockers, History. Use the vault's `templates/` version if one exists.
 4. Set frontmatter: `type: recurring-task`, `cadence`, `owner`, `blocker` (wikilink if a person/vendor gates it), `next-due` (compute the next occurrence from today and the cadence), and `amount` if it is a payment.
 5. Add a card for the next occurrence to the right board so it surfaces before `next-due`.

@@ -24,7 +24,7 @@ This is a hybrid command: a deterministic Python scan produces the facts, then Y
    python scripts/mine_commit_decisions.py --repo <codebase> --json
    ```
 
-4. **Pick the destination.** Write under the project's hub: `wiki/projects/<name>/Architecture/` (create it if missing). If the vault has no project note for this codebase yet, offer to create one via `/obsidian-project` first so the architecture links into it.
+4. **Pick the destination.** Write under the project's hub: `<projects folder>/<name>/Architecture/`, with the projects folder resolved per `references/folder-map.md` (wiki-style `wiki/projects/`, Obsidian-style `Projects/`); create it if missing. If the vault has no project note for this codebase yet, offer to create one via `/obsidian-project` first so the architecture links into it.
 
 5. **Synthesize and write these notes**, each AI-first compliant:
    - **`Architecture - Overview.md`** (`type: architecture-overview`): what the project is, its stack (from `languages`/`kind`/`dependencies`), how the parts fit together, and ONE Mermaid diagram of the modules and their main flow. Include a short **Personas** section (2-4 likely user types, marked `confidence: speculation` unless a README states them). Link to each module note.

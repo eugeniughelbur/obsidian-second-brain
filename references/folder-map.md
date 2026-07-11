@@ -25,6 +25,8 @@ How every command decides **which folder** a note belongs in. Never hardcode a f
 | Raw source (immutable) | `raw/` (articles, transcripts, pdfs, videos subfolders) | `raw/` |
 | Research output | `Research/` (Web, Deep, X-pulse, X-reads, YouTube, NotebookLM subfolders) | `Research/` |
 | Kanban board | `boards/` | `Boards/` |
+| Agenda snapshot | `wiki/agenda/` | `Agenda/` |
+| Recurring obligation (recurring-task) | `wiki/tasks/` | `Tasks/` |
 
 ## Notes
 

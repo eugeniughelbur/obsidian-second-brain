@@ -10,7 +10,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-daily`:
 1. Read `_CLAUDE.md` first if it exists in the vault root
 2. Read `CRITICAL_FACTS.md` for timezone
 
-3. Check if `wiki/daily/YYYY-MM-DD.md` exists for today
+3. Check if today's `YYYY-MM-DD.md` exists in the daily folder, resolved per `references/folder-map.md` (wiki-style `wiki/daily/`, Obsidian-style `Daily/`)
    - If not: read `templates/Daily Note.md`, fill in date fields, create the file
    - If yes: update existing note (inject, don't overwrite)
 
@@ -22,7 +22,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-daily`:
    - If no calendar MCP is connected, skip silently (don't error)
 
 5. Pull overdue and due-today tasks from kanban boards:
-   - Scan `boards/` for items with `@{date}` that match today or are past due
+   - Scan the boards folder (resolved per `references/folder-map.md`) for items with `@{date}` that match today or are past due
    - Add to the daily note's Focus section with priority markers
 
 6. Scan the current conversation for anything relevant to today:

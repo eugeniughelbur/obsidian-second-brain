@@ -15,8 +15,8 @@ The optional argument is a scope: `recent` (last 30 days, default), `all` (entir
 3. Spawn parallel subagents to gather learnings:
 
    - **Lessons agent**: scan all daily notes for "Lesson learned" sections, "What didn't" sections, evening review insights
-   - **Decisions agent**: read all ADRs in `wiki/decisions/` - extract the rationale and outcome of each
-   - **Reports agent**: read recent emerge/synthesize/connect/challenge reports in `wiki/concepts/` (the auto-generated pattern reports)
+   - **Decisions agent**: read all ADRs in the decisions folder (resolved per `references/folder-map.md` - wiki-style `wiki/decisions/`, Obsidian-style `Knowledge/` with `ADR-` filename prefix) - extract the rationale and outcome of each
+   - **Reports agent**: read recent emerge/synthesize/connect/challenge reports in the concepts folder (resolved per `references/folder-map.md`) - the auto-generated pattern reports
    - **Mistakes agent**: scan dev logs and daily notes for "what didn't work", "wasted time on", "next time", "lesson", phrases indicating learning from failure
    - **Wins agent**: scan for patterns that worked - "this saved time", "this approach worked", recurring success patterns
 
@@ -46,7 +46,7 @@ The optional argument is a scope: `recent` (last 30 days, default), `all` (entir
    ## Top 5 Lessons of the Period
    - Most impactful learnings ranked by frequency × recency × consequence
 
-6. Save the report to `wiki/concepts/YYYY-MM-DD — Learnings Review.md`
+6. Save the report to the concepts folder (resolved per `references/folder-map.md`) as `YYYY-MM-DD - Learnings Review.md`
 7. Append to the operation log: if `Logs/` exists write `**HH:MM** - learn | X active, Y stale, Z superseded, N promotion candidates` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] learn | X active, Y stale, Z superseded, N promotion candidates` to `log.md`
 8. Update today's daily note with a brief summary
 9. Offer to:

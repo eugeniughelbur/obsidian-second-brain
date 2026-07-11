@@ -14,7 +14,7 @@ The optional argument is the format: `json` (default), `markdown`, or `okf`.
 
 3. Build a structured export by scanning the vault:
 
-   **For each note in wiki/**, extract:
+   **For each note in every note folder present**, enumerating the vault's top-level note folders per `references/folder-map.md` (wiki-style: `wiki/`; Obsidian-style: `People/`, `Projects/`, `Ideas/`, `Knowledge/`, `Daily/`, ... whatever exists on disk), extract:
    - `path`: file path relative to vault root
    - `title`: note title (first heading or filename)
    - `type`: from frontmatter tags (entity, concept, project, daily, etc.)
@@ -36,7 +36,7 @@ The optional argument is the format: `json` (default), `markdown`, or `okf`.
      "total_notes": 238,
      "notes": [
        {
-         "path": "wiki/entities/Eric Siu.md",
+         "path": "wiki/entities/Ada Lovelace.md",
          "title": "Eric Siu",
          "type": "entity",
          "summary": "CEO of Single Grain...",

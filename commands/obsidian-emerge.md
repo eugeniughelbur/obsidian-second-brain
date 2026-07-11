@@ -15,7 +15,7 @@ The optional argument is a timeframe (e.g., "2 weeks", "this month"). Default: l
    - **Daily notes agent**: read all daily notes in the date range, extract recurring topics, complaints, observations, and energy patterns
    - **Dev logs agent**: read all dev logs in the range, extract repeated blockers, tools mentioned, architectural patterns
    - **Decisions agent**: read Key Decisions sections across project notes, look for directional trends
-   - **Ideas agent**: read Ideas/ notes created in the range, look for thematic clusters
+   - **Ideas agent**: read notes created in the range in the ideas/concepts folder (resolved per `references/folder-map.md` - wiki-style `wiki/concepts/`, Obsidian-style `Ideas/`), look for thematic clusters
 4. Merge results and identify:
    - **Recurring themes**: topics that appeared 3+ times without being named as a priority
    - **Emotional patterns**: what energizes vs. drains the user (based on language and context)

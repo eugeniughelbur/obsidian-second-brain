@@ -57,7 +57,7 @@ Print the full overview in the conversation immediately. Order: active first, th
 ## [Project Name]
 Status: active | stalled | idle | blocked | archived
 Repo: path/to/repo  (or "no repo")
-Vault: [[Projects/Project Name]]
+Vault: [[<projects folder>/Project Name]]  (use the folder resolved in step 1)
 
 Last session: YYYY-MM-DD - one sentence on what was done (source: git / vault / docs)
 Next action: specific next step, or "unclear - check vault note"

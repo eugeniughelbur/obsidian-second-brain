@@ -17,14 +17,14 @@ This command can run manually or as a scheduled agent. It thinks for you.
 
    - **Cross-source agent**: read all sources ingested in the last 7 days (`raw/`). Find concepts that appear in 2+ unrelated sources. If the same idea shows up in a podcast transcript AND an article AND a daily note - that's a synthesis candidate.
    
-   - **Entity convergence agent**: scan `wiki/entities/` for people who appear together in multiple contexts but have no explicit connection page. If Person A and Person B keep showing up in the same projects/decisions - write a connection note.
+   - **Entity convergence agent**: scan the entities folder (resolved per `references/folder-map.md`) for people who appear together in multiple contexts but have no explicit connection page. If Person A and Person B keep showing up in the same projects/decisions - write a connection note.
    
-   - **Concept evolution agent**: scan `wiki/concepts/` for ideas that have been updated 3+ times. Track how the concept evolved - write a "Concept Evolution" section showing the timeline of how the user's thinking changed.
+   - **Concept evolution agent**: scan the concepts folder (resolved per `references/folder-map.md`) for ideas that have been updated 3+ times. Track how the concept evolved - write a "Concept Evolution" section showing the timeline of how the user's thinking changed.
    
-   - **Orphan rescue agent**: find notes in `wiki/` with no incoming links that contain claims or ideas that SHOULD be linked to existing pages. Create the missing links and explain why.
+   - **Orphan rescue agent**: find notes in any note folder (enumerate the folders present, per `references/folder-map.md`) with no incoming links that contain claims or ideas that SHOULD be linked to existing pages. Create the missing links and explain why.
 
 5. For each synthesis found:
-   - Create `wiki/concepts/Synthesis — Title.md` with:
+   - Create `Synthesis - Title.md` in the concepts folder (resolved per `references/folder-map.md`) with:
      ```yaml
      ---
      date: YYYY-MM-DD

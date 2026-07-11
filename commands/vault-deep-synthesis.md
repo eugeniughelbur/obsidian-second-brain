@@ -16,7 +16,7 @@ A focused, topic-driven cross-reference of the existing vault. Unlike `/obsidian
    - **Contradictions** - where notes disagree; name both `[[notes]]` and the specific conflict. Do not resolve them here (that is `/obsidian-reconcile`); just surface them.
    - **Stale claims** - dated facts that may no longer hold (cite the note and the date).
    - **Coverage gaps** - questions the topic raises that the vault does not answer.
-4. Write the synthesis to `wiki/concepts/YYYY-MM-DD - synthesis - <topic-slug>.md` (`type: synthesis`, tagged `[research, thinking, vault-deep-synthesis]`), listing the source notes it read in frontmatter.
+4. Write the synthesis to the concepts folder (resolved per `references/folder-map.md` - wiki-style `wiki/concepts/`, Obsidian-style `Ideas/`) as `YYYY-MM-DD - synthesis - <topic-slug>.md` (`type: synthesis`, tagged `[research, thinking, vault-deep-synthesis]`), listing the source notes it read in frontmatter.
 5. Do NOT modify the source notes - this command only reads and synthesizes. Append a one-line entry to the operation log.
 
 ---
