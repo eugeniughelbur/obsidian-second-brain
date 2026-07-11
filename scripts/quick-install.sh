@@ -1,63 +1,44 @@
 #!/usr/bin/env bash
-# quick-install.sh - one-liner installer for obsidian-second-brain
-#
-# Usage:
+# One-line installer for obsidian-second-brain (Claude Code).
 #   curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
 #
-# What it does:
-#   1. Clones the repo to ~/.claude/skills/obsidian-second-brain (or pulls if it exists)
-#   2. Prompts for the vault path
-#   3. Runs scripts/setup.sh with that path
-#
-# Environment:
-#   OBSIDIAN_VAULT_PATH - skip the prompt and use this path
-#   SKILL_DIR           - override the install location (default: ~/.claude/skills/obsidian-second-brain)
-
+# What it does (idempotent, nothing destructive):
+#   1. Checks prerequisites (git; uv recommended for the Python helpers)
+#   2. Clones the skill into ~/.claude/skills/obsidian-second-brain (pulls if present)
+#   3. Runs install.sh (symlinks slash commands, offers the research-toolkit env)
+#   4. Prints the two follow-up choices: wire an existing vault, or bootstrap a new one
 set -euo pipefail
 
+SKILL_HOME="$HOME/.claude/skills/obsidian-second-brain"
 REPO_URL="https://github.com/eugeniughelbur/obsidian-second-brain"
-SKILL_DIR="${SKILL_DIR:-$HOME/.claude/skills/obsidian-second-brain}"
 
-red()    { printf '\033[0;31m%s\033[0m\n' "$1"; }
-green()  { printf '\033[0;32m%s\033[0m\n' "$1"; }
-yellow() { printf '\033[0;33m%s\033[0m\n' "$1"; }
-
-if ! command -v git &>/dev/null; then
-  red "Error: git not found. Install git and retry."
-  exit 1
+command -v git >/dev/null 2>&1 || { echo "Error: git is required. Install git and re-run." >&2; exit 1; }
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Note: 'uv' not found. Core commands work without it, but the health/research"
+  echo "      scripts need it: https://docs.astral.sh/uv/getting-started/installation/"
 fi
 
-# ── clone or update ──────────────────────────────────────────────────────────
-
-if [[ -d "$SKILL_DIR/.git" ]]; then
-  yellow "Repo already at $SKILL_DIR - pulling latest..."
-  git -C "$SKILL_DIR" pull --ff-only
+if [ -d "$SKILL_HOME/.git" ]; then
+  echo "Skill already present - updating..."
+  git -C "$SKILL_HOME" pull --ff-only
 else
-  if [[ -e "$SKILL_DIR" ]]; then
-    red "Error: $SKILL_DIR exists and is not a git checkout. Move it aside first."
-    exit 1
-  fi
-  mkdir -p "$(dirname "$SKILL_DIR")"
-  git clone "$REPO_URL" "$SKILL_DIR"
+  mkdir -p "$(dirname "$SKILL_HOME")"
+  git clone "$REPO_URL" "$SKILL_HOME"
 fi
 
-green "Skill installed at $SKILL_DIR"
+bash "$SKILL_HOME/install.sh"
 
-# ── resolve vault path ───────────────────────────────────────────────────────
+cat <<'NEXT'
 
-VAULT="${OBSIDIAN_VAULT_PATH:-}"
+Installed. Two ways to finish:
 
-if [[ -z "$VAULT" ]]; then
-  if [[ ! -t 0 ]]; then
-    yellow ""
-    yellow "Vault path required. Re-run with OBSIDIAN_VAULT_PATH set, or run setup.sh directly:"
-    echo "  bash $SKILL_DIR/scripts/setup.sh \"/path/to/your/vault\""
-    exit 0
-  fi
-  printf "Path to your Obsidian vault: "
-  read -r VAULT
-fi
+  Have a vault already?
+    bash ~/.claude/skills/obsidian-second-brain/scripts/setup.sh "/path/to/your/vault"
 
-# ── hand off to setup.sh ─────────────────────────────────────────────────────
+  No vault yet? Create one:
+    cd ~/.claude/skills/obsidian-second-brain
+    uv run python scripts/bootstrap_vault.py --path ~/Documents/MyVault --name "Your Name"
+    bash scripts/setup.sh ~/Documents/MyVault
 
-bash "$SKILL_DIR/scripts/setup.sh" "$VAULT"
+Then open Claude Code and run /obsidian-init inside your vault.
+NEXT

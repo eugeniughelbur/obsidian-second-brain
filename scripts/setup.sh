@@ -27,6 +27,12 @@ yellow() { printf '\033[0;33m%s\033[0m\n' "$1"; }
 red()    { printf '\033[0;31m%s\033[0m\n' "$1"; }
 step()   { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
+if ! command -v jq >/dev/null 2>&1; then
+  red "Error: jq is required (it edits ~/.claude/settings.json safely)."
+  echo "Install it: brew install jq   |   sudo apt install jq   |   https://jqlang.github.io/jq/"
+  exit 1
+fi
+
 # ── vault path ───────────────────────────────────────────────────────────────
 
 VAULT="${1:-}"
@@ -40,6 +46,9 @@ VAULT="${VAULT/#\~/$HOME}"  # expand leading ~
 
 if [[ ! -d "$VAULT" ]]; then
   red "Error: vault directory not found: $VAULT"
+  echo "No vault yet? Create one first:"
+  echo "  uv run python \"$SKILL_DIR/scripts/bootstrap_vault.py\" --path \"$VAULT\" --name \"Your Name\""
+  echo "then re-run this setup."
   echo "Create it first or check the path."
   exit 1
 fi

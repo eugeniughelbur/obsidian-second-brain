@@ -132,8 +132,19 @@ PRESETS = {
 }
 
 
+FORCE = False  # set by --force; write() never clobbers user files without it
+
+
 def write(path: Path, content: str):
+    """Create a file, refusing to overwrite existing content unless --force.
+
+    Bootstrap must be safe to run on a non-empty vault: silently replacing a
+    hand-made Home.md or _CLAUDE.md is data loss, not setup (stress-test fix
+    23/24 - the audit verified the loss)."""
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and not FORCE:
+        print(f"  = kept existing {path} (re-run with --force to overwrite)")
+        return
     path.write_text(content.strip() + "\n", encoding="utf-8")
     print(f"  ✓ {path}")
 
@@ -1243,21 +1254,22 @@ def main():
     parser.add_argument("--subject", default="", help="Subject name (required when --mode=assistant)")
     parser.add_argument("--jobs", default="Work", help="Comma-separated job/company names (default preset only)")
     parser.add_argument("--no-sidebiz", action="store_true", help="Omit side business module (default preset only)")
+    parser.add_argument("--force", action="store_true",
+                        help="Overwrite existing files (default: keep anything already in the vault)")
     args = parser.parse_args()
+    global FORCE
+    FORCE = args.force
 
     if args.mode == "assistant" and not args.subject:
         parser.error("--subject is required when --mode=assistant")
 
     vault = Path(args.path).expanduser().resolve()
-    if vault.exists() and any(p for p in vault.iterdir() if p.name != ".obsidian"):
-        print(f"⚠️  {vault} already exists and is not empty.")
-        try:
-            confirm = input("Continue anyway? This may overwrite files. [y/N] ").strip().lower()
-        except EOFError:
-            confirm = "n"
-        if confirm != "y":
-            print("Aborted.")
-            sys.exit(1)
+    if vault.exists() and any(vault.iterdir()):
+        if FORCE:
+            print(f"⚠️  {vault} is not empty and --force is set: existing files WILL be overwritten.")
+        else:
+            print(f"ℹ️  {vault} is not empty: existing files will be KEPT (re-run with --force to overwrite).")
+
 
     jobs = [j.strip() for j in args.jobs.split(",") if j.strip()]
     bootstrap(vault, args.name, args.preset, args.mode, args.subject,

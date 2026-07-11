@@ -569,22 +569,33 @@ vault/
 
 > **One codebase, six platforms.** Pick yours below. The vault behavior is identical across all of them; only the install path and the dispatcher file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md` / `.pi/`) differ.
 
+**Prerequisites:** [Claude Code](https://claude.com/claude-code) (or one of the other five platforms below), `git`, and [`uv`](https://docs.astral.sh/uv/) for the Python helpers (health check, research toolkit, bootstrap). Optional: `jq` (used by `setup.sh`), [Ollama](https://ollama.com) for local semantic search. No API keys needed for the core vault commands.
+
 ### Claude Code (default)
 
-One line:
+One line (clones the skill, installs the slash commands, offers the research env):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
 ```
 
-Or two commands:
+Or step by step:
 
 ```bash
 git clone https://github.com/eugeniughelbur/obsidian-second-brain ~/.claude/skills/obsidian-second-brain
+bash ~/.claude/skills/obsidian-second-brain/install.sh
 bash ~/.claude/skills/obsidian-second-brain/scripts/setup.sh "/path/to/your/vault"
 ```
 
-Then: `/obsidian-init`
+**No vault yet?** Create a ready-to-use one first (folders, templates, boards, dashboards - passes its own health check out of the box):
+
+```bash
+cd ~/.claude/skills/obsidian-second-brain
+uv run python scripts/bootstrap_vault.py --path ~/Documents/MyVault --name "Your Name"
+bash scripts/setup.sh ~/Documents/MyVault
+```
+
+Then open Claude Code and run `/obsidian-init` inside your vault.
 
 ### Codex CLI / Gemini CLI / OpenCode
 
@@ -655,7 +666,7 @@ What to expect (open models follow instructions less reliably than Claude, so th
 
 ### Research toolkit (optional)
 
-The 6 research commands need API keys. Run `install.sh` and answer "y" to the research prompt. That sets up `~/.config/obsidian-second-brain/.env`. Or do it manually:
+The 7 research commands use API keys (2 of them fall back to free sources without any). Run `install.sh` and answer "y" to the research prompt. That sets up `~/.config/obsidian-second-brain/.env`. Or do it manually:
 
 ```bash
 mkdir -p ~/.config/obsidian-second-brain
