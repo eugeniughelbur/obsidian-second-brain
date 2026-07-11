@@ -19,9 +19,10 @@ jobs:
         with:
           python-version: "3.11"
       # build.sh is pure bash and vault_health.py is stdlib-only, but the
-      # free-research source library imports `requests`, so install that too.
+      # free-research source library imports `requests`, and export_okf (tested
+      # via the test interpreter since stress-test fix 5/24) needs `pyyaml`.
       - name: Install test dependencies
-        run: python -m pip install --upgrade pip pytest requests
+        run: python -m pip install --upgrade pip pytest requests pyyaml
       - name: Run smoke tests
         run: pytest -q
       # Fail the build if a banned substitution character (em-dash, curly quote,
