@@ -158,7 +158,14 @@ def main():
             continue
         if str(rel).startswith(args.out):
             continue
-        fm, body = parse_note(f.read_text(encoding="utf-8", errors="replace"))
+        # rglob matches names, not files: skip dangling symlinks and directories
+        # named *.md instead of crashing the whole export (stress-test fix 2/24).
+        if not f.is_file():
+            continue
+        try:
+            fm, body = parse_note(f.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            continue
         notes[str(rel)] = (f, fm, body)
 
     # 2) index note name -> output relative path (for wikilink resolution)

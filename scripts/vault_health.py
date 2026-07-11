@@ -94,8 +94,15 @@ def load_vault(vault: Path) -> dict:
             continue
         if any(p in EXCLUDE_DIRS or p.lower().endswith("templates") for p in parts):
             continue
+        # rglob matches names, not files: a dangling symlink or a directory named
+        # *.md would crash the read and abort the whole scan (stress-test fix 2/24).
+        if not md.is_file():
+            continue
         rel = str(md.relative_to(vault))
-        content = md.read_text(encoding="utf-8", errors="replace")
+        try:
+            content = md.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
         fm_match = FRONTMATTER_RE.match(content)
         frontmatter = fm_match.group(1) if fm_match else ""
         # Strip fenced/inline code before extracting links so shell snippets like
