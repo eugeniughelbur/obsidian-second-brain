@@ -27,7 +27,11 @@ _NOTES_DIR = "Inbox"
 # Never scanned during search (config, vcs, immutable sources, exports). `.claude`
 # is a vault-local agent config dir (CLAUDE.md, commands, settings) - its markdown
 # is not vault content and would inflate every result (see issue #80).
-_SKIP_DIRS = {".obsidian", ".git", ".trash", ".claude", "_export", "templates"}
+# Canonical skip set for the WHOLE search stack: semantic_search.py imports it
+# and retrieval_eval.py consults it, so lexical scan, semantic index, and eval
+# all search the same universe (stress-test fix 10/24).
+_SKIP_DIRS = {".obsidian", ".git", ".trash", "_trash", ".claude", "_export",
+              "templates", "node_modules"}
 
 # Operational logs and immutable raw sources are rarely the *answer* to a query:
 # they are long and term-dense, so without a penalty they dominate term-frequency
@@ -125,11 +129,13 @@ def _embed_query(text: str) -> Optional[List[float]]:
 
 
 def _semantic_fuse(
-    query: str, lexical: List[Dict[str, Any]], vault: Path, limit: int
+    query: str, lexical: List[Dict[str, Any]], vault: Path, limit: int,
+    enabled: Optional[bool] = None,
 ) -> Optional[List[Dict[str, Any]]]:
     """Fuse lexical results with local semantic ranking via RRF. Returns None (so the
-    caller uses pure lexical) whenever semantic is unavailable or anything fails."""
-    if not _SEMANTIC_ENABLED:
+    caller uses pure lexical) whenever semantic is unavailable or anything fails.
+    enabled overrides the env toggle for this call (None = follow the env)."""
+    if not (_SEMANTIC_ENABLED if enabled is None else enabled):
         return None
     index_path = vault / _SEMANTIC_INDEX_FILE
     if not index_path.exists():
@@ -167,9 +173,14 @@ def _semantic_fuse(
         return None  # any failure -> pure lexical, never break search
 
 
-def search(query: str, *, limit: int = 6) -> List[Dict[str, Any]]:
+def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> List[Dict[str, Any]]:
     """Bounded keyword search over vault markdown, fused with local semantic search
-    when an embedding index + Ollama are available (else pure lexical)."""
+    when an embedding index + Ollama are available (else pure lexical).
+
+    semantic: force fusion on/off for this call. None (the default, what the MCP
+    serves) follows OBSIDIAN_SEARCH_SEMANTIC. The eval harness passes False to get
+    a genuinely pure lexical ranking - before this switch existed, "--mode lexical"
+    silently measured the fused blend under a false label (stress-test fix 10/24)."""
     vault = resolve_vault()
     terms = [t for t in re.split(r"\W+", query.lower()) if len(t) > 2 and t not in _STOPWORDS]
     if not terms:
@@ -219,7 +230,7 @@ def search(query: str, *, limit: int = 6) -> List[Dict[str, Any]]:
                 }
             )
     scored.sort(key=lambda r: r["score"], reverse=True)
-    fused = _semantic_fuse(query, scored, vault, limit)
+    fused = _semantic_fuse(query, scored, vault, limit, enabled=semantic)
     if fused is not None:
         return fused
     for r in scored:
@@ -516,7 +527,12 @@ def get_skill(name: str) -> Dict[str, Any]:
 
 def _iter_notes(vault: Path):
     for md in vault.rglob("*.md"):
-        if set(md.relative_to(vault).parts) & _SKIP_DIRS:
+        parts = md.relative_to(vault).parts
+        if any(p.lower() in _SKIP_DIRS or p.lower().endswith("templates") for p in parts):
+            continue
+        # Drawings are JSON blobs in .md clothing; the semantic index skips them,
+        # so the lexical scan does too - one universe for every mode.
+        if md.name.endswith(".excalidraw.md"):
             continue
         yield md
 

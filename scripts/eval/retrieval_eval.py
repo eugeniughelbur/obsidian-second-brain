@@ -199,9 +199,22 @@ def _rank_of_gold(results: list[dict[str, Any]], gold: list[str]) -> int:
 
 
 def _searcher(mode: str):
-    """Return a (label, fn(query)->results) for the chosen retrieval mode."""
+    """Return a (label, fn(query)->results) for the chosen retrieval mode.
+
+    Four modes, four TRUE labels (stress-test fix 10/24 - before this, "lexical"
+    silently measured the fused blend and "hybrid" fused an already-fused input,
+    double-counting semantic and flipping the semantic-vs-hybrid conclusion):
+
+      lexical   pure word-match, fusion forced off
+      default   exactly what the shipped MCP serves (env-driven fusion)
+      semantic  local embeddings only
+      hybrid    single RRF of pure lexical + semantic
+    """
     if mode == "lexical":
-        return "term-frequency, title-weighted (vault_ops.search)", \
+        return "pure lexical: term-frequency, title-weighted (fusion off)", \
+            lambda q: vault_ops.search(q, limit=SEARCH_LIMIT, semantic=False)
+    if mode == "default":
+        return "shipped default: vault_ops.search (lexical + semantic RRF when available)", \
             lambda q: vault_ops.search(q, limit=SEARCH_LIMIT)
     import semantic_search as ss  # local module; needs Ollama running
     vault = vault_ops.resolve_vault()
@@ -215,9 +228,11 @@ def _searcher(mode: str):
     if mode == "semantic":
         return f"local embeddings: {index.get('model')} (semantic_search)", \
             lambda q: ss.semantic_search(q, index, limit=SEARCH_LIMIT)
-    # hybrid
-    return f"hybrid: lexical + {index.get('model')} (RRF)", \
-        lambda q: ss.hybrid_search(q, index, vault_ops.search(q, limit=SEARCH_LIMIT), limit=SEARCH_LIMIT)
+    # hybrid: the lexical arm MUST be pure, or semantic gets fused twice
+    return f"hybrid: pure lexical + {index.get('model')} (single RRF)", \
+        lambda q: ss.hybrid_search(q, index,
+                                   vault_ops.search(q, limit=SEARCH_LIMIT, semantic=False),
+                                   limit=SEARCH_LIMIT)
 
 
 def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
@@ -300,12 +315,25 @@ def main() -> int:
     ap.add_argument("--cases", type=Path, default=DEFAULT_CASES,
                     help=f"Cases JSONL path (default: {DEFAULT_CASES})")
     ap.add_argument("--json", action="store_true", help="Emit JSON instead of a text report")
-    ap.add_argument("--mode", choices=("lexical", "semantic", "hybrid"), default="lexical",
-                    help="Retrieval to score: lexical (word-match, default), semantic "
-                         "(local embeddings), or hybrid (both fused). semantic/hybrid need Ollama.")
+    ap.add_argument("--mode", choices=("lexical", "default", "semantic", "hybrid"),
+                    default="lexical",
+                    help="Retrieval to score: lexical (pure word-match, default), "
+                         "default (exactly what the shipped MCP serves), semantic "
+                         "(local embeddings), or hybrid (pure lexical + semantic, "
+                         "single RRF). semantic/hybrid need Ollama.")
+    ap.add_argument("--force", action="store_true",
+                    help="Allow --generate to overwrite an existing cases file")
     args = ap.parse_args()
 
     if args.generate is not None:
+        if args.cases.exists() and not args.force:
+            print(
+                f"Refusing to overwrite existing cases at {args.cases}: regenerating "
+                f"mid-experiment breaks the before/after comparison on the SAME cases.\n"
+                f"Pass --force to overwrite, or --cases <new-path> for a fresh set.",
+                file=sys.stderr,
+            )
+            return 1
         return generate(args.generate, args.cases, args.style)
     return evaluate(args.cases, args.json, args.mode)
 

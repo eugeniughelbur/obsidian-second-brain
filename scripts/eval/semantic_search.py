@@ -52,7 +52,12 @@ EMBED_KEY = os.environ.get("OBSIDIAN_EMBED_KEY", "")
 EXCLUDE_PREFIXES = tuple(
     p.strip() for p in os.environ.get("OBSIDIAN_EMBED_EXCLUDE", "").split(",") if p.strip()
 )
-SKIP_DIRS = {".obsidian", ".git", ".trash", "_trash", ".claude", "_export", "templates", "node_modules"}
+# Single source of truth: the MCP server owns the skip set, so the semantic
+# index and the lexical scan can never drift into different universes
+# (stress-test fix 10/24).
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "integrations" / "obsidian-mcp-server"))
+from vault_ops import _SKIP_DIRS as SKIP_DIRS  # noqa: E402
 INDEX_FILE = ".obsidian-semantic-index.json"  # written at vault root
 # Embedding models have a token limit (mxbai-embed-large ~512 tokens). Long notes
 # must be split into safe chunks and averaged, or the model 500s. ~1200 chars sits
