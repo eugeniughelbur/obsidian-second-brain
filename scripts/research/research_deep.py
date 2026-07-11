@@ -357,6 +357,11 @@ def main(argv: list[str]) -> int:
         print("Usage: /research-deep <topic> [--free] [--academic]", file=sys.stderr)
         return 2
 
+    # Load the shared ~/.config/obsidian-second-brain/.env before deciding
+    # free vs paid. source_config does this without requiring vault config
+    # (unlike lib.config), so zero-config free mode keeps working.
+    from .lib import source_config  # noqa: F401
+
     use_free = force_free or not os.environ.get("PERPLEXITY_API_KEY", "").strip()
     if use_free:
         return run_free_deep(topic, academic)
