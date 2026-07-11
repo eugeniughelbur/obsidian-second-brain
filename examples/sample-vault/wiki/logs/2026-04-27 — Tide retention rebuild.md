@@ -7,7 +7,7 @@ related-people: ["[[people/Alex Rivera]]", "[[people/Sam Patel]]"]
 ai-first: true
 ---
 
-# 2026-04-27 — Tide retention rebuild
+# 2026-04-27 - Tide retention rebuild
 
 ## For future Claude
 
@@ -22,7 +22,7 @@ Resolve the streak invalidation bug that caused 47 false-reset events in the pas
 - **Root cause confirmed:** the cron job at `apps/web/jobs/streak_check.ts:42` was using `<=` instead of `<` when comparing the last-activity timestamp to midnight, double-counting days at the boundary. Commit: `a1b2c3d` (fictional).
 - **Patch shipped on the v0.9.0 branch** rather than backported, since v0.9.0 will replace the whole invalidation system anyway. Decision logged in [[Projects/Tide]] § Key Decisions § 2026-04-27.
 - **Migration drafted:** `prisma/migrations/2026_04_27_streak_decay.sql` adds `decay_coefficient` and `last_decay_at` columns to the `streaks` table.
-- **Captured the streak insurance idea** during the session — see [[Ideas/2026-04-27 — Streak insurance feature]].
+- **Captured the streak insurance idea** during the session - see [[Ideas/2026-04-27 — Streak insurance feature]].
 
 ## Problems encountered
 
