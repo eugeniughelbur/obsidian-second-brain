@@ -7,6 +7,8 @@ Skips:
   - hooks/validate-ai-first.sh (detection dict contains intentional banned chars)
   - Lines inside Markdown code fences (``` / ~~~)
   - Inline backtick code spans within lines
+  - [[wikilink]] interiors: a dash inside a link is part of a FILENAME, not
+    typography - substituting it breaks the link
 
 Usage:
   python scripts/sweep_non_ascii.py                    # dry-run, show what would change
@@ -16,9 +18,11 @@ Usage:
 
 In --check mode the script exits non-zero when a banned substitution character
 appears in prose (anything the sweep would rewrite). Characters inside code
-fences and inline backtick spans are intentionally preserved and never fail the
-check.
+fences, inline backtick spans, and wikilinks are intentionally preserved and
+never fail the check. Files that cannot be decoded are WARNED about and counted
+- an unchecked file must never silently read as a passed one.
 """
+import argparse
 import re
 import subprocess
 import sys
@@ -43,6 +47,7 @@ SKIP_FILES = {'hooks/validate-ai-first.sh', 'scripts/sweep_non_ascii.py', 'READM
 
 CODE_SPAN_RE = re.compile(r'(`+)(.+?)\1', re.DOTALL)
 FENCE_RE = re.compile(r'^[ \t]*(`{3,}|~{3,})')
+WIKILINK_RE = re.compile(r'\[\[[^\]]*\]\]')
 
 
 def substitute(text: str) -> str:
@@ -51,27 +56,41 @@ def substitute(text: str) -> str:
     return text
 
 
+def _substitute_outside_wikilinks(text: str) -> str:
+    """Substitute everywhere except inside [[...]]: the characters in a link
+    target are part of a filename, and rewriting them breaks the link."""
+    result = []
+    last = 0
+    for m in WIKILINK_RE.finditer(text):
+        result.append(substitute(text[last:m.start()]))
+        result.append(m.group(0))
+        last = m.end()
+    result.append(substitute(text[last:]))
+    return ''.join(result)
+
+
 def process_line(line: str, is_md: bool) -> str:
     if not is_md:
         return substitute(line)
-    # Markdown: preserve inline code spans verbatim
+    # Markdown: preserve inline code spans and wikilink interiors verbatim
     result = []
     last = 0
     for m in CODE_SPAN_RE.finditer(line):
-        result.append(substitute(line[last:m.start()]))
+        result.append(_substitute_outside_wikilinks(line[last:m.start()]))
         result.append(m.group(0))
         last = m.end()
-    result.append(substitute(line[last:]))
+    result.append(_substitute_outside_wikilinks(line[last:]))
     return ''.join(result)
 
 
 def process_file(path: Path, apply: bool) -> tuple[int, int]:
-    """Returns (lines_changed, lines_skipped_inside_fence)."""
+    """Returns (lines_changed, lines_skipped_inside_fence).
+
+    Raises OSError/UnicodeDecodeError to the caller: an unreadable file must be
+    reported, never silently counted as clean (a banned char in it would pass
+    the --check CI gate unseen)."""
     is_md = path.suffix == '.md'
-    try:
-        original = path.read_text(encoding='utf-8')
-    except (OSError, UnicodeDecodeError):
-        return 0, 0
+    original = path.read_text(encoding='utf-8')
 
     out_lines = []
     in_fence = False
@@ -109,12 +128,17 @@ def process_file(path: Path, apply: bool) -> tuple[int, int]:
 
 
 def main() -> int:
-    apply = '--apply' in sys.argv
-    check = '--check' in sys.argv
-    extra_args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    ap = argparse.ArgumentParser(
+        description="Sweep banned non-ASCII substitution characters from tracked repo files."
+    )
+    ap.add_argument('files', nargs='*', help='specific files (default: all tracked md/py/sh)')
+    ap.add_argument('--apply', action='store_true', help='write changes (default: dry-run)')
+    ap.add_argument('--check', action='store_true',
+                    help='CI gate: exit 1 if any prose violations')
+    args = ap.parse_args()
 
-    if extra_args:
-        files = [Path(f) for f in extra_args]
+    if args.files:
+        files = [Path(f) for f in args.files]
     else:
         result = subprocess.run(
             ['git', 'ls-files', '*.md', '*.py', '*.sh'],
@@ -125,6 +149,7 @@ def main() -> int:
     total_changed = 0
     total_skipped = 0
     touched_files = 0
+    unreadable = 0
 
     for path in files:
         norm = str(path).replace('\\', '/')
@@ -132,15 +157,24 @@ def main() -> int:
             print(f'  skip   {path}  (exempted)')
             continue
 
-        changed, skipped = process_file(path, apply)
+        try:
+            changed, skipped = process_file(path, args.apply)
+        except (OSError, UnicodeDecodeError) as exc:
+            print(f'  WARN   {path}  (unreadable, NOT checked: {exc.__class__.__name__})',
+                  file=sys.stderr)
+            unreadable += 1
+            continue
         if changed or skipped:
-            action = 'fixed ' if apply else 'would '
+            action = 'fixed ' if args.apply else 'would '
             print(f'  {action}  {path}  ({changed} line(s) changed, {skipped} skipped inside fence)')
             touched_files += 1
             total_changed += changed
             total_skipped += skipped
 
-    if check:
+    unreadable_note = (
+        f' WARNING: {unreadable} file(s) unreadable and NOT checked.' if unreadable else ''
+    )
+    if args.check:
         if total_changed > 0:
             print(
                 f'\nCHECK FAILED: {total_changed} banned substitution character(s) in prose '
@@ -150,16 +184,17 @@ def main() -> int:
             return 1
         print(
             f'\nCHECK PASSED: no banned substitution characters in prose. '
-            f'({total_skipped} preserved inside code fences/spans.)'
+            f'({total_skipped} preserved inside code fences/spans.)' + unreadable_note
         )
         return 0
 
-    mode = 'Applied' if apply else 'Dry-run'
+    mode = 'Applied' if args.apply else 'Dry-run'
     print(
         f'\n{mode}: {total_changed} line(s) across {touched_files} file(s). '
         f'{total_skipped} line(s) left untouched inside code fences -- review manually.'
+        + unreadable_note
     )
-    if not apply:
+    if not args.apply:
         print('Run with --apply to write changes.')
     return 0
 

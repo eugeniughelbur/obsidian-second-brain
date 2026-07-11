@@ -136,6 +136,8 @@ def main():
     vault = Path(args.path).expanduser()
 
     if args.apply:
+        if not args.src:
+            ap.error("--from <prior triage output> is required with --apply")
         verdicts = load_verdicts(args.src)
         d, c, s = apply_verdicts(vault, verdicts, args.create_cap)
         after = len(check_wanted_notes(load_vault(vault), vault))

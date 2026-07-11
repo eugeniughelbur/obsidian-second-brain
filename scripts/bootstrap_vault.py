@@ -458,7 +458,8 @@ def render_home(name: str, preset_key: str, preset: dict, jobs: list, mode: str,
             "|------|------|--------|\n"
             f"| [[Boards/{primary_job}\\|📋 Work Board]] | [[Goals/{YEAR} Goals\\|🎯 Goals]] | [[Templates/\\|📝 Templates]] |\n"
             "| [[Boards/Personal\\|📋 Personal]] | [[Finances/Income Streams\\|💵 Income]] | [[Mentions/Mentions Log\\|💬 Mentions]] |\n"
-            "| [[Projects/\\|🔨 Projects]] | [[Health/Health Dashboard\\|🏋️ Health]] | [[People/\\|👥 People]] |"
+            "| [[Projects/\\|🔨 Projects]] | [[Health/Health Dashboard\\|🏋️ Health]] | [[People/\\|👥 People]] |\n"
+            "| [[Content/Content Calendar\\|📅 Content]] | [[Ideas/\\|💡 Ideas]] | [[Reviews/\\|📆 Reviews]] |"
         )
     else:
         board_links = " · ".join(f"[[Boards/{b[0]}\\|📋 {b[0]}]]" for b in preset["boards"])
@@ -823,6 +824,23 @@ FROM "Mentions"
 WHERE contains(tags, "mention")
 SORT date DESC
 ```
+""")
+
+        # Home.md's nav links this note - a fresh vault must not ship a
+        # dangling wikilink (stress-test fix 9/24: the showroom rule).
+        write(vault / "Finances/Income Streams.md", f"""---
+date: {TODAY}
+tags:
+  - finance
+---
+
+# Income Streams
+
+Track every income source here - salary, side business, one-off invoices.
+
+| Stream | Type | Status |
+|--------|------|--------|
+| Salary | monthly | active |
 """)
 
         write(vault / "Health/Health Dashboard.md", f"""---
@@ -1191,6 +1209,16 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
     (vault / ".obsidian").mkdir(exist_ok=True)
     if not (vault / ".obsidian/app.json").exists():
         write(vault / ".obsidian/app.json", "{}")
+
+    # ── Showroom rule ─────────────────────────────────────────────────────────
+    # A fresh vault must pass its own health check with zero findings. Scaffold
+    # folders that end up empty get an invisible .gitkeep so vault_health's
+    # empty-folder alarm stays honest for folders that BECOME empty later
+    # (stress-test fix 9/24).
+    for f in folders:
+        d = vault / f
+        if d.is_dir() and not any(d.iterdir()):
+            (d / ".gitkeep").write_text("", encoding="utf-8")
 
     print(f"\n✅ Vault bootstrapped at: {vault}")
     print("\n📋 Recommended Obsidian plugins:")

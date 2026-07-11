@@ -443,7 +443,13 @@ def check_wanted_notes(notes: dict, vault: Path) -> list:
                     issues.append({
                         "type": "wanted_note",
                         "severity": "info",
-                        "message": f"[[{link}]] - wanted by {rel}",
+                        # A '[' inside the captured name means the real filename
+                        # contains brackets and the regex capture stopped early -
+                        # never present a possibly-mangled name as authoritative.
+                        "message": f"[[{link}]] - wanted by {rel}" + (
+                            " (name contains brackets; capture may be truncated)"
+                            if "[" in link else ""
+                        ),
                         "files": [rel],
                     })
     return issues
