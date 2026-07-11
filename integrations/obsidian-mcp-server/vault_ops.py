@@ -64,6 +64,68 @@ _SEARCH_ENTITY_BOOST = float(os.environ.get("OBSIDIAN_SEARCH_ENTITY_BOOST") or "
 _LOG_TYPES = {"log", "dev-log", "daily", "worklog"}
 _ENTITY_TYPES = {"person", "entity"}
 _LOG_FOLDERS = {"logs", "daily", "dev logs"}
+# Freshness (stress-test fix 15/24): "who is my CURRENT employer" ranked a
+# declined offer above the real employer. Two levers, lexical arm only (the
+# semantic arm rejected additive nudges by measurement in fix 13):
+# - a recency band: old notes lose near-ties, gently always, strongly when the
+#   query itself asks about the present (current/now/still/today/latest)
+# - a status fade: notes whose OWN metadata says they no longer hold
+#   (superseded/declined/archived/parked/on-hold...) step back
+_STALE_STATUSES = {"superseded", "declined", "rejected", "archived", "obsolete",
+                   "cancelled", "closed", "parked", "inactive", "done"}
+_STATUS_RE = re.compile(r"(?m)^status:\s*['\"]?([A-Za-z0-9_-]+)")
+_DATE_RE_FM = re.compile(r"(?m)^(?:updated|date):\s*['\"]?(\d{4})-(\d{2})-(\d{2})")
+_CURRENT_INTENT = {"current", "currently", "now", "today", "still", "latest", "actual"}
+_STATUS_FADE = float(os.environ.get("OBSIDIAN_SEARCH_STATUS_FADE") or "0.6")
+
+
+def _note_age_days(text: str, md: Path) -> float:
+    """Days since the note last held true: updated: > date: > file mtime."""
+    dates = _DATE_RE_FM.findall(text[:400])
+    if dates:
+        y, mo, d = max(dates)
+        try:
+            then = datetime(int(y), int(mo), int(d))
+            return max(0.0, (datetime.now() - then).days)
+        except ValueError:
+            pass
+    try:
+        return max(0.0, (datetime.now().timestamp() - md.stat().st_mtime) / 86400)
+    except OSError:
+        return 0.0
+
+
+def _freshness_rerank(results, vault: Path, current_intent: bool):
+    """Post-fusion re-rank: the semantic arm knows nothing about time or status,
+    so fusion happily served a declined April offer above the real employer for
+    "who is my CURRENT employer". Reads only the top results' frontmatter heads
+    (cheap): stale-status notes step back always (their own metadata says they
+    no longer hold); recency reorders only when the query asks about the
+    present. Rank-derived base scores keep this a reorder, never a rewrite."""
+    rescored = []
+    for i, r in enumerate(results):
+        weight = 1.0
+        try:
+            head = (vault / r["path"]).read_text(encoding="utf-8-sig", errors="ignore")[:400]
+            sm = _STATUS_RE.search(head)
+            if sm and sm.group(1).lower() in _STALE_STATUSES:
+                weight *= _STATUS_FADE
+            if current_intent:
+                weight *= _freshness_weight(_note_age_days(head, vault / r["path"]), True)
+        except OSError:
+            pass
+        rescored.append((weight / (_RRF_K + i), r))
+    rescored.sort(key=lambda t: t[0], reverse=True)
+    return [r for _, r in rescored]
+
+
+def _freshness_weight(age_days: float, current_intent: bool) -> float:
+    """Multiplicative band on lexical scores. Default band [0.92, 1.0] only
+    breaks near-ties (evergreen notes unharmed); current-intent queries widen
+    it to [0.6, 1.0] with a ~90-day half-life - the question said "now"."""
+    if current_intent:
+        return 0.6 + 0.4 * math.exp(-age_days / 130.0)
+    return 0.92 + 0.08 * math.exp(-age_days / 270.0)
 _TYPE_RE = re.compile(r"(?m)^type:\s*[\"\']?([A-Za-z0-9_-]+)")
 
 
@@ -255,6 +317,7 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
         terms = [t for t in re.split(r"\W+", query.lower()) if len(t) > 2]
     if not terms:
         return []
+    current_intent = bool(_CURRENT_INTENT & {t.lower() for t in re.split(r"\W+", query)})
     # Query-aware dispatch (fix 11/24): a single exact token ("OKF", "docker") is
     # a lookup, not a question - bare tokens embed near-meaninglessly, and fusing
     # semantic noise into an exact hit demoted it (OKF: lexical rank 2 -> fused
@@ -297,6 +360,10 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
                 score *= _SEARCH_DEWEIGHT_FACTOR
             else:
                 score *= _type_weight(rel, text)
+            sm = _STATUS_RE.search(text[:400])
+            if sm and sm.group(1).lower() in _STALE_STATUSES:
+                score *= _STATUS_FADE
+            score *= _freshness_weight(_note_age_days(text, md), current_intent)
             scored.append(
                 {
                     "path": rel,
@@ -314,7 +381,7 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
     scored.sort(key=lambda r: r["score"], reverse=True)
     fused = _semantic_fuse(query, scored, vault, limit, enabled=semantic)
     if fused is not None:
-        return fused
+        return _freshness_rerank(fused, vault, current_intent)
     for r in scored:
         r.pop("score", None)
     return scored[:limit]
