@@ -106,16 +106,20 @@ def _parse_embedding(data: dict) -> list[float] | None:
     return None
 
 
-def embed(text: str) -> list[float]:
+def embed(text: str, retries: int | None = None) -> list[float]:
     """Return the embedding vector for one text via the configured backend.
 
     Retries transient errors (HTTP 5xx, connection resets): a local model on a
     laptop can buckle under rapid sequential calls, then recover a second later.
-    The last failure is raised so the caller can skip the note.
+    The last failure is raised so the caller can skip the note. retries caps the
+    ladder: the adaptive splitter passes 1, because a deterministic too-many-
+    tokens failure repays every retry with the same 500 and the full ladder at
+    every split level turned an 11-note repair into a 10-minute stall.
     """
     url, body, headers = _embed_request(text)
     last_err: Exception | None = None
-    for attempt in range(len(_RETRY_WAITS) + 1):
+    waits = _RETRY_WAITS if retries is None else _RETRY_WAITS[:retries]
+    for attempt in range(len(waits) + 1):
         try:
             req = urllib.request.Request(url, data=body, headers=headers)
             with urllib.request.urlopen(req, timeout=120) as r:
@@ -125,8 +129,8 @@ def embed(text: str) -> list[float]:
             last_err = RuntimeError(f"backend returned no embedding (model '{EMBED_MODEL}')")
         except (urllib.error.HTTPError, urllib.error.URLError, ConnectionError, TimeoutError) as e:
             last_err = e
-        if attempt < len(_RETRY_WAITS):
-            time.sleep(_RETRY_WAITS[attempt])
+        if attempt < len(waits):
+            time.sleep(waits[attempt])
     raise RuntimeError(
         f"Embedding backend '{EMBED_BACKEND}' at {EMBED_URL} failed after retries ({last_err})."
     )
@@ -203,9 +207,28 @@ def embed_note_chunks(text: str, header: str = "") -> list[list[float]]:
         return []
     body_room = max(200, _CHUNK_CHARS - len(header))
     chunks = [text[i:i + body_room] for i in range(0, len(text), body_room)][:_MAX_CHUNKS]
-    # 6 decimals is far beyond cosine's discrimination needs and halves the
-    # on-disk index (float repr is the bulk of the JSON).
-    return [[round(x, 6) for x in embed(header + c)] for c in chunks]
+    vecs: list[list[float]] = []
+    for c in chunks:
+        vecs.extend(_embed_adaptive(c, header))
+    return vecs
+
+
+def _embed_adaptive(text: str, header: str) -> list[list[float]]:
+    """Embed one chunk, halving it on failure (stress-test fix 14/24).
+
+    Retry cures transient failures; these were deterministic: token-dense
+    content (a 1,066-char table of euro-rows) blows past the model's 512-token
+    window at char counts where prose fits fine, and failed on every build.
+    Char count is a bad proxy for tokens (even 'x'*1200 fails), so no fixed
+    chunk size is safe - halve until it fits, floor at 300 chars. 6-decimal
+    rounding is far beyond cosine's needs and halves the on-disk index."""
+    try:
+        return [[round(x, 6) for x in embed(header + text, retries=1)]]
+    except Exception:
+        if len(text) <= 300:
+            raise
+        mid = len(text) // 2
+        return _embed_adaptive(text[:mid], header) + _embed_adaptive(text[mid:], header)
 
 
 # --------------------------------------------------------------------------- #
@@ -258,7 +281,9 @@ def build_index(vault: Path, verbose: bool = True) -> dict:
     # embed for it is not.
     old = cache.get("notes", {}) if cache.get("format") == 2 else {}
     new: dict = {}
-    embedded = reused = skipped = failed = 0
+    embedded = reused = skipped = failed = degraded = 0
+    degraded_paths: list[str] = []
+    dropped_paths: list[str] = []
 
     for md in _iter_notes(vault):
         rel = md.relative_to(vault).as_posix()
@@ -283,17 +308,29 @@ def build_index(vault: Path, verbose: bool = True) -> dict:
         embed_text = body if body else header.strip()
         if not embed_text.strip():
             continue
+        degraded_note = False
         try:
             vecs = embed_note_chunks(embed_text, header=header)
-        except Exception as e:  # one bad note must not abort a 1000-note run
-            failed += 1
-            if verbose:
-                print(f"  [skip] {rel}: {e}", file=sys.stderr)
-            continue
+        except Exception:
+            # The body will not embed even split down - keep the note findable
+            # by NAME at least: an identity-only vector beats silent absence.
+            try:
+                vecs = [[round(x, 6) for x in embed(header.strip() or md.stem)]]
+                degraded_note = True
+            except Exception as e:  # one bad note must not abort a 1000-note run
+                failed += 1
+                dropped_paths.append(rel)
+                if verbose:
+                    print(f"  [skip] {rel}: {e}", file=sys.stderr)
+                continue
         tm = _FM_TYPE_RE.search(text[:400])
         entry = {"hash": h, "title": md.stem, "vecs": vecs}
         if tm:
             entry["type"] = tm.group(1).lower()
+        if degraded_note:
+            entry["degraded"] = True
+            degraded += 1
+            degraded_paths.append(rel)
         new[rel] = entry
         embedded += 1
         if verbose and embedded % 50 == 0:
@@ -302,11 +339,19 @@ def build_index(vault: Path, verbose: bool = True) -> dict:
     out = {"model": EMBED_MODEL, "format": 2, "notes": new}
     index_path.write_text(json.dumps(out), encoding="utf-8")
     if verbose:
+        total_eligible = len(new) + failed
+        pct = (100.0 * len(new) / total_eligible) if total_eligible else 100.0
         print(
             f"[semantic] indexed {len(new)} notes ({embedded} new, {reused} cached, "
-            f"{skipped} excluded, {failed} failed) -> {index_path}",
+            f"{skipped} excluded, {degraded} degraded, {failed} dropped) -> {index_path}",
             file=sys.stderr,
         )
+        print(f"[semantic] coverage: {len(new)}/{total_eligible} ({pct:.1f}%)", file=sys.stderr)
+        # Gaps must be a report, not a surprise: name every degraded/dropped note.
+        for rel in degraded_paths:
+            print(f"  [degraded to identity-only] {rel}", file=sys.stderr)
+        for rel in dropped_paths:
+            print(f"  [DROPPED - not findable semantically] {rel}", file=sys.stderr)
     return out
 
 
