@@ -1,3 +1,3 @@
-{"q": "How do the build adapters turn one command source into multiple CLIs?", "gold": ["wiki/projects/Obsidian Second Brain/Architecture/Architecture - Adapters.md"], "title": "Architecture - Adapters"}
-{"q": "What did we decide about labelling links to notes that don't exist yet?", "gold": ["wiki/decisions/ADR-2026-06-27 — Rename broken links to wanted notes.md"], "title": "ADR - Rename broken links to wanted notes"}
-{"q": "Which person leads the paid coaching sessions on positioning?", "gold": ["wiki/entities/Ken Kim.md"], "title": "Ken Kim"}
+{"q": "How do the build adapters turn one command source into multiple CLIs?", "gold": ["wiki/projects/Example Project/Architecture - Adapters.md"], "title": "Architecture - Adapters"}
+{"q": "What did we decide about labelling links to notes that don't exist yet?", "gold": ["wiki/decisions/ADR-2026-06-27 - Rename broken links to wanted notes.md"], "title": "ADR - Rename broken links to wanted notes"}
+{"q": "Which person leads the paid coaching sessions on positioning?", "gold": ["wiki/entities/Ada Lovelace.md"], "title": "Ada Lovelace"}
