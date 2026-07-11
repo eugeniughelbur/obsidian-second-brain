@@ -34,22 +34,35 @@ import yaml
 
 FM_RE = re.compile(r"^---\n(.*?)\n---\n?(.*)$", re.DOTALL)
 WIKILINK_RE = re.compile(r"(!?)\[\[([^\]]+)\]\]")
-SKIP_DIRS = {".obsidian", "_export", ".git", ".trash", ".claude", "templates", "Excalidraw"}
+# Compared lowercased; any folder ENDING in "templates" is also skipped (matching
+# vault_health.load_vault), so the canonical capital Templates/ stays out too.
+SKIP_DIRS = {".obsidian", "_export", ".git", ".trash", ".claude", "excalidraw"}
 # frontmatter fields that point at a real external asset -> OKF `resource`
 RESOURCE_KEYS = ("resource", "url", "source_url", "post-url", "post_url", "repo", "linkedin")
 
 
+def _skipped(parts) -> bool:
+    return any(p.lower() in SKIP_DIRS or p.lower().endswith("templates") for p in parts)
+
+
 def parse_note(text):
+    """Return (fm, body, malformed).
+
+    malformed=True means the note HAS a frontmatter block we failed to parse
+    (YAML error, or YAML that is not a mapping). The caller must warn and must
+    not guess: the whole text rides along as body so no prose is dropped, and
+    the type falls back to plain "note", never the folder name. A note with no
+    frontmatter at all is NOT malformed - folder inference stays fair game."""
     m = FM_RE.match(text)
-    if m:
-        try:
-            fm = yaml.safe_load(m.group(1)) or {}
-        except Exception:
-            fm = {}
-        body = m.group(2)
-    else:
-        fm, body = {}, text
-    return (fm if isinstance(fm, dict) else {}), body
+    if not m:
+        return {}, text, False
+    try:
+        fm = yaml.safe_load(m.group(1)) or {}
+    except Exception:
+        return {}, text, True
+    if not isinstance(fm, dict):
+        return {}, text, True
+    return fm, m.group(2), False
 
 
 def first_heading(body):
@@ -150,23 +163,30 @@ def main():
         sys.exit(1)
     out = (vault / args.out) if not os.path.isabs(args.out) else pathlib.Path(args.out)
 
-    # 1) collect notes (relative path -> (src_file, fm, body))
+    # 1) collect notes (relative path -> (src_file, fm, body, malformed))
     notes = {}
     for f in vault.rglob("*.md"):
         rel = f.relative_to(vault)
-        if any(part in SKIP_DIRS for part in rel.parts):
+        if _skipped(rel.parts):
             continue
         if str(rel).startswith(args.out):
+            continue
+        # The vault's own root index.md is navigation, not knowledge, and the
+        # generated bundle index would overwrite its export anyway.
+        if str(rel) == "index.md":
             continue
         # rglob matches names, not files: skip dangling symlinks and directories
         # named *.md instead of crashing the whole export (stress-test fix 2/24).
         if not f.is_file():
             continue
         try:
-            fm, body = parse_note(f.read_text(encoding="utf-8-sig", errors="replace"))
+            fm, body, malformed = parse_note(f.read_text(encoding="utf-8-sig", errors="replace"))
         except OSError:
             continue
-        notes[str(rel)] = (f, fm, body)
+        if malformed:
+            print(f"WARNING: malformed frontmatter in {rel} - exporting as type: note, "
+                  f"body kept verbatim", file=sys.stderr)
+        notes[str(rel)] = (f, fm, body, malformed)
 
     # 2) index note name -> output relative path (for wikilink resolution)
     name_to_rel = {}
@@ -177,6 +197,27 @@ def main():
         for a in (fm.get("aliases") or []):
             name_to_rel.setdefault(str(a).lower(), rel)
 
+    # 2b) index real non-note vault files (pdf, png, canvas, ...) so links to
+    # them export as links, exactly like embeds already do, instead of silently
+    # degrading to plain text.
+    asset_to_rel = {}
+    for f in vault.rglob("*"):
+        if not f.is_file() or f.suffix.lower() == ".md":
+            continue
+        arel = f.relative_to(vault)
+        if _skipped(arel.parts) or str(arel).startswith(args.out):
+            continue
+        posix = str(arel).replace(os.sep, "/")
+        asset_to_rel.setdefault(posix.lower(), posix)
+        asset_to_rel.setdefault(arel.name.lower(), posix)
+
+    def _link_name(target: str) -> str:
+        """Basename with only a literal trailing .md stripped. Titles are not
+        paths: PurePath.stem would truncate 'release v2.4 notes' to 'release v2'
+        (the #93 regression, alive here until stress-test fix 5/24)."""
+        base = target.rsplit("/", 1)[-1]
+        return base[:-3] if base.lower().endswith(".md") else base
+
     def convert_links(body, from_rel):
         from_dir = pathlib.PurePath(from_rel).parent
 
@@ -184,13 +225,18 @@ def main():
             embed, inner = m.group(1), m.group(2)
             target = inner.split("|", 1)[0].split("#", 1)[0].strip()
             display = inner.split("|", 1)[1].strip() if "|" in inner else target
-            tgt_rel = name_to_rel.get(pathlib.PurePath(target).stem.lower())
+            tgt_rel = name_to_rel.get(_link_name(target).lower())
             if tgt_rel:
                 relpath = os.path.relpath(tgt_rel, from_dir) if str(from_dir) != "." else tgt_rel
                 relpath = relpath.replace(os.sep, "/")
                 href = f"<{relpath}>" if " " in relpath else relpath
                 return f"![{display}]({href})" if embed else f"[{display}]({href})"
-            # unresolved: embed keeps the raw name, plain link degrades to text
+            # a real vault file (asset) that just isn't a note: keep the link
+            asset_rel = asset_to_rel.get(target.lower())
+            if asset_rel:
+                href = f"<{asset_rel}>" if " " in asset_rel else asset_rel
+                return f"![{display}]({href})" if embed else f"[{display}]({href})"
+            # truly unresolved: embed keeps the raw name, plain link degrades to text
             href = f"<{target}>" if " " in target else target
             return f"![{display}]({href})" if embed else display
 
@@ -199,10 +245,12 @@ def main():
     # 3) write the bundle
     out.mkdir(parents=True, exist_ok=True)
     written = 0
-    for rel, (src, fm, body) in sorted(notes.items()):
+    for rel, (src, fm, body, malformed) in sorted(notes.items()):
         title = (fm.get("title") or first_heading(body) or pathlib.PurePath(rel).stem)
         desc = clean_desc(str(fm.get("description") or first_paragraph(body)))
-        ntype = infer_type(fm, rel)
+        # A failed parse means the note HAS a type we could not read - inferring
+        # one from the folder would be a silent guess, so plain "note" it is.
+        ntype = "note" if malformed else infer_type(fm, rel)
         tags = fm.get("tags") or []
         resource = next((str(fm[k]) for k in RESOURCE_KEYS if fm.get(k)), None)
 
@@ -224,7 +272,7 @@ def main():
 
     # 4) index.md (progressive disclosure) grouped by top-level folder
     groups = {}
-    for rel, (src, fm, body) in notes.items():
+    for rel in notes:
         top = pathlib.PurePath(rel).parts[0] if len(pathlib.PurePath(rel).parts) > 1 else "."
         groups.setdefault(top, []).append(rel)
     # §6: index.md carries no frontmatter; §11: the bundle-root index MAY declare okf_version

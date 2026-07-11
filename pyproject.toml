@@ -11,6 +11,7 @@ dependencies = [
     "google-api-python-client>=2.110.0",
     "google-genai>=2.3.0",
     "feedparser>=6.0.10",
+    "pyyaml>=6",
 ]
 
 [dependency-groups]
