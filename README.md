@@ -679,7 +679,7 @@ Without keys, the 35 non-research commands work fully, and `/research` + `/resea
 
 ### Semantic search (optional, off by default)
 
-Search (`/obsidian-find` and the MCP connector) works out of the box as fast keyword search - **no setup, no model, nothing to install.** You can optionally add a meaning-based layer that finds notes even when your query shares no words with them. It is opt-in by setup and, when present, fuses with keyword search (measured best of both: keyword recall@10 80% -> 91%, paraphrased 17% -> ~46% on a 1,000-note vault). If the model is ever unreachable, search silently falls back to keyword - it never breaks or hangs.
+Search (`/obsidian-find` and the MCP connector) works out of the box as fast keyword search - **no setup, no model, nothing to install.** You can optionally add a meaning-based layer that finds notes even when your query shares no words with them. It is opt-in by setup and, when present, leads the ranking with keyword search as tiebreak and freshness signals on top (measured on a ~2,350-note vault: keyword recall@10 1.0, paraphrased-question recall@10 77%, and non-English queries went from ~0 to 63% recall@5 with the multilingual default model - full reference in scripts/eval/BASELINE.md). If the model is ever unreachable, search silently falls back to keyword - it never breaks or hangs.
 
 Two ways to provide the embedding model:
 

@@ -164,9 +164,11 @@ _FUSE_DEPTH = 25  # how many from each ranking feed the fusion
 # Semantic votes count more than lexical ones in the fusion. Measured on the
 # straightened ruler (fix 11/24): flat 1:1 fusion let noisy term-dense log
 # notes demote answers pure semantic had ranked #1 (paraphrase recall@1
-# 8% fused vs 50% semantic on the audit cases). w=3.0 won the measured
-# sweep: best average MRR across paraphrase + keyword case sets.
-_RRF_SEMANTIC_WEIGHT = float(os.environ.get("OBSIDIAN_RRF_SEMANTIC_WEIGHT") or "5.0")
+# 8% fused vs 50% semantic on the audit cases). Re-tuned per model on the
+# measured sweep (w=3 for mxbai; w=5/10/20 each strictly better on bge-m3):
+# at 20 the lexical arm is a tiebreak plus coverage for notes written since
+# the last index build, and the default converges to pure-semantic quality.
+_RRF_SEMANTIC_WEIGHT = float(os.environ.get("OBSIDIAN_RRF_SEMANTIC_WEIGHT") or "20.0")
 # Lexical rank carries signal only near the top: on paraphrase queries the
 # tail of the lexical ranking is term-frequency noise, and letting 25 noisy
 # entries vote demoted semantic answers. Lexical votes are capped to its
