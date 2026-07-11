@@ -5,9 +5,14 @@ hubs, and orphans - in one pass, so the command does not have to read every note
 into the model just to know what links to what. Claude then does the layout, the
 canvas, and the interpretation; the counting is done here, fast and exactly.
 
-Pure stdlib. Mirrors vault_health.py's link handling: code fences/inline code are
-stripped before scanning (so example links don't count), and em/en dashes are
-normalized so `[[A - B]]` resolves to a file named with an em/en dash too.
+Pure stdlib. Mirrors vault_health.py's link handling BY SHARING ITS PARTS (the
+full-file index) and matching its rules exactly: code fences/inline code are
+stripped before scanning, em/en dashes are normalized so `[[A - B]]` resolves to
+a file named with an em/en dash, spaces vs hyphens are NOT flattened together
+(Obsidian does not resolve `[[Foo Bar Baz]]` to `foo-bar-baz.md`, so neither do
+we), links to real assets/folders are not dangling, and _CLAUDE.md's example
+links are skipped. Two implementations of one rule always drift; a test pins
+this one's counts to vault_health's (stress-test fix 7/24).
 
 Usage:
     python scripts/link_graph.py --path "/path/to/vault" [--json]
@@ -24,7 +29,14 @@ import re
 import sys
 from pathlib import Path
 
+# Shared with the health check so the two tools cannot drift apart again.
+from vault_health import index_vault_files
+
 SKIP_DIRS = {".obsidian", ".git", ".trash", "_trash", ".claude", "_export", "templates", "node_modules"}
+
+
+def _skipped(parts) -> bool:
+    return any(p.lower() in SKIP_DIRS or p.lower().endswith("templates") for p in parts)
 
 LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
@@ -36,9 +48,14 @@ EM_DASH, EN_DASH = "\u2014", "\u2013"
 
 
 def _norm(s: str) -> str:
-    """Lowercase, dashes unified, separators flattened - the matching key for a title."""
+    """Lowercase with em/en dashes unified to '-' - the matching key for a title.
+
+    Spaces, hyphens and underscores are deliberately NOT flattened together:
+    Obsidian does not resolve [[Foo Bar Baz]] to foo-bar-baz.md, and flattening
+    them created phantom edges while hiding real broken links (341 of them on
+    the audit's 3,000-note fixture)."""
     s = s.replace(EM_DASH, "-").replace(EN_DASH, "-")
-    return re.sub(r"[\s_-]+", " ", s.strip().lower())
+    return re.sub(r"\s+", " ", s.strip().lower())
 
 
 def _strip_code(text: str) -> str:
@@ -77,10 +94,13 @@ def _link_target(link: str) -> str:
 def build_graph(vault: Path, scope: str | None = None) -> dict:
     notes: dict[str, dict] = {}
     key_to_rel: dict[str, str] = {}
+    relpath_to_rel: dict[str, str] = {}
 
     for md in sorted(vault.rglob("*.md")):
         parts = md.relative_to(vault).parts
-        if SKIP_DIRS & set(parts):
+        if _skipped(parts):
+            continue
+        if not md.is_file():
             continue
         rel = md.relative_to(vault).as_posix()
         try:
@@ -99,8 +119,31 @@ def build_graph(vault: Path, scope: str | None = None) -> dict:
         }
         notes[rel] = note
         key_to_rel.setdefault(_norm(md.stem), rel)
+        relpath_to_rel[_norm(rel[:-3])] = rel
         for a in note["aliases"]:
             key_to_rel.setdefault(_norm(a), rel)
+
+    # Shared with vault_health: lowercased rel paths + bare names of every real
+    # vault file, so a link to Attachments/file.pdf is never "dangling".
+    vault_files = index_vault_files(vault)
+    vault_dirs: set[str] = set()
+    for d in vault.rglob("*/"):
+        dparts = d.relative_to(vault).parts
+        if _skipped(dparts):
+            continue
+        vault_dirs.add(d.relative_to(vault).as_posix().lower())
+        vault_dirs.add(d.name.lower())
+
+    def _resolve(raw: str) -> str | None:
+        body = raw.split("|", 1)[0].split("#", 1)[0].strip().rstrip("\\")
+        if "/" in body:
+            # [[Projects/ProjectX]] disambiguates twins by path: match the full
+            # relative path first, basename only as a fallback.
+            p = body[:-3] if body.lower().endswith(".md") else body
+            hit = relpath_to_rel.get(_norm(p))
+            if hit:
+                return hit
+        return key_to_rel.get(_norm(_link_target(raw)))
 
     edges: list[dict] = []
     dangling = 0
@@ -108,10 +151,18 @@ def build_graph(vault: Path, scope: str | None = None) -> dict:
     outdeg = {rel: 0 for rel in notes}
 
     for rel, note in notes.items():
+        # The operating manual's [[wikilinks]] are syntax demos, not references
+        # (vault_health skips it the same way).
+        if rel.rsplit("/", 1)[-1] == "_CLAUDE.md":
+            continue
         seen: set[str] = set()
         for raw in LINK_RE.findall(note["content"]):
-            target = key_to_rel.get(_norm(_link_target(raw)))
+            target = _resolve(raw)
             if target is None:
+                body = raw.split("|", 1)[0].split("#", 1)[0].strip().rstrip("\\")
+                key = body.lower().rstrip("/")
+                if key in vault_files or key in vault_dirs:
+                    continue  # a real asset or folder-nav link, not a broken note link
                 dangling += 1
                 continue
             if target == rel or target in seen:
