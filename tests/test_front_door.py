@@ -57,3 +57,18 @@ def test_installer_scripts_parse_and_crossreference():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     assert "scripts/quick-install.sh" in readme
     assert (REPO_ROOT / "scripts" / "quick-install.sh").exists()
+
+
+def test_dists_ship_a_runnable_python_project():
+    """Fix 24/24: dists shipped scripts with no Python project, so the
+    documented `uv run -m scripts.research.<name>` hit ModuleNotFoundError.
+    Every platform now ships pyproject.toml next to its scripts copy, and the
+    Codex install doc states the working, cd-aware invocation."""
+    build = subprocess.run(["bash", "scripts/build.sh", "--platform", "codex-cli"],
+                           cwd=REPO_ROOT, capture_output=True, text=True)
+    assert build.returncode == 0, build.stderr
+    assert (REPO_ROOT / "dist/codex-cli/.codex/pyproject.toml").is_file()
+    assert (REPO_ROOT / "dist/codex-cli/.codex/scripts/research").is_dir()
+    install = (REPO_ROOT / "dist/codex-cli/INSTALL.md").read_text(encoding="utf-8")
+    assert "cd .codex && uv run -m scripts.research" in install
+    assert "scripts.research.<name>` from the vault root" not in install  # the broken claim is gone

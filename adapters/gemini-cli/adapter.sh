@@ -91,6 +91,10 @@ _gemini_copy_scripts() {
   [[ -d "$src" ]] || return 0
   mkdir -p "$dst"
   cp -R "$src/." "$dst/"
+  # Ship the Python project next to the scripts so the documented
+  # `uv run -m scripts.research.<name>` actually resolves modules AND deps
+  # (stress-test fix 24/24: the dist shipped scripts with no project).
+  cp "$src/../pyproject.toml" "$(dirname "$dst")/pyproject.toml"
 }
 
 _gemini_emit_install_hint() {
@@ -107,6 +111,6 @@ Then in your vault:
 
 - `GEMINI.md` is the operating manual Gemini reads at session start.
 - `.gemini/commands/*.md` are the command bodies the AI follows.
-- `.gemini/scripts/` holds the Python helpers (`uv run -m scripts.research.<name>`).
+- `.gemini/scripts/` holds the Python helpers; `.gemini/` ships a `pyproject.toml`, so run them via `(cd .gemini && uv run -m scripts.research.<name> ...)`.
 EOF
 }

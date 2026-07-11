@@ -71,7 +71,8 @@ load only when a skill is selected (progressive disclosure).
 ## Scripts
 
 Python helpers live under \`.codex/scripts/\`. They run via
-\`uv run -m scripts.research.<name>\` from the vault root. Skills that need them
+\`(cd .codex && uv run -m scripts.research.<name> ...)\` - \`.codex/\` is a
+self-contained uv project, so modules and dependencies both resolve. Skills that need them
 reference the exact invocation inside the skill body.
 
 ---
@@ -139,6 +140,10 @@ _codex_copy_scripts() {
   [[ -d "$src" ]] || return 0
   mkdir -p "$dst"
   cp -R "$src/." "$dst/"
+  # Ship the Python project next to the scripts so the documented
+  # `uv run -m scripts.research.<name>` actually resolves modules AND deps
+  # (stress-test fix 24/24: the dist shipped scripts with no project).
+  cp "$src/../pyproject.toml" "$(dirname "$dst")/pyproject.toml"
 }
 
 _codex_emit_install_hint() {
@@ -164,7 +169,8 @@ Then in your vault:
 - `.codex/references/` holds shared specs (the AI-first vault rule) that skills
   reference.
 - `.codex/scripts/` holds the Python helpers invoked by the research toolkit
-  skills. Run them via `uv run -m scripts.research.<name>` from the vault root.
+  skills, plus a `pyproject.toml` making `.codex/` a self-contained uv project.
+  Run them via `(cd .codex && uv run -m scripts.research.<name> ...)`.
 
 Start Codex CLI from the vault root. Skills run in your current session - no
 `codex exec` wrapper, no per-command startup, and writes honor your session's

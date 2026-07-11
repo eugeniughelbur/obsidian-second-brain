@@ -288,6 +288,10 @@ _hermes_copy_scripts() {
   [[ -d "$src" ]] || return 0
   mkdir -p "$dst"
   cp -R "$src/." "$dst/"
+  # Ship the Python project next to the scripts so the documented
+  # `uv run -m scripts.research.<name>` actually resolves modules AND deps
+  # (stress-test fix 24/24: the dist shipped scripts with no project).
+  cp "$src/../pyproject.toml" "$(dirname "$dst")/pyproject.toml"
 }
 
 _hermes_emit_install_hint() {
@@ -324,7 +328,8 @@ Then in Hermes:
   writes (`## For future Claude` preamble, rich frontmatter, `[[wikilinks]]`,
   recency markers, sources verbatim, confidence levels).
 - Python helpers under `scripts/` run via `uv run -m scripts.research.<name>`
-  from the vault root.
+  from the install directory (it ships a `pyproject.toml`, so modules and
+  dependencies both resolve there - e.g. `~/.hermes/skills/obsidian-second-brain/`).
 
 ## Scheduled agents (opt-in)
 
