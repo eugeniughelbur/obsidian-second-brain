@@ -88,3 +88,7 @@ else
   done
   success "All platforms built"
 fi
+
+# Never ship Python bytecode into user vaults (stress-test fix 22/24).
+find dist -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true
+find dist -name "*.pyc" -delete 2>/dev/null || true

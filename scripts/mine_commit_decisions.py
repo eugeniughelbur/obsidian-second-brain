@@ -4,7 +4,7 @@
 Scans recent commit messages for language that signals an architectural or
 directional decision ("switch to", "adopt", "drop", "replace X with Y",
 "rename", "migrate", "decided to", etc.) and prints the matches so they can be
-turned into ADRs via /obsidian-adr. Decisions made in code often never get
+turned into ADRs via /obsidian-decide --formal. Decisions made in code often never get
 recorded as decisions; this surfaces them.
 
 Usage:
@@ -12,7 +12,7 @@ Usage:
   python scripts/mine_commit_decisions.py --repo ~/proj --limit 500
   python scripts/mine_commit_decisions.py --json          # machine-readable for a command
 
-Output is candidates only - it never writes anything. Pair with /obsidian-adr.
+Output is candidates only - it never writes anything. Pair with /obsidian-decide --formal.
 """
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ def main(argv: list[str]) -> int:
     print(f"Found {len(candidates)} ADR candidate(s) in the last {args.limit} commits:\n")
     for c in candidates:
         print(f"  {c['date']}  {c['sha']}  [{c['signal']}]  {c['subject']}")
-    print("\nTurn any of these into a decision record with /obsidian-adr.")
+    print("\nTurn any of these into a decision record with /obsidian-decide --formal.")
     return 0
 
 

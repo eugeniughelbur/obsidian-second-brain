@@ -14,7 +14,7 @@ When a user asks Claude to create their `_CLAUDE.md`, Claude should:
 3. Read 2-3 templates from the `Templates/` folder
 4. Read the current kanban boards
 5. Fill in the template below with discovered values
-6. Write the file to `_CLAUDE.md` at the vault root (Write tool, or `obsidian_save_note` if using the bundled MCP server)
+6. Write the file to `_CLAUDE.md` at the vault root (with your file-write tool, or `obsidian_save_note` if using the bundled MCP server)
 
 ---
 

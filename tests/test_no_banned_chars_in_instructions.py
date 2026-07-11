@@ -25,8 +25,12 @@ ALLOW_MARKER = "Em-dash (`\u2014`)"  # the specimen row in ai-first-rules.md
 
 def test_instruction_files_carry_no_banned_characters():
     offenders: list[str] = []
-    for folder in ("commands", "references"):
-        for md in sorted((REPO_ROOT / folder).glob("*.md")):
+    targets = [*sorted((REPO_ROOT / "commands").glob("*.md")),
+               *sorted((REPO_ROOT / "references").glob("*.md")),
+               REPO_ROOT / "SKILL.md"]
+    for md in targets:
+        folder = md.parent.name if md.parent != REPO_ROOT else "."
+        if True:
             for i, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1):
                 if ALLOW_MARKER in line:
                     continue

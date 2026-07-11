@@ -37,7 +37,7 @@
   <em>write-time AI-first validator &middot; <code>/create-command</code> interview flow &middot; multilingual trigger schema</em>
   <br /><br />
   <a href="#what-happens-when-you-install-this">See it in action</a> &middot;
-  <a href="#43-commands">All commands</a> &middot;
+  <a href="#44-commands">All commands</a> &middot;
   <a href="#install">Install</a> &middot;
   <a href="#choose-your-preset">Presets</a> &middot;
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain/discussions">Discussions</a>
@@ -215,7 +215,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
   |                                          |
   +------------------------------------------+
   |                                          |
-  |   LAYER 2: Thinking Tools (7 commands)   |
+  |   LAYER 2: Thinking Tools (8 commands)   |
   |   Claude thinks with you                 |
   |                                          |
   +------------------------------------------+
@@ -237,7 +237,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
   +------------------------------------------+
 ```
 
-44 commands total. The calendar command (`/obsidian-calendar`) is Claude Code only (needs the Google Calendar MCP), so the Codex / Gemini / OpenCode / Hermes builds ship 43.
+44 commands total. The calendar command (`/obsidian-calendar`) is Claude Code only (needs the Google Calendar MCP), so the Codex / Gemini / OpenCode / Hermes / Pi builds ship 43.
 
 **Layer 1** saves, organizes, ingests, reconciles, exports, schedules your calendar, and maintains your vault.
 **Layer 2** challenges your ideas, surfaces hidden patterns, bridges unrelated domains, and graduates ideas into projects.
@@ -675,7 +675,7 @@ Keys you need:
 | `YOUTUBE_API_KEY` | [console.cloud.google.com](https://console.cloud.google.com) | `/youtube` metadata + comments (optional, transcripts free without) | Free tier 10k units/day |
 | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) | `/podcast` Whisper transcription (optional, falls back to show-notes if unset) | ~$0.006/min |
 
-Without keys, the 35 non-research commands work fully, and `/research` + `/research-deep` fall back to free, key-less sources. The rest of the research toolkit degrades gracefully.
+Without keys, the 37 non-research commands work fully, and `/research` + `/research-deep` fall back to free, key-less sources. The rest of the research toolkit degrades gracefully.
 
 ### Semantic search (optional, off by default)
 

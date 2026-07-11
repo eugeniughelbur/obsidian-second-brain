@@ -9,7 +9,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-retrieval-eval $ARGUMENT
 
 You cannot improve retrieval you have not measured. This scores the vault's REAL search (the term-frequency, title-weighted ranking in `integrations/obsidian-mcp-server/vault_ops.py`, the same engine behind `/obsidian-find` and the MCP connector) against natural-language questions whose correct answer note is known - so "should I add a vector index / better ranking?" becomes a number and a list of failures, not a hunch.
 
-The optional argument is a number of cases to (re)generate first (e.g. `30`), or `report` to also write the result to the vault. No argument: evaluate the existing cases.
+The optional argument is a number of cases to (re)generate first (without `XAI_API_KEY` the generator silently falls back to verbatim-sentence heuristics - fine for keyword-style cases, weak for paraphrase-style) (e.g. `30`), or `report` to also write the result to the vault. No argument: evaluate the existing cases.
 
 1. Read `_CLAUDE.md` first if it exists in the vault root.
 
