@@ -7,7 +7,7 @@ Use this template when the vault operator is maintaining a vault FOR someone els
 ## The Template
 
 ```markdown
-# Claude Operating Manual — [Subject Name]'s Vault
+# Claude Operating Manual - [Subject Name]'s Vault
 
 > Read this file before doing anything in this vault.
 > This vault is maintained BY [Operator Name] FOR [Subject Name].
@@ -16,8 +16,8 @@ Use this template when the vault operator is maintaining a vault FOR someone els
 
 ## Vault Identity
 
-- **Subject:** [Subject Name] — the person this vault is about
-- **Operator:** [Operator Name] — the person who maintains this vault
+- **Subject:** [Subject Name] - the person this vault is about
+- **Operator:** [Operator Name] - the person who maintains this vault
 - **Vault path:** [path]
 - **Structure:** Wiki-style (LLM-first)
 - **Last updated:** [date]
@@ -31,7 +31,7 @@ This vault is operated on behalf of someone else. Key differences from personal 
 - **Voice**: write in [Subject Name]'s voice and perspective, not the operator's
 - **Capture logic**: save what matters to [Subject Name], not what matters to the operator
 - **Synthesis focus**: surface patterns relevant to [Subject Name]'s goals and decisions
-- **Privacy**: the operator may not have full context — ask before saving sensitive topics
+- **Privacy**: the operator may not have full context - ask before saving sensitive topics
 - **Decision records**: always note WHO made the decision (subject or operator)
 
 ---
@@ -50,7 +50,7 @@ This vault is operated on behalf of someone else. Key differences from personal 
 
 - Save everything from conversations the operator has ABOUT the subject
 - Flag when the operator's interpretation might differ from the subject's intent
-- Keep a clear audit trail — the subject should be able to review what was saved and why
+- Keep a clear audit trail - the subject should be able to review what was saved and why
 - Never mix the operator's personal notes into this vault
 
 ---

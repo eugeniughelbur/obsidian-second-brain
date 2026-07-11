@@ -20,7 +20,7 @@ How every command decides **which folder** a note belongs in. Never hardcode a f
 | Dev / work log | `wiki/logs/` | `Dev Logs/` |
 | Weekly / monthly review | `wiki/reviews/` | `Reviews/` |
 | Standalone task | `wiki/tasks/` | `Tasks/` |
-| Decision record (ADR) | `wiki/decisions/` | `Knowledge/` (as `ADR-YYYY-MM-DD — Title.md`) |
+| Decision record (ADR) | `wiki/decisions/` | `Knowledge/` (as `ADR-YYYY-MM-DD - Title.md`) |
 | Meeting note | `wiki/meetings/` | `Meetings/` |
 | Raw source (immutable) | `raw/` (articles, transcripts, pdfs, videos subfolders) | `raw/` |
 | Research output | `Research/` (Web, Deep, X-pulse, X-reads, YouTube, NotebookLM subfolders) | `Research/` |

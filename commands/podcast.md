@@ -32,7 +32,7 @@ Use the obsidian-second-brain skill. Execute `/podcast [url]`:
 
 4. Show the script output verbatim to the user.
 
-5. **Default save behavior: saves automatically.** AI-first note written to `Research/Podcasts/YYYY-MM-DD — <episode-title-slug>.md` (em-dash separator, matches the existing `/youtube` and `/research` filename pattern). Frontmatter includes `show`, `host`, `episode-title`, `episode-url`, `feed-url`, `guid`, `published`, `duration`, `transcript-source` (one of `rss-transcript-tag` / `whisper-api` / `show-notes`), and tags.
+5. **Default save behavior: saves automatically.** AI-first note written to `Research/Podcasts/YYYY-MM-DD - <episode-title-slug>.md` (hyphen separator, matches the existing `/youtube` and `/research` filename pattern). Frontmatter includes `show`, `host`, `episode-title`, `episode-url`, `feed-url`, `guid`, `published`, `duration`, `transcript-source` (one of `rss-transcript-tag` / `whisper-api` / `show-notes`), and tags.
 
 6. Plain English triggers: "summarize this podcast", "what's in this episode", "transcribe this podcast", or just pasting an Apple Podcasts URL with a question about content.
 

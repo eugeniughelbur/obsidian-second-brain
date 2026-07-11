@@ -20,7 +20,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-save`:
      - **Hooks, angles, contrarian takes** → append to `social-media/ideas.md` (dated bullet)
      - **Specific numbers, stats, reusable data points** → append to `social-media/data-points.md` (with source)
      - **External posts that hit + why** → append to `social-media/swipe-file.md` (link + reason)
-     - **Research findings, frameworks, methodologies** → create `social-media/research/YYYY-MM-DD — topic.md`
+     - **Research findings, frameworks, methodologies** → create `social-media/research/YYYY-MM-DD - topic.md`
 5. After all agents complete: update today's daily note with links to everything saved
 6. Report back: a clean list of what was saved and where
 

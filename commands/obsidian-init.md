@@ -19,7 +19,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - List every note in the vault grouped by folder (Projects, People, Ideas, etc.)
    - Include a one-line description for each note (from frontmatter or first paragraph)
    - Claude reads this file FIRST when navigating the vault - cheaper and faster than searching
-   - Format: `- [[Note Name]] — brief description`
+   - Format: `- [[Note Name]] - brief description`
 6. Initialize the vault operations log:
    - Create `Logs/` directory at the vault root
    - Write `log.md` at the vault root as a thin pointer file: explains the per-day structure, points at `Logs/`, and ships the entry template (do NOT put log entries in `log.md` itself)

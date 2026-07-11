@@ -16,7 +16,7 @@ Use the obsidian-second-brain skill. Execute `/x-pulse [topic]`:
 
 3. The script returns a structured pulse: WHAT'S HOT (themes with rep posts + voices), WHAT'S UNDEREXPLORED (gaps), HOOKS THAT ARE WORKING, VOICE & TONE WORKING, POST IDEAS FOR YOU TODAY. Show the full output to the user verbatim.
 
-4. **Default save behavior: saves automatically.** The script writes an AI-first note to `Research/X-pulse/YYYY-MM-DD — <slug>.md` with the AI-first vault rule applied (preamble, frontmatter, recency markers, sources verbatim). It also appends a one-line entry to `log.md`.
+4. **Default save behavior: saves automatically.** The script writes an AI-first note to `Research/X-pulse/YYYY-MM-DD - <slug>.md` with the AI-first vault rule applied (preamble, frontmatter, recency markers, sources verbatim). It also appends a one-line entry to `log.md`.
 
 5. After printing, mention to the user the file path that was saved (the script prints this on stderr, surface it cleanly).
 

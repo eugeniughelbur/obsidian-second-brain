@@ -18,7 +18,7 @@ Use the obsidian-second-brain skill. Execute `/x-read [url]`:
 
 4. **Default save behavior: chat only.** Do NOT save the analysis to the vault automatically. The user must ask explicitly ("save this", "save to vault", "/obsidian-save") for it to be archived.
 
-5. If the user asks to save: write an AI-first note to `Research/X-reads/YYYY-MM-DD — <slug>.md` in the vault, following the AI-first vault rule (Section 0 of `_CLAUDE.md`):
+5. If the user asks to save: write an AI-first note to `Research/X-reads/YYYY-MM-DD - <slug>.md` in the vault, following the AI-first vault rule (Section 0 of `_CLAUDE.md`):
    - Frontmatter: `date`, `time`, `type: x-read`, `post-url`, `post-author` (if known), `key-claims` (list), `tags`, `related-people` (wikilinks for any @ handles that map to known people in the vault), `cost-usd`
    - Body starts with **For future Claude:** preamble (2-3 sentences summarizing what this post is about and why it was saved)
    - Then the full structured analysis from the script

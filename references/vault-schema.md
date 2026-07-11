@@ -116,7 +116,7 @@ tags:
   - project
 status: active   # active | planning | completed | archived | on-hold
 job: "[[Acme Corp]]"   # or Personal, [[Company Name]]
-timeline:                # bi-temporal facts — status changes over time
+timeline:                # bi-temporal facts - status changes over time
   - fact: "status: planning"
     from: 2026-03-01
     until: 2026-03-15
@@ -152,7 +152,7 @@ tags:
 role: "Senior Engineer"        # current role
 company: "[[Acme Corp]]"       # current company
 last_interaction: 2026-03-24
-timeline:                       # bi-temporal facts — never delete, only append
+timeline:                       # bi-temporal facts - never delete, only append
   - fact: "CTO at Acme Corp"
     from: 2024-01-01            # event time: when the fact was true
     until: 2026-04-07
@@ -249,12 +249,12 @@ target_date: 2026-12-31
 | Type | Pattern | Example |
 |---|---|---|
 | Daily note | `YYYY-MM-DD.md` | `2026-03-24.md` |
-| Dev log | `YYYY-MM-DD — Description.md` | `2026-03-24 — API Gateway Debug.md` |
+| Dev log | `YYYY-MM-DD - Description.md` | `2026-03-24 - API Gateway Debug.md` |
 | Entity | Full name (flat) | `Jane Smith.md`, `Acme Corp.md` |
 | Concept | Descriptive title | `LLM-Wiki Pattern.md` |
 | Project | Proper name | `My Project Name.md` |
-| Source | `YYYY-MM-DD — Source Title.md` | `2026-04-06 — Karpathy LLM Wiki.md` |
-| Decision | `ADR-YYYY-MM-DD — Title.md` | `ADR-2026-04-06 — Wiki Style Default.md` |
+| Source | `YYYY-MM-DD - Source Title.md` | `2026-04-06 - Karpathy LLM Wiki.md` |
+| Decision | `ADR-YYYY-MM-DD - Title.md` | `ADR-2026-04-06 - Wiki Style Default.md` |
 | Archive prefix | `_archived_` | `_archived_Old Project.md` |
 
 ---

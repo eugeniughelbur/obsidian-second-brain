@@ -23,32 +23,32 @@ When a user asks Claude to create their `_CLAUDE.md`, Claude should:
 Copy this, fill in the bracketed values, and save as `_CLAUDE.md` in the vault root.
 
 ```markdown
-# Claude Operating Manual — [Your Name]'s Vault
+# Claude Operating Manual - [Your Name]'s Vault
 
 > Read this file before doing anything in this vault.
 > This is the single source of truth for how Claude operates here.
 
 ---
 
-## Section 0 — AI-First Vault Rule (read first, applies to every note)
+## Section 0 - AI-First Vault Rule (read first, applies to every note)
 
-This vault is designed for **future-Claude** to read and reason over, not for human review. The owner rarely reads notes directly — they call Claude to retrieve, synthesize, and connect dots across years of accumulated knowledge.
+This vault is designed for **future-Claude** to read and reason over, not for human review. The owner rarely reads notes directly - they call Claude to retrieve, synthesize, and connect dots across years of accumulated knowledge.
 
 **Every note Claude writes to this vault must follow these rules:**
 
-1. **Self-contained context** — Each note must explain itself. Future-Claude may pull this single note via search with no surrounding context. Don't rely on backlinks alone for meaning.
-2. **"For future Claude" preamble** — Every note begins with a 2-3 sentence summary in plain English so Claude can decide relevance in 10 seconds before parsing the structured data.
-3. **Rich, consistent frontmatter** — Filterable metadata (`type`, `date`, `topic`, `tags`, `related-people`, `related-projects`, `sources`, `confidence`). Different note types may have different schemas, but every note has machine-readable frontmatter.
-4. **Recency markers per claim** — When stating external facts, attach the date: "Mem0 raised $24M (as of 2026-04)" so future-Claude knows what to verify before trusting.
-5. **Sources preserved verbatim** — Every external claim has its source URL inline so it can be re-verified or refreshed.
-6. **Cross-links are mandatory** — Every person, project, idea, decision, or concept referenced uses `[[wikilinks]]` so the graph is traversable.
-7. **Confidence levels** — Where applicable, mark claims as `stated | high | medium | speculation` so future-Claude knows what to trust vs verify.
+1. **Self-contained context** - Each note must explain itself. Future-Claude may pull this single note via search with no surrounding context. Don't rely on backlinks alone for meaning.
+2. **"For future Claude" preamble** - Every note begins with a 2-3 sentence summary in plain English so Claude can decide relevance in 10 seconds before parsing the structured data.
+3. **Rich, consistent frontmatter** - Filterable metadata (`type`, `date`, `topic`, `tags`, `related-people`, `related-projects`, `sources`, `confidence`). Different note types may have different schemas, but every note has machine-readable frontmatter.
+4. **Recency markers per claim** - When stating external facts, attach the date: "Mem0 raised $24M (as of 2026-04)" so future-Claude knows what to verify before trusting.
+5. **Sources preserved verbatim** - Every external claim has its source URL inline so it can be re-verified or refreshed.
+6. **Cross-links are mandatory** - Every person, project, idea, decision, or concept referenced uses `[[wikilinks]]` so the graph is traversable.
+7. **Confidence levels** - Where applicable, mark claims as `stated | high | medium | speculation` so future-Claude knows what to trust vs verify.
 
 This rule applies to all `/obsidian-*` and `/research*` commands, all scheduled agents, and any direct vault writes.
 
 ---
 
-## Section 0.5 — Verify Live State Before Acting
+## Section 0.5 - Verify Live State Before Acting
 
 Before declaring a bug, drafting a fix, or writing architecture: read the actual code, schema, deployed branch, env, or live data. Speculation from stale context burns hours and produces drafts that contradict reality.
 
@@ -67,7 +67,7 @@ This is a general operating principle, not vault-specific. Keep it in `_CLAUDE.m
 ## Vault Identity
 
 - **Owner:** [Full Name]
-- **Primary purpose:** [e.g. "Life OS — work, personal, side business, finances"]
+- **Primary purpose:** [e.g. "Life OS - work, personal, side business, finances"]
 - **Last updated:** [YYYY-MM-DD]
 
 ---
@@ -81,9 +81,9 @@ This is a general operating principle, not vault-specific. Keep it in `_CLAUDE.m
 | `Tasks/` | Standalone task notes (linked from boards) |
 | `Boards/` | Kanban boards: [list your board names] |
 | `People/` | One note per person |
-| `Dev Logs/` | Technical work logs — dated, project-tagged |
+| `Dev Logs/` | Technical work logs - dated, project-tagged |
 | `Side Biz/` | [Remove if not applicable] Deals, dashboard, tasks |
-| `Side Biz/Deals/` | Deal notes — one per client opportunity |
+| `Side Biz/Deals/` | Deal notes - one per client opportunity |
 | `Knowledge/` | Reference material and permanent notes |
 | `Learning/` | Books, courses, content consumed |
 | `Content/` | Content calendar and post drafts |
@@ -98,7 +98,7 @@ This is a general operating principle, not vault-specific. Keep it in `_CLAUDE.m
 
 ## Key Files
 
-- **Dashboard:** `[[Home]]` — main navigation and dataview queries
+- **Dashboard:** `[[Home]]` - main navigation and dataview queries
 - **Work Board:** `[[Boards/[Work Board Name]]]`
 - **Personal Board:** `[[Boards/Personal]]`
 - **Mentions Log:** `[[Mentions/Mentions Log]]`
@@ -111,7 +111,7 @@ This is a general operating principle, not vault-specific. Keep it in `_CLAUDE.m
 > Update this section at the start of each major project or focus period.
 
 **Current top priority:** [Your current top priority here]
-**Current job:** [Company] — [Your Role]
+**Current job:** [Company] - [Your Role]
 **Manager:** [Name]
 **Key colleagues:** [Name (role), Name (role), ...]
 
@@ -137,7 +137,7 @@ Claude should **ask before saving**:
 ## Naming Conventions
 
 - Daily notes: `YYYY-MM-DD.md`
-- Dev logs: `YYYY-MM-DD — Description.md`
+- Dev logs: `YYYY-MM-DD - Description.md`
 - Deals: `Client Name - Description Month Year.md`
 - Tasks: Descriptive title, no date prefix
 - People: Full name (e.g. `Jane Smith.md`, not `Jane.md`)
@@ -208,16 +208,16 @@ Completed:
 
 > Keep this list current. Claude uses it to route context correctly.
 
-- `[[Projects/Project Name]]` — [one-line status]
-- `[[Projects/Project Name]]` — [one-line status]
+- `[[Projects/Project Name]]` - [one-line status]
+- `[[Projects/Project Name]]` - [one-line status]
 
 ---
 
 ## Do Not Touch
 
-- `Templates/` — Never modify templates during normal vault operations
-- `Faith/` — Private. Read only if directly asked.
-- `[Other private folders]` — [Reason]
+- `Templates/` - Never modify templates during normal vault operations
+- `Faith/` - Private. Read only if directly asked.
+- `[Other private folders]` - [Reason]
 
 ---
 

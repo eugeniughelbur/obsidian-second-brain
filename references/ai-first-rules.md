@@ -321,7 +321,7 @@ Daily note for YYYY-MM-DD. Captures what was worked on, who was met, decisions m
 ### Project note
 ```markdown
 ## For future Claude
-[Project name] is a [type — work / personal / open-source] project with status [status] as of [date]. The Overview section explains what it is and why it exists. Recent Activity captures the last 30 days. Key Decisions documents major directional choices with rationale.
+[Project name] is a [type - work / personal / open-source] project with status [status] as of [date]. The Overview section explains what it is and why it exists. Recent Activity captures the last 30 days. Key Decisions documents major directional choices with rationale.
 ```
 
 ### Person note

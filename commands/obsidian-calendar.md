@@ -27,7 +27,7 @@ Always start by reading `_CLAUDE.md` (folder conventions, working hours) and `CR
 
 Range argument: `today` (default), `tomorrow`, `week` (current ISO week Mon-Sun), `next-week`, `YYYY-MM-DD`, or `YYYY-MM-DD..YYYY-MM-DD`.
 
-1. Resolve the range against the user's current date; convert start/end to ISO 8601 (`YYYY-MM-DDTHH:MM:SS±HH:MM`) in the user's timezone, end bound exclusive at end-of-day local.
+1. Resolve the range against the user's current date; convert start/end to ISO 8601 (`YYYY-MM-DDTHH:MM:SS+/-HH:MM`) in the user's timezone, end bound exclusive at end-of-day local.
 2. `list_calendars` once, pick the primary (`primary: true`). Accept `--calendars <id1>,<id2>` to include more; otherwise primary only.
 3. `list_events` with `timeMin`, `timeMax`, `singleEvents: true`, `orderBy: "startTime"`; filter cancelled events client-side.
 4. For each event capture verbatim: id, htmlLink, summary, start, end, location, description, hangoutLink/conferenceData URL, attendees (email + displayName + responseStatus), organizer, status, recurringEventId.
@@ -53,7 +53,7 @@ Window argument: `today`, `this week` (default), `this month`. Flag only - never
 
 ## Mode: meeting - turn a calendar event into a meeting note
 
-Selector argument: `last` (most recent past event, default), `next` (next upcoming), `today` (list and ask), `event-id:<id>`, or a fuzzy event title (search now ± 14d, show top 3, confirm).
+Selector argument: `last` (most recent past event, default), `next` (next upcoming), `today` (list and ask), `event-id:<id>`, or a fuzzy event title (search now +/- 14d, show top 3, confirm).
 
 1. Resolve the event: `last` -> `list_events` timeMin now-7d..now, take last whose `end` is past; `next` -> now..now+14d, take first; `today` -> list and ask (do not guess); `event-id:` -> `get_event`; fuzzy -> match and confirm.
 2. Capture: id, htmlLink, summary, start, end, location, description, hangoutLink, attendees (email + displayName + responseStatus), organizer, recurringEventId.
