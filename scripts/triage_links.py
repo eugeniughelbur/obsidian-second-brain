@@ -19,7 +19,7 @@ from datetime import date
 from pathlib import Path
 
 from note_io import read_exact, write_exact
-from vault_health import load_vault, check_wanted_notes
+from vault_health import load_vault, check_wanted_notes, replace_outside_code
 
 LINK_IN_MSG = re.compile(r"\[\[(.+?)\]\]")
 MODEL = "claude-haiku-4-5"
@@ -97,8 +97,11 @@ def apply_verdicts(vault, verdicts, create_cap):
                 print(f"  SKIPPED (not valid UTF-8, left untouched): {rel}")
                 skipped += 1
                 continue
-            if f"[[{link}]]" in text:
-                write_exact(path, text.replace(f"[[{link}]]", link))
+            # Delete only prose occurrences: a [[link]] inside a code fence or
+            # inline code is example text the counter never reported.
+            new_text, n = replace_outside_code(text, f"[[{link}]]", link)
+            if n:
+                write_exact(path, new_text)
                 deleted += 1
         elif v == "CREATE" and link not in seen_create and created < create_cap:
             seen_create.add(link)

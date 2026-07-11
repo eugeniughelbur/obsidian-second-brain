@@ -322,6 +322,39 @@ def _strip_code(text: str) -> str:
     return INLINE_CODE_RE.sub("", CODE_FENCE_BLOCK_RE.sub("", text))
 
 
+def _replace_between(pattern, text: str, old: str, new: str) -> tuple[str, int]:
+    out, last, n = [], 0, 0
+    for m in pattern.finditer(text):
+        seg = text[last:m.start()]
+        n += seg.count(old)
+        out.append(seg.replace(old, new))
+        out.append(m.group(0))
+        last = m.end()
+    seg = text[last:]
+    n += seg.count(old)
+    out.append(seg.replace(old, new))
+    return "".join(out), n
+
+
+def replace_outside_code(text: str, old: str, new: str) -> tuple[str, int]:
+    """Replace old -> new everywhere EXCEPT inside fenced blocks and inline code.
+
+    The link counters ignore code (_strip_code), so anything that EDITS links must
+    ignore it too - otherwise dry-run promises N changes and apply makes more,
+    corrupting example code (stress-test fix 3/24). Returns (new_text, count)."""
+    out, last, total = [], 0, 0
+    for m in CODE_FENCE_BLOCK_RE.finditer(text):
+        seg, n = _replace_between(INLINE_CODE_RE, text[last:m.start()], old, new)
+        total += n
+        out.append(seg)
+        out.append(m.group(0))
+        last = m.end()
+    seg, n = _replace_between(INLINE_CODE_RE, text[last:], old, new)
+    total += n
+    out.append(seg)
+    return "".join(out), total
+
+
 def _normalize_dashes(s: str) -> str:
     """Convert em-dash (U+2014) and en-dash (U+2013) to a regular hyphen.
 
