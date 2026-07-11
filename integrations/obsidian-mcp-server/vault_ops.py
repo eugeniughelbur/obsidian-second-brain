@@ -14,6 +14,7 @@ import json
 import math
 import os
 import re
+import sys
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -87,8 +88,13 @@ _RRF_SEMANTIC_WEIGHT = float(os.environ.get("OBSIDIAN_RRF_SEMANTIC_WEIGHT") or "
 # strongest few; semantic keeps the full fusion depth.
 _FUSE_LEX_DEPTH = int(os.environ.get("OBSIDIAN_RRF_LEX_DEPTH") or "25")
 
-# Bounds keep search fast and reads safe.
-_MAX_FILES_SCANNED = 2000
+# Bounds keep search fast and reads safe. The scan cap exists to stop a runaway
+# walk on pathological trees, NOT to slice a real vault: 10k covers personal
+# vaults several times over, it is env-tunable, notes iterate newest-first so a
+# bite drops the oldest notes (never an arbitrary filesystem-order slice), and
+# search warns when it truncates (stress-test fix 12/24 - the old silent 2000
+# cap made ~342 of the maintainer's 2342 notes randomly unsearchable).
+_MAX_FILES_SCANNED = int(os.environ.get("OBSIDIAN_SEARCH_MAX_FILES") or "10000")
 _MAX_FILE_BYTES = 200_000
 _SNIPPET_CHARS = 320
 _READ_CAP = 20_000
@@ -208,8 +214,10 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
         semantic = False
     limit = max(1, min(int(limit), 20))
     scored: List[Dict[str, Any]] = []
+    truncated = False
     for i, md in enumerate(_iter_notes(vault)):
         if i >= _MAX_FILES_SCANNED:
+            truncated = True
             break
         text = _read_safe(md, limit=_MAX_FILE_BYTES)
         if not text:
@@ -246,6 +254,12 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
                     "snippet": _snippet(text, terms),
                 }
             )
+    if truncated:
+        print(
+            f"warning: search scanned only the newest {_MAX_FILES_SCANNED} notes; "
+            f"raise OBSIDIAN_SEARCH_MAX_FILES to cover the whole vault",
+            file=sys.stderr,
+        )
     scored.sort(key=lambda r: r["score"], reverse=True)
     fused = _semantic_fuse(query, scored, vault, limit, enabled=semantic)
     if fused is not None:
@@ -543,6 +557,10 @@ def get_skill(name: str) -> Dict[str, Any]:
 
 
 def _iter_notes(vault: Path):
+    """Yield vault notes newest-first (modified time). Deterministic on purpose:
+    every consumer of this iterator caps its scan, and a cap that bites must
+    drop the oldest notes, never a random filesystem-order slice."""
+    found = []
     for md in vault.rglob("*.md"):
         parts = md.relative_to(vault).parts
         if any(p.lower() in _SKIP_DIRS or p.lower().endswith("templates") for p in parts):
@@ -551,6 +569,12 @@ def _iter_notes(vault: Path):
         # so the lexical scan does too - one universe for every mode.
         if md.name.endswith(".excalidraw.md"):
             continue
+        try:
+            found.append((md.stat().st_mtime, md))
+        except OSError:
+            continue  # dangling symlink or race: a ghost must not kill the scan
+    found.sort(key=lambda t: t[0], reverse=True)
+    for _, md in found:
         yield md
 
 
