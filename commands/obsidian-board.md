@@ -15,7 +15,7 @@ The optional argument is a board name. Handle typos and partial matches.
 4. Read and display the current board state: columns, item counts, overdue items (past `@{date}`)
 5. Ask if the user wants to make updates - if yes, infer changes from conversation context
 6. Move completed items to ✅ Done with strikethrough, add new items in the right column
-7. Flag any items that are overdue or have been in the same column for more than a week
+7. Flag any items that are overdue (past their `@{date}`), and any in-progress items whose `@{date}` is more than a week past. The board format has no per-column timestamps, so date stamps are the only age signal - do not guess column dwell time
 
 ---
 

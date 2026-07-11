@@ -9,7 +9,8 @@ Transcript priority:
   3. Show-notes-only fallback (no audio fetch)
 
 Then summarizes via Grok and saves an AI-first note to Research/Podcasts/.
-Spotify URLs are not supported in v1 (DRM blocks audio access).
+Spotify episode URLs are supported via the public-RSS bridge (lib/podcast.py):
+the episode is resolved to its open feed and pulled from there, never from Spotify.
 """
 
 import os

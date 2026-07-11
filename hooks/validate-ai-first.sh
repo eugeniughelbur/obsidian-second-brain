@@ -23,7 +23,9 @@
 # Scope:
 #   - Only inspects files inside OBSIDIAN_VAULT_PATH (env var)
 #   - Skips raw/, templates/, _export/, .obsidian/, boards/ (kanban exception:
-#     an H2 preamble renders as a phantom column), and any path containing
+#     an H2 preamble renders as a phantom column), vault-surface files
+#     (_CLAUDE.md, Home.md, index.md, log.md, catchup.md, per-day Logs/ -
+#     operating surfaces, not knowledge notes), and any path containing
 #     /.git/ - those are system/template paths, not first-class notes
 #   - Skips any file not ending in .md
 #
@@ -53,7 +55,7 @@ esac
 
 # Skip non-first-class paths
 case "$FILE" in
-  */raw/*|*/templates/*|*/_export/*|*/.obsidian/*|*/.git/*|*/.trash/*|*/boards/*|*/Boards/*)
+  */raw/*|*/templates/*|*/_export/*|*/.obsidian/*|*/.git/*|*/.trash/*|*/boards/*|*/Boards/*|*/Logs/*|*/_CLAUDE.md|*/Home.md|*/index.md|*/log.md|*/catchup.md)
     exit 0 ;;
 esac
 

@@ -7,7 +7,7 @@ triggers_es: ["visualiza el vault", "mapa del vault", "canvas del vault", "mués
 
 Use the obsidian-second-brain skill. Execute `/obsidian-visualize $ARGUMENTS`:
 
-The optional argument is a scope: a project name, entity name, topic, or "full" for the entire vault. Default: full vault.
+The optional argument is a scope: an EXACT note title or alias (a project, an entity), or "full" for the entire vault. Default: full vault. A free-form topic phrase will not match - resolve it to a real note title first (e.g. via /obsidian-find).
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
 
@@ -15,7 +15,7 @@ The optional argument is a scope: a project name, entity name, topic, or "full" 
    ```bash
    python scripts/link_graph.py --path "<vault>" [--scope "<topic/project/entity>"]
    ```
-   It returns JSON with `nodes` (path, title, `type`, folder, in/out/`degree`), `edges` (resolved `[[wikilink]]` pairs), and `stats` (`node_count`, `edge_count`, `orphan_count`, `dangling_link_count`, `top_hubs`, `orphans`). Pass `--scope` for a topic/project/entity (the script keeps that note plus its 2-hop neighborhood); omit it for the full vault. Use this JSON as the graph - only open individual notes if you need a label the scan did not provide.
+   It returns JSON with `nodes` (path, title, `type`, folder, in/out/`degree`), `edges` (resolved `[[wikilink]]` pairs), and `stats` (`node_count`, `edge_count`, `orphan_count`, `dangling_link_count`, `top_hubs`, `orphans`). Pass `--scope` with an exact note title/alias (the script keeps that note plus its 2-hop neighborhood); omit it for the full vault. If the result has `node_count: 0`, the scope did not resolve to a note - find the real title and rerun. Use this JSON as the graph - only open individual notes if you need a label the scan did not provide.
 
 3. Generate a JSON Canvas file (`.canvas`) compatible with Obsidian's native canvas viewer:
 
@@ -36,7 +36,7 @@ The optional argument is a scope: a project name, entity name, topic, or "full" 
    - **Hub nodes** (most links) go in the center, larger
    - **Cluster by type**: entities on the left, projects top-right, concepts bottom-right, daily notes bottom
    - **Color by type**: entities = blue, projects = green, concepts = purple, daily = gray, sources = orange
-   - **Edge thickness** = number of connections between two nodes (thicker = stronger relationship)
+   - **Edge labels** = when two nodes connect through multiple links, record the count in the edge `label` (JSON Canvas edges have no thickness property)
    - **Orphan nodes** placed at the edges with a red border (easy to spot)
 
 4. Save to vault root as `atlas.canvas` (or `atlas-{topic}.canvas` if scoped)

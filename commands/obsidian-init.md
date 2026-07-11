@@ -34,7 +34,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    | `tasks.base.template` | `Bases/Tasks.base` | `Tasks` | `wiki/tasks` |
    | `daily.base.template` | `Bases/Daily.base` | `Daily` | `wiki/daily` |
 
-   Detect vault style from the folder structure discovered in step 1: if `wiki/` exists at the root, use wiki-style folder names; otherwise use obsidian-style. For each template, replace the `{{FOLDER}}` placeholder with the correct folder name, then write to `Bases/`.
+   Detect vault style from the folder structure discovered in step 1: if `wiki/` exists at the root, use wiki-style folder names; otherwise use obsidian-style. For each template, replace its named placeholder (`{{DAILY_FOLDER}}`, `{{PEOPLE_FOLDER}}`, `{{PROJECTS_FOLDER}}`, `{{TASKS_FOLDER}}`) with the correct folder name, then write to `Bases/`.
 
    Skip any base file that already exists in `Bases/` - never overwrite.
 
@@ -43,7 +43,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
 
 If `_CLAUDE.md` already exists: show a diff of what would change and ask before overwriting.
 If `index.md` already exists: regenerate it (it's always a fresh catalog of current vault state).
-If a monolithic `log.md` already exists with `## YYYY-MM-DD` sections: run `python scripts/migrate_log.py --vault <vault-path>` to split it into `Logs/YYYY-MM-DD.md` files. Do not overwrite manually.
+If a monolithic `log.md` already exists with `## YYYY-MM-DD` sections: run, from the skill repo root, `python3 scripts/migrate_log.py --vault <vault-path>` to split it into `Logs/YYYY-MM-DD.md` files. Do not overwrite manually.
 
 ---
 

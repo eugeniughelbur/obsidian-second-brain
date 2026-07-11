@@ -2,6 +2,7 @@
 
 Inputs accepted:
   - Apple Podcasts URL (https://podcasts.apple.com/.../id<show>?i=<episode>)
+  - Spotify episode URL (bridged to the public RSS feed via oEmbed + Apple search)
   - RSS feed URL pointing at a single episode <item> (uses first episode)
   - Direct RSS URL + ?episode=<guid-or-title-fragment>
 

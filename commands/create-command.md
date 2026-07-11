@@ -121,6 +121,7 @@ Build the new command file. The exact format MUST be:
 description: <one-line, sentence-case, ends without period>
 category: <vault | thinking | research | meta>
 triggers_en: ["<trigger 1>", "<trigger 2>", "<trigger 3>"]
+triggers_es: ["<disparador 1>", "<disparador 2>"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/<name> $ARGUMENTS`:
@@ -150,7 +151,7 @@ Write the file to `commands/<name>.md` using the Write tool.
 
 Show the user the absolute path of the file you just wrote. Then surface the three follow-up actions:
 
-1. **Build** - `bash scripts/build.sh` will recompile every platform (`dist/claude-code/commands/<name>.md`, plus the auto-generated routing tables and trigger reference in `AGENTS.md` / `GEMINI.md`)
+1. **Build** - `bash scripts/build.sh` will recompile every platform (`dist/claude-code/commands/<name>.md`, plus the per-platform outputs: native Agent Skills + `AGENTS.md` trigger reference for Codex, routing tables in `GEMINI.md` / OpenCode's `AGENTS.md`)
 2. **Install** - for Claude Code users who symlink, the new command appears automatically on next session. For other platforms, copy `dist/<platform>/` into the vault.
 3. **Iterate** - open the file, refine steps, commit. Or rerun `/create-command` to add a sibling command.
 
@@ -163,3 +164,5 @@ If the new command writes to the vault and the user has the validate-ai-first ho
 ---
 
 **Note for future-Claude:** This is a command that creates commands. Do not run it recursively on itself. Do not rewrite this file when invoked - write a NEW `commands/<name>.md` based on the interview.
+
+**Anti-fabrication:** Search exhaustively before claiming any note, person, or file is absent - false absence is the most common failure mode - and never invent facts, entities, or dates (mark unknowns as `TBD`). See the anti-fabrication and search-completeness hard rules in `references/ai-first-rules.md`.

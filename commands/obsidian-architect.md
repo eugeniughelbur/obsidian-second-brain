@@ -15,13 +15,13 @@ This is a hybrid command: a deterministic Python scan produces the facts, then Y
 
 2. **Run the scan** from the skill repo root:
    ```bash
-   python scripts/architect_scan.py --path <codebase>
+   python3 scripts/architect_scan.py --path <codebase>
    ```
    It returns JSON: `name`, `kind`, `languages` (with file counts), `modules` (proposed top-level parts with a `core`/`support` hint), `dependencies`, `entry_points`, `signals` (dockerfile/makefile/ci), and `git` (commit). It writes nothing and calls no LLM - the synthesis is yours.
 
 3. **Optionally pull decision history** for the "Key decisions" note:
    ```bash
-   python scripts/mine_commit_decisions.py --repo <codebase> --json
+   python3 scripts/mine_commit_decisions.py --repo <codebase> --json
    ```
 
 4. **Pick the destination.** Write under the project's hub: `<projects folder>/<name>/Architecture/`, with the projects folder resolved per `references/folder-map.md` (wiki-style `wiki/projects/`, Obsidian-style `Projects/`); create it if missing. If the vault has no project note for this codebase yet, offer to create one via `/obsidian-project` first so the architecture links into it.

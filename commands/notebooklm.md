@@ -17,7 +17,7 @@ Use the obsidian-second-brain skill. Execute `/notebooklm [topic]`:
 3. The script does the whole flow end-to-end:
    - Scans the vault for the top 12 relevant notes (same shape as `/research-deep` Phase 1).
    - Uploads them to a fresh Gemini File Search store.
-   - Asks Gemini (default `gemini-2.5-pro`, override via `NOTEBOOKLM_MODEL` env) for a synthesis grounded against those sources.
+   - Asks Gemini (default `gemini-2.5-flash`, override via `NOTEBOOKLM_MODEL` env) for a synthesis grounded against those sources.
    - Writes the AI-first synthesis to `Research/NotebookLM/YYYY-MM-DD - <slug>.md`.
    - Deletes the File Search store so nothing is left behind.
    - Emits a `<<<NOTEBOOKLM_PROPAGATION_PAYLOAD>>>` JSON block.
@@ -38,7 +38,7 @@ Use the obsidian-second-brain skill. Execute `/notebooklm [topic]`:
    - `/notebooklm` (Gemini File Search): when you want answers GROUNDED IN your own vault. Cost: ~$0.01-0.05.
    - Run both for high-value topics. The web view and the grounded view rarely contradict, and the contradictions are where the insight is.
 
-8. Configuration: requires `GEMINI_API_KEY` in `~/.config/obsidian-second-brain/.env`. Get one free at https://aistudio.google.com/apikey. Optional `NOTEBOOKLM_MODEL` override (default `gemini-2.5-pro`).
+8. Configuration: requires `GEMINI_API_KEY` in `~/.config/obsidian-second-brain/.env`. Get one free at https://aistudio.google.com/apikey. Optional `NOTEBOOKLM_MODEL` override (default `gemini-2.5-flash`).
 
 ---
 

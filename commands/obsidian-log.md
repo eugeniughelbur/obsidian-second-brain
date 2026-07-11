@@ -9,7 +9,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-log`:
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
 2. Infer the project from conversation context - search the vault if needed to find the right project note
-3. Read `Templates/Dev Log.md` (or `Templates/Work Log.md` if it exists)
+3. Read `Templates/Dev Log.md` (or `Templates/Work Log.md`) if either exists; if neither does, write the sections directly: Context, What changed, Decisions, Next steps
 4. Fill in: date, project, what was worked on, problems encountered, decisions made, next steps - all inferred from the conversation
 5. Save to the dev-log folder resolved per `references/folder-map.md` (read the vault's `_CLAUDE.md` Folder Map first; wiki-style `wiki/logs/`, Obsidian-style `Dev Logs/`), named `YYYY-MM-DD - Project Name.md`
 6. Inject a link into the project note's Recent Activity section

@@ -8,10 +8,10 @@ triggers_es: ["nota de hoy", "crea la diaria de hoy", "abre mi diaria", "la nota
 Use the obsidian-second-brain skill. Execute `/obsidian-daily`:
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
-2. Read `CRITICAL_FACTS.md` for timezone
+2. If `CRITICAL_FACTS.md` exists in the vault root, read it for timezone; otherwise use the system timezone
 
 3. Check if today's `YYYY-MM-DD.md` exists in the daily folder, resolved per `references/folder-map.md` (wiki-style `wiki/daily/`, Obsidian-style `Daily/`)
-   - If not: read `templates/Daily Note.md`, fill in date fields, create the file
+   - If not: read the daily-note template (`Templates/Daily Note.md`, or lowercase `templates/` if that is the vault's folder), fill in date fields, create the file
    - If yes: update existing note (inject, don't overwrite)
 
 4. Pull calendar events (if a Google Calendar MCP is connected):

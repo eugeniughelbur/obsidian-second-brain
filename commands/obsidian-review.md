@@ -14,7 +14,7 @@ The optional argument specifies `weekly` or `monthly`. Ask if not clear from con
 3. Read daily notes and dev logs for the period
 4. Read active projects and check for status changes
 5. Read completed tasks from kanban boards
-6. Draft a review note using `Templates/Review.md` if it exists, otherwise use:
+6. Draft a review note using `Templates/Review.md` (or lowercase `templates/Review.md`) if one exists, otherwise use:
    - What I accomplished
    - Key decisions made
    - People I worked with

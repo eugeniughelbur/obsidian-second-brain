@@ -28,7 +28,7 @@ Spawn one subagent per project. Each agent runs three checks:
 
 **Vault check:**
 - Read the project note
-- Extract: `status`, most recent entry in any `Recent Activity` or `## Last overview` section, `next_action`, open questions, blockers
+- Extract: `status`, most recent entry in any `Recent Activity` section, `next_action`, open questions, blockers. IGNORE `## Last overview` sections - this command writes those, and reading them back would mark stale projects active forever (a feedback loop)
 
 **Git check** (skip if no `repo:` field):
 - `git -C "<repo>" log --oneline --no-merges -15`
@@ -44,7 +44,7 @@ Spawn one subagent per project. Each agent runs three checks:
 
 Merge the three agent results into one status block per project:
 
-- **Status**: infer from activity recency: `active` (commits or vault update in last 7 days), `stalled` (7-30 days), `idle` (30+ days), `blocked` (explicit blocker found). Override with the note's `status:` field if it says `on-hold`, `completed`, or `archived`.
+- **Status**: infer from activity recency: `active` (commits or vault update in last 7 days, excluding `## Last overview` writes), `stalled` (7-30 days), `idle` (30+ days), `blocked` (explicit blocker found). Override with the note's `status:` field if it says `on-hold`, `completed`, or `archived`.
 - **Last session**: what was worked on and when. Prefer git commit dates + messages over vault dates.
 - **Next action**: single most concrete next step. Pull from vault open questions or docs TODO. If unclear, say so - do not invent one.
 - **Blocked by**: anything explicitly blocking. `none` if nothing found.
@@ -84,3 +84,5 @@ If a project note doesn't exist yet but was discoverable via git (e.g. the repo 
 ---
 
 **AI-first rule:** Every vault write MUST follow `references/ai-first-rules.md` - `## For future Claude` preamble, rich frontmatter, `[[wikilinks]]` for every project referenced, recency markers on git-sourced facts (e.g. `(as of 2026-05-21, git log)`), sources noted inline.
+
+**Anti-fabrication:** Search exhaustively before claiming any note, person, or file is absent - false absence is the most common failure mode - and never invent facts, entities, or dates (mark unknowns as `TBD`). See the anti-fabrication and search-completeness hard rules in `references/ai-first-rules.md`.

@@ -222,6 +222,7 @@ Where the full rule is deliberately relaxed. A documented exception is law; an u
 - **Capture exception** (`/obsidian-capture`): speed beats completeness at capture time. A captured idea needs only `type: idea`, `date`, `tags: [idea]`, `ai-first: true`, `status: captured`, and a one-line body. Full enrichment (preamble, wikilinks, related-*) happens at graduation via `/obsidian-graduate`, by design.
 - **Kanban exception** (boards): board files are UI surfaces for the Kanban plugin - a `## For future Claude` H2 would render as a phantom column. Boards carry `kanban-plugin: board` frontmatter only and are exempt from the preamble and rich-frontmatter rules; notes ABOUT board items (task notes) follow the full rule. The validate hook skips board files accordingly.
 - **Raw-source exception** (`raw/`): see `type: source` above - frontmatter yes, preamble no, body verbatim.
+- **Vault-surface exception**: root operating files (`_CLAUDE.md`, `Home.md`, `index.md`, `log.md`, `catchup.md`) and per-day operation logs (`Logs/YYYY-MM-DD.md`) are navigation/manual/append surfaces, not knowledge notes - exempt from the preamble and rich-frontmatter rules. The validate hook skips them accordingly.
 
 ### `type: podcast`
 ```yaml
