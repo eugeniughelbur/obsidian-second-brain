@@ -3,7 +3,7 @@
 Lexical: term-dense logs took #1 on 7 of 12 audit queries, burying canonical
 notes - notes typed log/daily now fade to 0.5 (a moderator, not a mute) and
 person/entity dossiers boost 1.5x. Semantic: mean-pooling a long note into one
-averaged vector made the Ken Kim dossier unfindable despite containing the
+averaged vector made a person dossier unfindable despite containing the
 answer verbatim - the index now stores per-chunk vectors with an identity
 header, and a note scores by its best chunk.
 """
@@ -97,13 +97,13 @@ def test_fuse_scores_by_best_chunk_too(vault, monkeypatch):
 
 def test_prepare_note_text_header_and_scaffolding():
     header, body = ss.prepare_note_text(
-        "Hermes",
-        "---\ntype: project\naliases: [Eric agent]\nrelated-people: [Eric Siu]\n---\n\n"
-        "## For future Claude\n\nPersonal agent gateway for Eric.\n\n"
+        "Atlas",
+        "---\ntype: project\naliases: [Ada agent]\nrelated-people: [Ada Lovelace]\n---\n\n"
+        "## For future Claude\n\nPersonal agent gateway for Ada.\n\n"
         "## Empty scaffold\n\n## Also empty\n\n"
         "## Filled\n\ncontent here\n",
     )
-    assert header.startswith("Hermes | project | Eric agent | Eric Siu")
+    assert header.startswith("Atlas | project | Ada agent | Ada Lovelace")
     assert "Personal agent gateway" in body
     assert "content here" in body
     assert "Empty scaffold" not in body
