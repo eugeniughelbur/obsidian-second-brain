@@ -36,6 +36,7 @@ from difflib import get_close_matches
 from pathlib import Path
 
 # reuse the EXACT detection the health check uses, so our count == its count
+from note_io import read_exact, write_exact
 from vault_health import load_vault, check_wanted_notes
 
 DECORATION = re.compile(r"[#|].*$")          # a #heading anchor or |display alias
@@ -168,29 +169,37 @@ def apply_batch(vault):
     before = len(wanted)
     per_file, buckets = _collect_safe(wanted, *index_notes(notes))
 
-    applied = files_touched = 0
+    applied = files_touched = skipped = 0
     for rel, fixes in per_file.items():
         path = vault / rel
-        text = path.read_text(encoding="utf-8", errors="replace")
+        text = read_exact(path)
+        if text is None:
+            print(f"  SKIPPED (not valid UTF-8, left untouched): {rel}")
+            skipped += 1
+            continue
         changed = 0
         for link, new_stem in fixes:
             text, n = _rewrite(text, link, new_stem)
             changed += n
         if changed:
-            path.write_text(text, encoding="utf-8")
+            write_exact(path, text)
             applied += changed
             files_touched += 1
 
     after = len(check_wanted_notes(load_vault(vault), vault))
     print(f"  wanted links before:        {before}")
     print(f"  safe auto-fixes applied:    {applied} (across {files_touched} files)")
+    if skipped:
+        print(f"  skipped non-UTF-8 files:    {skipped}")
     print(f"  left for AI triage:         {buckets['ask_claude']}")
     print(f"  no match at all:            {buckets['no_target']}")
     print(f"  wanted links after:         {after}\n")
 
 
-def find_next_safe_fix(per_file):
+def find_next_safe_fix(per_file, skip_rels=frozenset()):
     for rel, fixes in per_file.items():
+        if rel in skip_rels:
+            continue
         if fixes:
             link, new_stem = fixes[0]
             return rel, link, new_stem
@@ -200,22 +209,27 @@ def find_next_safe_fix(per_file):
 def apply_loop(vault, max_fixes):
     print(f"\nStarting the loop. Bounded to {max_fixes} safe fixes. Watch the count.\n")
     fixed = 0
+    skip_rels = set()
     while fixed < max_fixes:
         notes = load_vault(vault)
         wanted = check_wanted_notes(notes, vault)
         before = len(wanted)
         per_file, _ = _collect_safe(wanted, *index_notes(notes))
 
-        nxt = find_next_safe_fix(per_file)
+        nxt = find_next_safe_fix(per_file, skip_rels)
         if nxt is None:
             print("  no more safe fixes left. stopping.")
             break
 
         rel, link, new_stem = nxt
         path = vault / rel
-        text = path.read_text(encoding="utf-8", errors="replace")
+        text = read_exact(path)
+        if text is None:
+            print(f"  SKIPPED (not valid UTF-8, left untouched): {rel}")
+            skip_rels.add(rel)
+            continue
         text, _ = _rewrite(text, link, new_stem)
-        path.write_text(text, encoding="utf-8")
+        write_exact(path, text)
 
         after = len(check_wanted_notes(load_vault(vault), vault))
         fixed += 1

@@ -18,6 +18,7 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
+from note_io import read_exact, write_exact
 from vault_health import load_vault, check_wanted_notes
 
 LINK_IN_MSG = re.compile(r"\[\[(.+?)\]\]")
@@ -81,7 +82,7 @@ def load_verdicts(path):
 
 def apply_verdicts(vault, verdicts, create_cap):
     broken = check_wanted_notes(load_vault(vault), vault)
-    deleted, created = 0, 0
+    deleted, created, skipped = 0, 0, 0
     seen_create = set()
     for iss in broken:
         m = LINK_IN_MSG.search(iss["message"])
@@ -91,9 +92,13 @@ def apply_verdicts(vault, verdicts, create_cap):
         v = verdicts.get(link)
         if v == "DELETE":
             path = vault / rel
-            text = path.read_text(encoding="utf-8", errors="replace")
+            text = read_exact(path)
+            if text is None:
+                print(f"  SKIPPED (not valid UTF-8, left untouched): {rel}")
+                skipped += 1
+                continue
             if f"[[{link}]]" in text:
-                path.write_text(text.replace(f"[[{link}]]", link), encoding="utf-8")
+                write_exact(path, text.replace(f"[[{link}]]", link))
                 deleted += 1
         elif v == "CREATE" and link not in seen_create and created < create_cap:
             seen_create.add(link)
@@ -114,7 +119,7 @@ def apply_verdicts(vault, verdicts, create_cap):
                     f"you next encounter it.\n",
                     encoding="utf-8")
                 created += 1
-    return deleted, created
+    return deleted, created, skipped
 
 
 def main():
@@ -129,9 +134,11 @@ def main():
 
     if args.apply:
         verdicts = load_verdicts(args.src)
-        d, c = apply_verdicts(vault, verdicts, args.create_cap)
+        d, c, s = apply_verdicts(vault, verdicts, args.create_cap)
         after = len(check_wanted_notes(load_vault(vault), vault))
         print(f"\nDeleted {d} junk links, created {c} stub notes.")
+        if s:
+            print(f"Skipped {s} non-UTF-8 files (left untouched).")
         print(f"Wanted notes now: {after}\n")
         return
 
