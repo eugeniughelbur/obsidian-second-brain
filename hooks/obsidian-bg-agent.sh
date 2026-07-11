@@ -70,14 +70,16 @@ INSTRUCTIONS:
    - Ideas, learnings, or insights
    - Shoutouts or mentions worth logging
 3. Before creating any note, search for an existing one. Never duplicate.
-4. Update or create notes as appropriate:
-   - People: update People/Name.md interaction log; create a stub if missing
+4. Update or create notes as appropriate. Resolve every folder from _CLAUDE.md's
+   Folder Map (wiki-style wiki/entities|projects|logs|daily, Obsidian-style
+   People/|Projects/|Dev Logs/|Daily/ - use whichever layout the vault has):
+   - People: update the person's note interaction log; create a stub if missing
    - Projects: update status, Recent Activity, Key Decisions sections
-   - Dev work: create or update Dev Logs/YYYY-MM-DD - Project.md; link from project note
-   - Tasks: add to the right Boards/ kanban column (use TODAY date from above)
-   - Ideas: save to Ideas/ folder
+   - Dev work: create or update the dev log YYYY-MM-DD - Project.md; link from project note
+   - Tasks: add to the right kanban board column (use TODAY date from above)
+   - Ideas: save to the ideas/concepts folder
    - Decisions: append to the relevant project note's Key Decisions section
-5. Update today's daily note (Daily/[TODAY].md using the TODAY value above):
+5. Update today's daily note ([TODAY].md in the resolved daily folder):
    - Create it from the Daily Note template if it does not exist
    - Link everything you touched - people, projects, dev logs, decisions
 6. Propagate everywhere:

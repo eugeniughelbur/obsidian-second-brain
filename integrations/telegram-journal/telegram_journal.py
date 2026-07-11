@@ -222,8 +222,22 @@ def find_note(folder, name):
     return None
 
 
+def _folder(kind):
+    """Resolve a folder per references/folder-map.md instead of hardcoding
+    wiki-style: an Obsidian-style vault (the default bootstrap) would otherwise
+    get a parallel wiki/ tree forked into it. Rule: wiki/ at the root wins;
+    else the Obsidian-style folder if it exists; else the wiki default."""
+    wiki = {"daily": "wiki/daily", "entities": "wiki/entities", "projects": "wiki/projects"}[kind]
+    obs = {"daily": "Daily", "entities": "People", "projects": "Projects"}[kind]
+    if (VAULT / "wiki").is_dir():
+        return wiki
+    if (VAULT / obs).is_dir():
+        return obs
+    return wiki
+
+
 def daily_note(when):
-    return VAULT / "wiki" / "daily" / f"{when.strftime('%Y-%m-%d')}.md"
+    return VAULT / _folder("daily") / f"{when.strftime('%Y-%m-%d')}.md"
 
 
 def resolve_target(target, when):
@@ -232,15 +246,15 @@ def resolve_target(target, when):
     t = (target or "daily").strip()
     low = t.lower()
     if low.startswith("person:"):
-        p = find_note("wiki/entities", t.split(":", 1)[1])
+        p = find_note(_folder("entities"), t.split(":", 1)[1])
         if p:
             return p, p.stem, False
     elif low.startswith("project:"):
-        p = find_note("wiki/projects", t.split(":", 1)[1])
+        p = find_note(_folder("projects"), t.split(":", 1)[1])
         if p:
             return p, p.stem, False
     elif low == "finance":
-        p = find_note("wiki/projects", "Personal Finance")
+        p = find_note(_folder("projects"), "Personal Finance")
         if p:
             return p, p.stem, False
     return daily_note(when), "today's note", (low not in ("daily", "idea"))
