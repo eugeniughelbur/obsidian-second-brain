@@ -18,9 +18,9 @@ Design choices that matter:
   the shipped default until the eval proves hybrid beats lexical.
 
 Requires Ollama (https://ollama.com) with an embedding model pulled:
-    ollama pull mxbai-embed-large
+    ollama pull bge-m3
 Configure via env: OLLAMA_URL (default http://localhost:11434),
-OBSIDIAN_EMBED_MODEL (default mxbai-embed-large),
+OBSIDIAN_EMBED_MODEL (default bge-m3, multilingual),
 OBSIDIAN_EMBED_EXCLUDE (default empty; e.g. "wiki/private/,Faith,Masha").
 """
 
@@ -38,7 +38,7 @@ import urllib.error
 from pathlib import Path
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
-EMBED_MODEL = os.environ.get("OBSIDIAN_EMBED_MODEL", "mxbai-embed-large")
+EMBED_MODEL = os.environ.get("OBSIDIAN_EMBED_MODEL", "bge-m3")
 # Backend selects how embeddings are produced:
 #   "ollama" (default) - local Ollama at OLLAMA_URL, fully private/offline.
 #   "openai" - ANY OpenAI-compatible /v1/embeddings endpoint, so users without
@@ -59,7 +59,7 @@ import sys as _sys
 _sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "integrations" / "obsidian-mcp-server"))
 from vault_ops import _SKIP_DIRS as SKIP_DIRS  # noqa: E402
 INDEX_FILE = ".obsidian-semantic-index.json"  # written at vault root
-# Embedding models have a token limit (mxbai-embed-large ~512 tokens). Long notes
+# Embedding models have a token limit (typically ~512 tokens). Long notes
 # must be split into safe chunks and averaged, or the model 500s. ~1200 chars sits
 # well under the limit; capping the chunk count bounds time on huge notes.
 _CHUNK_CHARS = 1200
@@ -83,16 +83,16 @@ def ollama_available() -> bool:
 _RETRY_WAITS = (1, 3, 8, 15)  # a local model on a laptop can briefly 500 under rapid load
 
 
-def _embed_request(text: str) -> tuple[str, bytes, dict]:
+def _embed_request(text: str, model: str | None = None) -> tuple[str, bytes, dict]:
     """Build the (url, body, headers) for the configured backend."""
     if EMBED_BACKEND == "openai":
         headers = {"Content-Type": "application/json"}
         if EMBED_KEY:
             headers["Authorization"] = f"Bearer {EMBED_KEY}"
-        body = json.dumps({"model": EMBED_MODEL, "input": text[:_CHUNK_CHARS]}).encode()
+        body = json.dumps({"model": (model or EMBED_MODEL), "input": text[:_CHUNK_CHARS]}).encode()
         return f"{EMBED_URL}/v1/embeddings", body, headers
     # ollama (default): keep_alive holds the model in memory between calls
-    body = json.dumps({"model": EMBED_MODEL, "prompt": text[:_CHUNK_CHARS], "keep_alive": "15m"}).encode()
+    body = json.dumps({"model": (model or EMBED_MODEL), "prompt": text[:_CHUNK_CHARS], "keep_alive": "15m"}).encode()
     return f"{EMBED_URL}/api/embeddings", body, {"Content-Type": "application/json"}
 
 
@@ -106,7 +106,7 @@ def _parse_embedding(data: dict) -> list[float] | None:
     return None
 
 
-def embed(text: str, retries: int | None = None) -> list[float]:
+def embed(text: str, retries: int | None = None, model: str | None = None) -> list[float]:
     """Return the embedding vector for one text via the configured backend.
 
     Retries transient errors (HTTP 5xx, connection resets): a local model on a
@@ -116,7 +116,7 @@ def embed(text: str, retries: int | None = None) -> list[float]:
     tokens failure repays every retry with the same 500 and the full ladder at
     every split level turned an 11-note repair into a 10-minute stall.
     """
-    url, body, headers = _embed_request(text)
+    url, body, headers = _embed_request(text, model)
     last_err: Exception | None = None
     waits = _RETRY_WAITS if retries is None else _RETRY_WAITS[:retries]
     for attempt in range(len(waits) + 1):
@@ -278,8 +278,11 @@ def build_index(vault: Path, verbose: bool = True) -> dict:
             cache = {}
     # Format 2 = per-chunk vectors with identity headers (fix 13/24). A cache in
     # the old shape must not be reused: the note text is unchanged but what we
-    # embed for it is not.
-    old = cache.get("notes", {}) if cache.get("format") == 2 else {}
+    # embed for it is not. Same rule for a MODEL switch (fix 16/24): vectors
+    # from different embedding models live in different spaces - mixing them
+    # silently would make every similarity meaningless.
+    cache_ok = cache.get("format") == 2 and cache.get("model") == EMBED_MODEL
+    old = cache.get("notes", {}) if cache_ok else {}
     new: dict = {}
     embedded = reused = skipped = failed = degraded = 0
     degraded_paths: list[str] = []
@@ -367,7 +370,8 @@ def load_index(vault: Path) -> dict:
 # --------------------------------------------------------------------------- #
 def semantic_search(query: str, index: dict, limit: int = 10) -> list[dict]:
     """Rank notes by meaning-distance from the query."""
-    qvec = embed(query)
+    # The query must live in the same vector space as the index (fix 16/24).
+    qvec = embed(query, model=index.get("model"))
 
     def _score(n: dict) -> float:
         vecs = n.get("vecs") or ([n["vec"]] if n.get("vec") else [])

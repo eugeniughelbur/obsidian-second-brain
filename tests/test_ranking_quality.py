@@ -74,7 +74,7 @@ def test_best_chunk_beats_average(vault, monkeypatch):
             "old.md": {"title": "old", "vec": [0.5, 0.85]},
         },
     }
-    monkeypatch.setattr(ss, "embed", lambda q: [1.0, 0.0])
+    monkeypatch.setattr(ss, "embed", lambda q, **kw: [1.0, 0.0])
     hits = ss.semantic_search("q", index, limit=3)
     assert hits[0]["path"] == "dossier.md"
     assert {h["path"] for h in hits} == {"dossier.md", "meh.md", "old.md"}
@@ -89,7 +89,7 @@ def test_fuse_scores_by_best_chunk_too(vault, monkeypatch):
         },
     }
     (vault / vault_ops._SEMANTIC_INDEX_FILE).write_text(json.dumps(index), encoding="utf-8")
-    monkeypatch.setattr(vault_ops, "_embed_query", lambda q: [1.0, 0.0])
+    monkeypatch.setattr(vault_ops, "_embed_query", lambda q, **kw: [1.0, 0.0])
     fused = vault_ops._semantic_fuse("some multi word query", [], vault, 5, enabled=True)
     assert fused is not None
     assert fused[0]["path"] == "dossier.md"

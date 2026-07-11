@@ -152,7 +152,7 @@ _SEARCH_LENGTH_NORM = os.environ.get("OBSIDIAN_SEARCH_LENGTHNORM", "1") != "0"
 # silently falls back to pure lexical, so search never breaks or hangs.
 _SEMANTIC_INDEX_FILE = ".obsidian-semantic-index.json"
 _OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
-_EMBED_MODEL = os.environ.get("OBSIDIAN_EMBED_MODEL", "mxbai-embed-large")
+_EMBED_MODEL = os.environ.get("OBSIDIAN_EMBED_MODEL", "bge-m3")
 # Backend mirrors scripts/eval/semantic_search.py: "ollama" (default, local) or
 # "openai" (any OpenAI-compatible /v1/embeddings - other local runtimes or a cloud API).
 _EMBED_BACKEND = os.environ.get("OBSIDIAN_EMBED_BACKEND", "ollama").lower()
@@ -166,7 +166,7 @@ _FUSE_DEPTH = 25  # how many from each ranking feed the fusion
 # notes demote answers pure semantic had ranked #1 (paraphrase recall@1
 # 8% fused vs 50% semantic on the audit cases). w=3.0 won the measured
 # sweep: best average MRR across paraphrase + keyword case sets.
-_RRF_SEMANTIC_WEIGHT = float(os.environ.get("OBSIDIAN_RRF_SEMANTIC_WEIGHT") or "3.0")
+_RRF_SEMANTIC_WEIGHT = float(os.environ.get("OBSIDIAN_RRF_SEMANTIC_WEIGHT") or "5.0")
 # Lexical rank carries signal only near the top: on paraphrase queries the
 # tail of the lexical ranking is term-frequency noise, and letting 25 noisy
 # entries vote demoted semantic answers. Lexical votes are capped to its
@@ -205,18 +205,20 @@ def _cosine(a: List[float], b: List[float]) -> float:
     return dot / (na * nb) if na and nb else 0.0
 
 
-def _embed_query(text: str) -> Optional[List[float]]:
+def _embed_query(text: str, model: Optional[str] = None) -> Optional[List[float]]:
     """One fast embedding call for the query via the configured backend. Short
     timeout, no retries - search must stay snappy; on any failure the caller falls
-    back to lexical. Supports Ollama (default) and OpenAI-compatible endpoints."""
+    back to lexical. Supports Ollama (default) and OpenAI-compatible endpoints.
+    model: pass the INDEX's model so query and note vectors share one space."""
+    model = model or _EMBED_MODEL
     if _EMBED_BACKEND == "openai":
         headers = {"Content-Type": "application/json"}
         if _EMBED_KEY:
             headers["Authorization"] = f"Bearer {_EMBED_KEY}"
-        body = json.dumps({"model": _EMBED_MODEL, "input": text[:1200]}).encode()
+        body = json.dumps({"model": model, "input": text[:1200]}).encode()
         url = f"{_EMBED_URL}/v1/embeddings"
     else:
-        body = json.dumps({"model": _EMBED_MODEL, "prompt": text[:1200], "keep_alive": "15m"}).encode()
+        body = json.dumps({"model": model, "prompt": text[:1200], "keep_alive": "15m"}).encode()
         url = f"{_EMBED_URL}/api/embeddings"
     req = urllib.request.Request(url, data=body, headers=headers if _EMBED_BACKEND == "openai"
                                 else {"Content-Type": "application/json"})
@@ -262,7 +264,9 @@ def _semantic_fuse(
         notes = index.get("notes") or {}
         if not notes:
             return None
-        qvec = _embed_query(query)
+        # The query MUST be embedded with the model the index was built with -
+        # vectors from different models live in different spaces (fix 16/24).
+        qvec = _embed_query(query, model=index.get("model") or _EMBED_MODEL)
         if not qvec:
             return None
         # Best-chunk scoring (fix 13/24): a note is as relevant as its most

@@ -78,7 +78,7 @@ def test_semantic_votes_outweigh_lexical_in_fusion(vault, monkeypatch):
         },
     }
     (vault / vault_ops._SEMANTIC_INDEX_FILE).write_text(json.dumps(index), encoding="utf-8")
-    monkeypatch.setattr(vault_ops, "_embed_query", lambda q: [1.0, 0.0])
+    monkeypatch.setattr(vault_ops, "_embed_query", lambda q, **kw: [1.0, 0.0])
 
     # b.md sits at lexical rank 3: flat 1:1 fusion would keep a.md on top
     # (verified against the old code); semantic-weighted fusion must not.
