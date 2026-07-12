@@ -23,7 +23,7 @@ Two depths, one command. The optional argument narrows focus to a topic. Add `--
 
 ### Formal mode (`--formal`)
 
-2. Identify the structural decision - from the argument or recent conversation (a project graduated, a folder reorganized, a convention adopted, a concept promoted to hub). To surface decisions already made in code but never recorded, run `python scripts/mine_commit_decisions.py --repo <project> --json` from the skill repo - it scans git history for decision-shaped commits ("switch to", "replace", "adopt", "rename", "migrate") and returns ADR candidates.
+2. Identify the structural decision - from the argument or recent conversation (a project graduated, a folder reorganized, a convention adopted, a concept promoted to hub). To surface decisions already made in code but never recorded, run `uv run --directory "SKILL_ROOT" scripts/mine_commit_decisions.py --repo <project> --json` (the skill root was given at session start as **Skill root**; substitute it for `SKILL_ROOT`) - it scans git history for decision-shaped commits ("switch to", "replace", "adopt", "rename", "migrate") and returns ADR candidates.
 3. Create a decision record in the decisions folder resolved per `references/folder-map.md` (wiki-style `wiki/decisions/YYYY-MM-DD - Title.md`, Obsidian-style `Knowledge/ADR-YYYY-MM-DD - Title.md`), with frontmatter `date`, `type: adr`, `status: accepted`, `tags: [adr, decision]`, `ai-first: true`. Structure:
    - **Decision** - one-line summary of what was decided.
    - **Context** - what prompted it (the problem or trigger).

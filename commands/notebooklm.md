@@ -9,9 +9,9 @@ Use the obsidian-second-brain skill. Execute `/notebooklm [topic]`:
 
 1. Resolve the topic from the user's argument. If no topic, ask: "What topic for source-grounded research?"
 
-2. Run the Python command from the skill's repo root (wherever this skill is checked out):
+2. Run the script from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   uv run -m scripts.research.notebooklm --topic "<topic>"
+   uv run --directory "SKILL_ROOT" -m scripts.research.notebooklm --topic "<topic>"
    ```
 
 3. The script does the whole flow end-to-end:

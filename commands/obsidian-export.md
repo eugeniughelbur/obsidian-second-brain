@@ -52,9 +52,9 @@ The optional argument is the format: `json` (default), `markdown`, or `okf`.
    A flat markdown file with every note listed with its metadata and summary.
    Save to `_export/vault-snapshot.md`
 
-   **OKF** (Open Knowledge Format - Google Cloud's vendor-neutral "folders of markdown" standard): do NOT build this by hand. Run the deterministic exporter:
+   **OKF** (Open Knowledge Format - Google Cloud's vendor-neutral "folders of markdown" standard): do NOT build this by hand. Run the deterministic exporter from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   uv run scripts/export_okf.py --path "<vault path from _CLAUDE.md>"
+   uv run --directory "SKILL_ROOT" scripts/export_okf.py --path "<vault path from _CLAUDE.md>"
    ```
    It writes an OKF v0.1 bundle to `_export/okf/`: every note becomes an OKF concept doc (frontmatter `type` [required] / `title` / `description` / `resource` [only when the note has a real source URL] / `tags` / ISO-8601 `timestamp`; `[[wikilinks]]` converted to relative-path markdown links), plus a generated `index.md` (progressive disclosure) and a copied `log.md`. The vault's richer AI-first body (incl. the `## For future Claude` preamble) is preserved - OKF is minimally opinionated, so the extra content rides along. This makes the vault "OKF v0.1 compatible" without changing how it works natively.
 

@@ -9,13 +9,13 @@ Use the obsidian-second-brain skill. Execute `/youtube [url] [--visual]`:
 
 1. Resolve the YouTube URL or video ID from the user's argument. Accept any of: full URL (`https://www.youtube.com/watch?v=...`), `https://youtu.be/...`, `https://www.youtube.com/shorts/...`, or just the 11-character video ID. If no input given, ask: "Which YouTube video?"
 
-2. Run the Python command from the repo root (`~/Projects/personal/obsidian-second-brain/`):
+2. Run the script from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   uv run -m scripts.research.youtube_extract "<url-or-id>"
+   uv run --directory "SKILL_ROOT" -m scripts.research.youtube_extract "<url-or-id>"
    ```
    Add `--visual` when the user wants the video watched, not just transcribed (demos, whiteboards, slides, UI walkthroughs, b-roll, "what's on screen"). Optional `--max-frames N` caps how many frames are read (default 24):
    ```bash
-   uv run -m scripts.research.youtube_extract "<url-or-id>" --visual
+   uv run --directory "SKILL_ROOT" -m scripts.research.youtube_extract "<url-or-id>" --visual
    ```
 
 3. The script:

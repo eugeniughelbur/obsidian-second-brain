@@ -13,15 +13,15 @@ The optional argument is a number of cases to (re)generate first (without `XAI_A
 
 1. Read `_CLAUDE.md` first if it exists in the vault root.
 
-2. If the user asked to generate (or no cases file exists yet at `scripts/eval/retrieval_cases.jsonl`), bootstrap the eval set from the vault:
+2. If the user asked to generate (or no cases file exists yet at `scripts/eval/retrieval_cases.jsonl`), bootstrap the eval set from the vault. Run from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   uv run python scripts/eval/retrieval_eval.py --generate 30
+   uv run --directory "SKILL_ROOT" python scripts/eval/retrieval_eval.py --generate 30
    ```
    This samples real notes and, for each, has an LLM write a question whose answer is in that note while AVOIDING the note's title words (so it tests retrieval, not string match). The note's path is the gold answer. Cases are gitignored - they contain private note paths.
 
-3. Run the evaluation:
+3. Run the evaluation (from the same skill root):
    ```bash
-   uv run python scripts/eval/retrieval_eval.py --json
+   uv run --directory "SKILL_ROOT" python scripts/eval/retrieval_eval.py --json
    ```
    It prints recall@1/3/5/10, MRR, and per-case results: misses (gold note never in the top 10) and buried cases (gold ranked below #3, usually because a noisy high-mention note or a `raw/` transcript outscored the canonical note).
 

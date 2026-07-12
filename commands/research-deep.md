@@ -9,9 +9,9 @@ Use the obsidian-second-brain skill. Execute `/research-deep [topic]`:
 
 1. Resolve the topic from the user's argument. If no topic, ask: "What topic for deep research?"
 
-2. Run the Python command from the repo root (`~/Projects/personal/obsidian-second-brain/`):
+2. Run the script from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   uv run -m scripts.research.research_deep "<topic>"
+   uv run --directory "SKILL_ROOT" -m scripts.research.research_deep "<topic>"
    ```
    The script auto-selects its mode: if `PERPLEXITY_API_KEY` is set it runs the paid pipeline below; otherwise it falls back to free, key-less sources. Pass `--free` to force free mode, or `--academic` (free mode only) to restrict to scholarly sources. Phase 1 (vault scan) is identical in both modes, so OBSIDIAN_VAULT_PATH must be set either way.
 

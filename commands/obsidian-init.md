@@ -14,7 +14,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - **Boards agent**: read all files in `Boards/`
    - **Samples agent**: read one existing note per major folder to capture naming conventions and frontmatter patterns
 3. Merge all agent results into a complete picture of the vault
-4. Generate a complete `_CLAUDE.md` using the template in `references/claude-md-template.md`, filled with real values from the vault
+4. Generate a complete `_CLAUDE.md` using the template bundled with the skill at `SKILL_ROOT/references/claude-md-template.md` (its absolute path was given at session start as **Skill root**), filled with real values from the vault
 5. Generate `index.md` at the vault root - a catalog of all pages organized by category:
    - List every note in the vault grouped by folder (Projects, People, Ideas, etc.)
    - Include a one-line description for each note (from frontmatter or first paragraph)
@@ -25,7 +25,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - Write `log.md` at the vault root as a thin pointer file: explains the per-day structure, points at `Logs/`, and ships the entry template (do NOT put log entries in `log.md` itself)
    - Write today's `Logs/YYYY-MM-DD.md` with the init entry: `**HH:MM** - init | Vault initialized with _CLAUDE.md, index.md, Logs/`
    - Per-day file format: frontmatter (`type: log`, `date`, `ai-first: true`) + `**HH:MM** - action | description` entries, append-only
-7. Create `Bases/` at the vault root if it does not exist. Stamp the four premade base files from `references/bases/`:
+7. Create `Bases/` at the vault root if it does not exist. Stamp the four premade base files from `SKILL_ROOT/references/bases/` (the skill root given at session start):
 
    | Template | Output file | Obsidian-style folder | Wiki-style folder |
    |---|---|---|---|
@@ -43,7 +43,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
 
 If `_CLAUDE.md` already exists: show a diff of what would change and ask before overwriting.
 If `index.md` already exists: regenerate it (it's always a fresh catalog of current vault state).
-If a monolithic `log.md` already exists with `## YYYY-MM-DD` sections: run, from the skill repo root, `python3 scripts/migrate_log.py --vault <vault-path>` to split it into `Logs/YYYY-MM-DD.md` files. Do not overwrite manually.
+If a monolithic `log.md` already exists with `## YYYY-MM-DD` sections: run `uv run --directory "SKILL_ROOT" scripts/migrate_log.py --vault <vault-path>` (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`) to split it into `Logs/YYYY-MM-DD.md` files. Do not overwrite manually.
 
 ---
 

@@ -9,9 +9,9 @@ Use the obsidian-second-brain skill. Execute `/x-read [url]`:
 
 1. Resolve the URL from the user's argument. If no URL was given, ask: "Which X post URL?" Accept any URL containing `x.com/` or `twitter.com/`.
 
-2. Run the Python command from the repo root (`~/Projects/personal/obsidian-second-brain/`):
+2. Run the script from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   uv run -m scripts.research.x_read "<url>"
+   uv run --directory "SKILL_ROOT" -m scripts.research.x_read "<url>"
    ```
 
 3. The script prints a structured analysis (ORIGINAL POST, THREAD, TL;DR, KEY CLAIMS, REPLY SENTIMENT, NOTABLE COUNTER-ARGUMENTS, VOICES TO WATCH) and a one-line cost summary on stderr. Show the analysis to the user verbatim - don't paraphrase or summarize.

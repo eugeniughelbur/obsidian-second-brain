@@ -11,9 +11,9 @@ The optional argument is a scope: an EXACT note title or alias (a project, an en
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
 
-2. Build the graph deterministically with the scanner instead of reading every note into context (a full-vault read is O(read-everything) and burns the budget):
+2. Build the graph deterministically with the scanner instead of reading every note into context (a full-vault read is O(read-everything) and burns the budget). Run from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   python scripts/link_graph.py --path "<vault>" [--scope "<topic/project/entity>"]
+   uv run --directory "SKILL_ROOT" scripts/link_graph.py --path "<vault>" [--scope "<topic/project/entity>"]
    ```
    It returns JSON with `nodes` (path, title, `type`, folder, in/out/`degree`), `edges` (resolved `[[wikilink]]` pairs), and `stats` (`node_count`, `edge_count`, `orphan_count`, `dangling_link_count`, `top_hubs`, `orphans`). Pass `--scope` with an exact note title/alias (the script keeps that note plus its 2-hop neighborhood); omit it for the full vault. If the result has `node_count: 0`, the scope did not resolve to a note - find the real title and rerun. Use this JSON as the graph - only open individual notes if you need a label the scan did not provide.
 

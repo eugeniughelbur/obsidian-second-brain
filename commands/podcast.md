@@ -15,9 +15,9 @@ Use the obsidian-second-brain skill. Execute `/podcast [url]`:
 
    If no input given, ask: "Which podcast episode? Paste the Apple Podcasts, Spotify, or RSS feed URL."
 
-2. Run the Python command from the repo root (`~/Projects/personal/obsidian-second-brain/`):
+2. Run the script from the skill root (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`):
    ```bash
-   uv run -m scripts.research.podcast_extract "<url>"
+   uv run --directory "SKILL_ROOT" -m scripts.research.podcast_extract "<url>"
    ```
 
 3. The script:
