@@ -597,9 +597,9 @@ That ships all 44 commands, the skill manual, the session-context hook, the opt-
 "env": { "OBSIDIAN_VAULT_PATH": "/path/to/your/vault" }
 ```
 
-Restart Claude Code and run `/obsidian-init` inside your vault. Update later with `/plugin update obsidian-second-brain`.
+Restart Claude Code, then run `/obsidian-second-brain:obsidian-init` inside your vault. Plugin commands are namespaced, so every command is `/obsidian-second-brain:<name>` (type `/obsidian-second-brain:` to see all 44). Update later with `/plugin update obsidian-second-brain`.
 
-**Classic install (script).** One line (clones the skill, installs the slash commands, offers the research env):
+**Classic install (script).** Use this if you want the commands as bare names (`/obsidian-init`, `/research`, ...) or you are developing the skill and want live edits. One line (clones the skill, installs the slash commands, registers the session-context hook, and offers the research env):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
