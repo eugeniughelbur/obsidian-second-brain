@@ -109,11 +109,23 @@ def apply_verdicts(vault, verdicts, create_cap):
             # Stubs land in a single holding folder marked `type: stub`; a human or a
             # later Claude pass classifies and moves them. Link resolution is by
             # filename, so the stub heals the broken link from here just the same.
-            stub = vault / "wiki" / "stubs" / f"{link}.md"
-            if not stub.exists():
-                stub.parent.mkdir(parents=True, exist_ok=True)
+            stubs_root = (vault / "wiki" / "stubs").resolve()
+            stub = stubs_root / f"{link}.md"
+            # Containment guard: the link text is vault content shaped by an LLM verdict,
+            # so a crafted or hallucinated [[../../x]] or [[/abs/x]] must never write
+            # outside the stubs folder. Resolve and confirm the target stays inside it;
+            # skip (never crash the batch) if it escapes.
+            try:
+                safe_stub = stub.resolve()
+                safe_stub.relative_to(stubs_root)
+            except (ValueError, OSError):
+                print(f"  SKIPPED (unsafe link path, not created): [[{link}]]")
+                skipped += 1
+                continue
+            if not safe_stub.exists():
+                safe_stub.parent.mkdir(parents=True, exist_ok=True)
                 today = date.today().isoformat()
-                stub.write_text(
+                safe_stub.write_text(
                     f"---\ntype: stub\ndate: {today}\ntags: [stub]\nai-first: true\n---\n\n"
                     f"## For future Claude\n\nStub created by link triage on {today}. "
                     f"`{link}` was referenced across the vault but had no note. "
@@ -143,7 +155,7 @@ def main():
         after = len(check_wanted_notes(load_vault(vault), vault))
         print(f"\nDeleted {d} junk links, created {c} stub notes.")
         if s:
-            print(f"Skipped {s} non-UTF-8 files (left untouched).")
+            print(f"Skipped {s} (non-UTF-8 file or unsafe link path, left untouched).")
         print(f"Wanted notes now: {after}\n")
         return
 

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Security
+
+- **Link triage can no longer write outside the vault (stress-test round 2).** `triage_links.py` built a new stub's path straight from wikilink text, and the wikilink regex allows `/`, `.`, and `..`. A `CREATE` verdict on a crafted or hallucinated `[[../../escaped/x]]` wrote a file above the vault root, `[[/abs/path/x]]` wrote at an absolute path, and `[[/unwritable/x]]` raised an unhandled `OSError` that aborted the whole batch. Since the verdict comes from an LLM reading attacker-influenceable vault text, this was a real containment hole. The stub path is now resolved and required to stay inside `wiki/stubs/`; anything that escapes is skipped and reported, never written and never fatal. Covered by `tests/test_note_safety.py` (parent-traversal refused, absolute-path refused, legitimate stubs still created).
+
+### Fixed
+
+- **Note rewrites are atomic now - an interrupted write can no longer wipe a note (stress-test round 2).** `note_io.write_exact` did `path.write_bytes(...)`, which truncates the file to zero and then streams the new bytes in place. A Ctrl-C, a crash, a sleep, or a full disk between those two steps left the note truncated or empty with no backup - in the one primitive both in-place rewriters (`heal_links`, `triage_links`) depend on, in a tool whose headline promise is note safety. `write_exact` now writes a sibling temp file, flushes it, and `os.replace`s it over the target (a same-filesystem rename, atomic on POSIX and Windows); the original is untouched until that final swap, and an interrupted write cleans up its temp and leaves the note exactly as it was. Permission bits are carried over so a rewrite never quietly changes a note's mode. This is a second-pass finding: v0.12.0's "The Stress Test" hardened the encoding, BOM, symlink, and slug paths but left the write itself non-atomic. Covered by `tests/test_note_safety.py` (byte-exact round-trip with no temp litter, original preserved when the swap fails, mode preserved).
+
 ### Added
 
 - **DEMOS.md - a demo gallery, with the flagship /obsidian-save demo above the fold in the README.** Three demos ship: /obsidian-save fanning one brain-dump into five cross-linked AI-first notes (real headless claude run against a synthetic vault, the model's working pause cut and disclosed), the two-command plugin-marketplace install, and bootstrapping a vault that passes its own health check. Every demo is real footage rendered from a committed vhs tape (`media/*.tape`) against throwaway synthetic data, so demos re-render pixel-perfect for future versions and no real vault can ever appear in one. The README's stale v0.10 banner blurb now says v0.12.
@@ -16,7 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- **/research and /research-deep now honor a PERPLEXITY_API_KEY set in `~/.config/obsidian-second-brain/.env`.** The free-vs-paid decision read the process environment before anything had loaded the shared `.env` file (the documented setup), so paid-mode users silently got the free pipeline. Root-caused and fixed by @MichaelHabermas in #125 (fixes #124) - the project's first external contribution. Fenced in CI: a smoke test proves a key set only in the config `.env` selects paid mode, and that zero-config free mode still works when no key is set anywhere.
+- **/research and /research-deep now honor a PERPLEXITY_API_KEY set in `~/.config/obsidian-second-brain/.env`.** The free-vs-paid decision read the process environment before anything had loaded the shared `.env` file (the documented setup), so paid-mode users silently got the free pipeline. Root-caused and fixed by @MichaelHabermas in #125 (fixes #124), joining the project's 18 external contributors. Fenced in CI: a smoke test proves a key set only in the config `.env` selects paid mode, and that zero-config free mode still works when no key is set anywhere.
 
 - **The audit's three never-tested surfaces are now exercised live, and the one real bug found is fixed (#126).** The bg-agent hook's gates, garbage-stdin handling, and parse-and-spawn chain are tested against a stub `claude` binary, and its embedded prompt resolves folders from the vault's folder map instead of hardcoding Obsidian-style names. The MCP write path ran end-to-end against a scratch vault with traversal probes on save/update/read all refused. The Telegram ingest core had a real bug: hardcoded wiki-style folders would fork a parallel `wiki/` tree into Obsidian-style vaults - fixed with folder-map resolution and covered by layout-sensitive tests.
 
