@@ -20,7 +20,17 @@
 #   4. Make executable: chmod +x hooks/obsidian-bg-agent.sh
 # To disable again: clear OBSIDIAN_BG_AGENT_ENABLED (the gate below makes that enough).
 #
-# Logs: /tmp/obsidian-bg-agent.log
+# Optional:
+#   - CLAUDE_VAULT_PROPAGATION=1 lets the origin project's CLAUDE.md steer
+#     propagation. If set, and the compacting project has a "## Vault
+#     propagation hints" section in its CLAUDE.md, that section (only) is
+#     injected into the prompt as project-specific rules, ranked below the
+#     vault's own _CLAUDE.md. Ships inert (same philosophy as the enable flag).
+#
+# Logs:
+#   - /tmp/obsidian-bg-agent.log        - stdout/stderr of the headless run
+#   - $VAULT/.claude-runs/YYYY-MM-DD.jsonl - one JSONL line per run outcome
+#     (early-exit reason, or starting + completed with duration and exit code)
 
 VAULT="${OBSIDIAN_VAULT_PATH:-}"
 [[ -z "$VAULT" ]] && exit 0
@@ -29,19 +39,88 @@ VAULT="${OBSIDIAN_VAULT_PATH:-}"
 # second of the two flags; without it the hook does nothing even when registered.
 [[ "${OBSIDIAN_BG_AGENT_ENABLED:-0}" != "1" ]] && exit 0
 
+# --- Observability -----------------------------------------------------------
+# Every decision point below used to be a bare `exit 0`, indistinguishable from
+# "nothing to do", and the headless run's exit code vanished into a detached
+# subshell. We now record one JSONL line per outcome under the vault so a run
+# that decided not to propagate - or failed - is never silent.
+RUN_ID="$(date +%s)-$$"
+START_TIME=$(date +%s)
+RUNS_DIR="$VAULT/.claude-runs"
+mkdir -p "$RUNS_DIR" 2>/dev/null || true
+
+# Portable file mtime in epoch seconds: GNU / Git-Bash `stat -c`, BSD / macOS
+# `stat -f`; 0 if neither works so callers never divide by a missing value.
+file_mtime() {
+  stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || echo 0
+}
+
+# log_run <status> [key val [key val ...]]  - append one JSONL line.
+# JSON is built by jq (integers via --argjson, strings via --arg) so escaping is
+# correct even for Windows backslash paths - hand-rolling the JSON in shell was
+# fragile. Fails loud: any jq error leaves a degraded marker line rather than
+# silently dropping the record.
+log_run() {
+  local status="$1"; shift
+  local file="$RUNS_DIR/$(date +%Y-%m-%d).jsonl"
+  local jq_args=(--arg run_id "$RUN_ID" --arg status "$status" --argjson ts "$(date +%s)")
+  local filter='{run_id:$run_id, status:$status, ts:$ts'
+  while [[ $# -ge 2 ]]; do
+    local key="$1" val="$2"; shift 2
+    if [[ "$val" =~ ^-?[0-9]+$ ]]; then jq_args+=(--argjson "$key" "$val")
+    else jq_args+=(--arg "$key" "$val"); fi
+    filter+=", ${key}:\$${key}"
+  done
+  jq -nc "${jq_args[@]}" "$filter}" >> "$file" 2>/dev/null \
+    || printf '{"run_id":"%s","status":"_log_run_error","for":"%s"}\n' "$RUN_ID" "$status" >> "$file"
+}
+
+# --- Burst-dedup lock --------------------------------------------------------
+# Two sessions compacting within seconds of each other fire two hooks at the
+# same vault. A short-TTL lock drops the second. The trap releases on hook exit,
+# so this dedups burst double-fires; it does not serialize the full headless run
+# (that would need a TTL longer than a real run). The 120s TTL also reaps a lock
+# orphaned by a hook that died before its trap ran.
+LOCK="$VAULT/.claude-lock"
+if [[ -f "$LOCK" ]]; then
+  AGE=$(( $(date +%s) - $(file_mtime "$LOCK") ))
+  if [[ $AGE -lt 120 ]]; then
+    log_run "lock_contention" lock_age_sec "$AGE"; exit 0
+  fi
+fi
+touch "$LOCK"
+trap 'rm -f "$LOCK"' EXIT
+
 # PostCompact stdin includes `transcript_path`; the compaction summary itself
 # is written into the transcript JSONL as entries with `isCompactSummary: true`.
 # We read the most recent one here.
 INPUT=$(cat)
 TRANSCRIPT=$(printf '%s' "$INPUT" | jq -r '.transcript_path // ""' 2>/dev/null || true)
-[[ -z "$TRANSCRIPT" || ! -f "$TRANSCRIPT" ]] && exit 0
+if [[ -z "$TRANSCRIPT" || ! -f "$TRANSCRIPT" ]]; then
+  log_run "no_transcript"; exit 0
+fi
 
 # Stream the JSONL (transcripts can be 100MB+). base64-encode each match so the
 # multi-line content stays on one line, then decode the most recent one.
 SUMMARY=$(jq -rc 'select(.isCompactSummary == true) | .message.content // "" | @base64' "$TRANSCRIPT" 2>/dev/null | tail -n 1 | base64 -d 2>/dev/null || true)
-[[ -z "$SUMMARY" ]] && exit 0
+if [[ -z "$SUMMARY" ]]; then
+  log_run "no_summary"; exit 0
+fi
 
 TODAY=$(date +%Y-%m-%d)
+
+# Optional: pull project-specific propagation rules from the compacting
+# project's CLAUDE.md. Marker-based extraction so the agent ingests only the
+# section addressed to it, never the whole repo CLAUDE.md.
+ORIGIN_CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // ""' 2>/dev/null || true)
+PROJECT_HINTS=""
+if [[ "${CLAUDE_VAULT_PROPAGATION:-0}" == "1" && -n "$ORIGIN_CWD" && -f "$ORIGIN_CWD/CLAUDE.md" ]]; then
+  PROJECT_HINTS=$(awk '
+    /^## Vault propagation hints/ { capture=1; next }
+    /^## / && capture { exit }
+    capture { print }
+  ' "$ORIGIN_CWD/CLAUDE.md")
+fi
 
 # Build prompt in a temp file to handle special characters in the summary safely
 PROMPT_FILE=$(mktemp /tmp/obsidian-bg-XXXXXX.txt)
@@ -57,6 +136,19 @@ SESSION SUMMARY:
 HEADER
 
 printf '%s\n\n' "$SUMMARY" >> "$PROMPT_FILE"
+
+# Inject project-specific rules between the summary and the standing
+# instructions, with explicit precedence below the vault's own _CLAUDE.md so a
+# sloppy or hostile repo CLAUDE.md can never override vault authority.
+if [[ -n "$PROJECT_HINTS" ]]; then
+  cat >> "$PROMPT_FILE" << PROJECTRULES
+PROJECT-SPECIFIC RULES (from $ORIGIN_CWD/CLAUDE.md section "Vault propagation hints"):
+$PROJECT_HINTS
+
+Precedence: vault _CLAUDE.md > project rules (above) > skill defaults.
+
+PROJECTRULES
+fi
 
 cat >> "$PROMPT_FILE" << 'INSTRUCTIONS'
 INSTRUCTIONS:
@@ -94,13 +186,22 @@ CONSTRAINTS:
 - Do not archive, delete, or merge anything - only add or update.
 INSTRUCTIONS
 
-PROMPT=$(cat "$PROMPT_FILE")
-rm -f "$PROMPT_FILE"
+log_run "starting" summary_chars "${#SUMMARY}" hints_chars "${#PROJECT_HINTS}"
 
-# Run headless agent in vault directory - async, logs to /tmp for debugging
+# Run headless agent in vault directory - async, logs to /tmp for debugging.
+# Feed the prompt via stdin, NOT as an argv element. `claude -p "$PROMPT"`
+# passes the whole prompt as one command-line argument and hits the ~32K
+# CreateProcess limit on Git Bash for Windows ("Argument list too long",
+# exit 126) - silently, because this subshell is detached and its exit code is
+# never read. stdin has no such limit. Real compaction summaries reach 24K+
+# chars, so this is not a theoretical edge. Delete the temp file after the
+# subprocess exits (not before spawn), then record the outcome.
 (
-  cd "$VAULT" && \
-  claude --dangerously-skip-permissions -p "$PROMPT" >> /tmp/obsidian-bg-agent.log 2>&1
+  cd "$VAULT" || exit 1
+  claude --dangerously-skip-permissions -p < "$PROMPT_FILE" >> /tmp/obsidian-bg-agent.log 2>&1
+  EXIT_CODE=$?
+  rm -f "$PROMPT_FILE"
+  log_run "completed" duration_sec "$(( $(date +%s) - START_TIME ))" exit_code "$EXIT_CODE"
 ) &
 
 exit 0
