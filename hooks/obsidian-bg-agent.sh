@@ -98,9 +98,17 @@ PROMPT=$(cat "$PROMPT_FILE")
 rm -f "$PROMPT_FILE"
 
 # Run headless agent in vault directory - async, logs to /tmp for debugging
+#
+# --strict-mcp-config: this agent uses filesystem tools only (see CONSTRAINTS in
+# the prompt above: "MCP is not available in this subprocess"). Without this flag
+# the headless run still loads every enabled MCP server, contradicting that stated
+# contract and wasting startup. Worse, for users running an MCP-based bot (e.g. a
+# Telegram/Slack integration) alongside Claude Code, this background run can seize
+# the bot's single MCP session and disrupt the live poller. The flag makes the
+# launch match the prompt's own contract.
 (
   cd "$VAULT" && \
-  claude --dangerously-skip-permissions -p "$PROMPT" >> /tmp/obsidian-bg-agent.log 2>&1
+  claude --dangerously-skip-permissions --strict-mcp-config -p "$PROMPT" >> /tmp/obsidian-bg-agent.log 2>&1
 ) &
 
 exit 0
