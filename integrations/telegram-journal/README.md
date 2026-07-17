@@ -14,7 +14,7 @@ the AI-first note rules, so future-Claude can read what you captured.
   default, or fully on-box with no API key - see [Local transcription](#local-transcription).
 - **Text** -> tidied by Claude -> same daily note. (Bot commands like `/start` are ignored.)
 - **Image** -> Claude vision reads it, decides where it belongs (a person note, a project
-  note, finance, or today's note), saves the file into `wiki/attachments/`, embeds it, and
+  note, finance, or today's note), saves the file into `raw/images/`, embeds it, and
   replies where it went. Reply `move <where>` (e.g. `move daily`, `move Acme Corp`) to
   re-file the last image.
 - **PDF / document** -> Claude reads the PDF, writes an AI-first literature note (summary,
@@ -103,9 +103,11 @@ You should see it process the message and reply on Telegram.
 
 ## Where things land
 
-- Voice / text -> `wiki/daily/YYYY-MM-DD.md` under `## Voice journal`
+- Voice / text -> the daily note under `## Voice journal`. The daily folder is resolved per
+  `references/folder-map.md`: `wiki/daily/` on a wiki-style vault, `Daily/` on an Obsidian-style one.
 - Images -> the chosen note (person/project/finance/daily) under `## Captured`, with the
-  file in `wiki/attachments/`
+  raw file in `raw/images/`
+- PDFs -> a literature note in `Research/Papers/`, with the raw file in `raw/pdfs/`
 
 Image routing targets only **notes that already exist**; if it is unsure it parks the entry
 in today's note and tells you - so it never creates junk notes.
@@ -159,6 +161,7 @@ Claude Haiku tidy/image call costs anything.
 - Image routing uses a vision model's best guess. The `move` reply is the correction path.
 - It catches voice/text/image; other message types (stickers, files) get a "not supported
   yet" reply.
-- Vault layout assumed: `wiki/daily/`, `wiki/entities/` (people/companies), `wiki/projects/`,
-  `wiki/attachments/` - the obsidian-second-brain default. Adjust the paths in the script if
-  your vault differs.
+- Folder resolution: daily/entities/projects are resolved per `references/folder-map.md`
+  (wiki-style `wiki/*` vs Obsidian-style `Daily/`, `People/`, `Projects/`). Raw attachments
+  always go to native `raw/` source-type subfolders: PDFs -> `raw/pdfs/`, images -> `raw/images/`
+  (per `/obsidian-ingest`). No `wiki/attachments/` tree is created on Obsidian-style vaults.

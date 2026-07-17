@@ -304,7 +304,7 @@ def remove_block(note, block):
 
 
 def save_image(img_bytes, ext, when):
-    folder = VAULT / "wiki" / "attachments"
+    folder = VAULT / "raw" / "images"
     folder.mkdir(parents=True, exist_ok=True)
     fname = f"{when.strftime('%Y-%m-%d-%H%M%S')}-journal{ext or '.jpg'}"
     (folder / fname).write_bytes(img_bytes)
@@ -463,7 +463,7 @@ def handle_document(msg, chat_id, when):
     data, _ = download(doc["file_id"])
 
     # save the file into the vault
-    att = VAULT / "wiki" / "attachments"
+    att = VAULT / "raw" / "pdfs"
     att.mkdir(parents=True, exist_ok=True)
     safe = re.sub(r"[^A-Za-z0-9._-]+", "-", name) or "document.pdf"
     fname = f"{when.strftime('%Y-%m-%d-%H%M%S')}-{safe}"
