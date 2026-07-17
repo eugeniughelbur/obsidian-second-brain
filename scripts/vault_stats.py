@@ -235,14 +235,15 @@ def main() -> int:
     # --path matches every sibling script (vault_health, heal_links, link_graph,
     # export_okf, ...); --vault stays as the historical alias.
     ap.add_argument("--path", "--vault", dest="vault", required=False, type=Path,
-                    default=os.environ.get("OBSIDIAN_VAULT"),
-                    help="Path to vault root (default: $OBSIDIAN_VAULT)")
+                    default=os.environ.get("OBSIDIAN_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT"),
+                    help="Path to vault root (default: $OBSIDIAN_VAULT_PATH, "
+                         "falling back to the legacy $OBSIDIAN_VAULT)")
     ap.add_argument("--print-only", action="store_true", help="Print block to stdout, do not modify index.md")
     ap.add_argument("--json", action="store_true", help="Emit raw aggregates as JSON (machine-readable)")
     args = ap.parse_args()
 
     if not args.vault:
-        ap.error("--path is required or set OBSIDIAN_VAULT env var")
+        ap.error("--path is required or set OBSIDIAN_VAULT_PATH env var")
 
     vault = Path(args.vault).resolve()
     notes, skipped = walk_vault(vault)
