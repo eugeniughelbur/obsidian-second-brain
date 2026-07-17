@@ -227,8 +227,8 @@ def _folder(kind):
     wiki-style: an Obsidian-style vault (the default bootstrap) would otherwise
     get a parallel wiki/ tree forked into it. Rule: wiki/ at the root wins;
     else the Obsidian-style folder if it exists; else the wiki default."""
-    wiki = {"daily": "wiki/daily", "entities": "wiki/entities", "projects": "wiki/projects"}[kind]
-    obs = {"daily": "Daily", "entities": "People", "projects": "Projects"}[kind]
+    wiki = {"daily": "wiki/daily", "entities": "wiki/entities", "projects": "wiki/projects", "concepts": "wiki/concepts", "stub": "wiki/stubs"}[kind]
+    obs = {"daily": "Daily", "entities": "People", "projects": "Projects", "concepts": "Knowledge", "stub": "Knowledge"}[kind]
     if (VAULT / "wiki").is_dir():
         return wiki
     if (VAULT / obs).is_dir():
@@ -349,9 +349,9 @@ def handle_move(chat_id, dest_text, when):
         target = "finance"
     elif "daily" in d or "today" in d:
         target = "daily"
-    elif find_note("wiki/entities", dest_text):
+    elif find_note(_folder("entities"), dest_text):
         target = f"person:{dest_text}"
-    elif find_note("wiki/projects", dest_text):
+    elif find_note(_folder("projects"), dest_text):
         target = f"project:{dest_text}"
     else:
         reply(chat_id, f"could not find a note called '{dest_text.strip()}' - left it where it is")
@@ -521,8 +521,8 @@ Reply with ONLY a JSON object:
 NONEMBED_LINK = re.compile(r"(?<!\!)\[\[([^\]]+)\]\]")
 # the vault owner (from VAULT_OWNER) - skip making a note for them by full name or first name
 OWNER_NAMES = {OWNER.lower(), OWNER.split()[0].lower()} if OWNER else set()
-TYPE_FOLDER = {"person": "wiki/entities", "company": "wiki/entities",
-               "project": "wiki/projects", "concept": "wiki/concepts"}
+TYPE_KIND = {"person": "entities", "company": "entities",
+             "project": "projects", "concept": "concepts"}
 _ALL_STEMS = None
 
 
@@ -553,7 +553,7 @@ def create_stub(name, context, when):
     ntype = str(info.get("type") or "stub").strip().lower()
     if ntype not in ("person", "company", "project", "concept"):
         ntype = "stub"
-    folder = TYPE_FOLDER.get(ntype, "wiki/stubs")
+    folder = _folder(TYPE_KIND.get(ntype, "stub"))
     d = VAULT / folder
     d.mkdir(parents=True, exist_ok=True)
     note = d / f"{name}.md"
