@@ -76,7 +76,7 @@ def _free_sources(academic: bool):
     from .lib.sources.reddit import RedditSource
     from .lib.sources.wikipedia import WikipediaSource
 
-    return [
+    sources = [
         DuckDuckGoSource(),
         WikipediaSource(),
         HackerNewsSource(),
@@ -84,6 +84,16 @@ def _free_sources(academic: bool):
         ArxivSource(),
         SemanticScholarSource(),
     ]
+
+    # Optional paid extra: Tavily joins the pool when its key is set. The
+    # shared .env is already loaded by main() via source_config (the #125
+    # lesson: never read a key before load_dotenv has run).
+    if os.environ.get("TAVILY_API_KEY", "").strip():
+        from .lib.sources.tavily import TavilySource
+
+        sources.append(TavilySource())
+
+    return sources
 
 
 def run_free(topic: str, academic: bool) -> int:

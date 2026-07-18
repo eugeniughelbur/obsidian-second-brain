@@ -35,14 +35,15 @@ def test_library_imports_without_vault_path():
     from scripts.research.lib.sources.openalex import OpenAlexSource
     from scripts.research.lib.sources.reddit import RedditSource
     from scripts.research.lib.sources.semantic_scholar import SemanticScholarSource
+    from scripts.research.lib.sources.tavily import TavilySource
     from scripts.research.lib.sources.wikipedia import WikipediaSource
 
     names = {
         ArxivSource.name, CrossRefSource.name, DevToSource.name, DuckDuckGoSource.name,
         HackerNewsSource.name, LobstersSource.name, OpenAlexSource.name, RedditSource.name,
-        SemanticScholarSource.name, WikipediaSource.name,
+        SemanticScholarSource.name, TavilySource.name, WikipediaSource.name,
     }
-    assert len(names) == 10  # all source names distinct
+    assert len(names) == 11  # all source names distinct
 
 
 def test_result_json_roundtrip():
@@ -118,3 +119,71 @@ def test_aggregate_collects_and_degrades_gracefully():
     assert any("broken" in w for w in out["warnings"])
     # Output is JSON-serializable as-is (results already dicts).
     json.dumps(out)
+
+
+def test_tavily_requires_key(monkeypatch):
+    """Without TAVILY_API_KEY the constructor refuses - the source must never
+    be built keyless (research._free_sources gates on the env var)."""
+    from scripts.research.lib.sources.tavily import TavilySource
+
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    with pytest.raises(RuntimeError):
+        TavilySource()
+
+
+def test_tavily_source_search(monkeypatch, tmp_path):
+    """TavilySource hits the REST API with plain requests (no SDK), sends the
+    key as a Bearer header (never in the JSON body), and maps the response to
+    Result objects."""
+    from unittest.mock import MagicMock
+
+    from scripts.research.lib.sources.tavily import TavilySource
+
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-key")
+    # Isolate the disk cache (cache paths derive from HOME).
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+
+    fake_resp = MagicMock()
+    fake_resp.json.return_value = {
+        "results": [
+            {"title": "Tavily Result", "url": "https://example.com", "content": "A snippet"},
+            {"title": "keyless row dropped", "url": "", "content": "no url"},
+        ]
+    }
+    fake_resp.raise_for_status.return_value = None
+
+    src = TavilySource()
+    fake_session = MagicMock()
+    fake_session.post.return_value = fake_resp
+    src._session = fake_session
+
+    results = src.search("test query", n=5)
+
+    assert len(results) == 1
+    assert results[0].source == "tavily"
+    assert results[0].title == "Tavily Result"
+    assert results[0].url == "https://example.com"
+    assert results[0].snippet == "A snippet"
+    # Auth travels in the header; the key must not leak into the payload.
+    _, kwargs = fake_session.post.call_args
+    assert kwargs["headers"]["Authorization"] == "Bearer tvly-test-key"
+    assert "api_key" not in kwargs["json"]
+    assert kwargs["json"]["max_results"] == 5
+
+
+def test_free_sources_include_tavily_only_with_key(monkeypatch):
+    """research._free_sources appends Tavily when the key is set, skips it
+    keyless - the pool must stay fully key-less by default."""
+    from scripts.research import research
+
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    without = {type(s).__name__ for s in research._free_sources(academic=False)}
+    assert "TavilySource" not in without
+
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-key")
+    with_key = {type(s).__name__ for s in research._free_sources(academic=False)}
+    assert "TavilySource" in with_key
+    # Academic mode stays untouched either way.
+    academic = {type(s).__name__ for s in research._free_sources(academic=True)}
+    assert "TavilySource" not in academic
