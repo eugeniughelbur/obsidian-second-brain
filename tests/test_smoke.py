@@ -844,3 +844,33 @@ def test_retrieval_eval_external_mode(tmp_path):
     )
     assert missing.returncode != 0
     assert "RETRIEVAL_EVAL_EXTERNAL_CMD" in missing.stderr
+
+
+def test_mcp_search_supersedes_reverse_edge(tmp_path, monkeypatch):
+    """When ADR A declares `supersedes: [[B]]`, B must rank below A even though
+    B's own status was never updated (the reverse edge from fork-insights r2).
+    Both notes match the query; without the edge, B (more term hits) wins."""
+    vault_ops = _load_vault_ops()
+    vault = tmp_path / "vault"
+    (vault / "Knowledge").mkdir(parents=True)
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault))
+
+    # Old ADR: status still says accepted (the vault forgot to update it),
+    # and it mentions the topic MORE, so pure lexical ranks it first.
+    (vault / "Knowledge" / "ADR-1 caching strategy.md").write_text(
+        "---\ntype: decision\nstatus: accepted\n---\n"
+        "# ADR-1 caching strategy\n\ncaching strategy caching strategy caching layer choice.\n",
+        encoding="utf-8",
+    )
+    # New ADR: declares it supersedes ADR-1.
+    (vault / "Knowledge" / "ADR-2 caching strategy v2.md").write_text(
+        '---\ntype: decision\nstatus: accepted\nsupersedes: "[[Knowledge/ADR-1 caching strategy]]"\n---\n'
+        "# ADR-2 caching strategy v2\n\ncaching strategy: use the new layer.\n",
+        encoding="utf-8",
+    )
+
+    results = vault_ops.search("caching strategy", limit=5)
+    paths = [r["path"] for r in results]
+    assert any("ADR-1" in p for p in paths) and any("ADR-2" in p for p in paths)
+    assert paths.index(next(p for p in paths if "ADR-2" in p)) < \
+           paths.index(next(p for p in paths if "ADR-1" in p)), paths

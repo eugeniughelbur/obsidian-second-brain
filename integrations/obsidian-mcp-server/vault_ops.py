@@ -17,7 +17,7 @@ import re
 import sys
 import urllib.request
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional
 
 _VAULT_ENV = "OBSIDIAN_VAULT_PATH"
@@ -74,6 +74,13 @@ _LOG_FOLDERS = {"logs", "daily", "dev logs"}
 _STALE_STATUSES = {"superseded", "declined", "rejected", "archived", "obsolete",
                    "cancelled", "closed", "parked", "inactive", "done"}
 _STATUS_RE = re.compile(r"(?m)^status:\s*['\"]?([A-Za-z0-9_-]+)")
+# The supersedes REVERSE edge (fork-insights round 2, the local-first memory
+# fork): when ADR A declares `supersedes: "[[B]]"`, B should fade even if B's
+# own status was never updated - the exact "vault forgot to update the old
+# note" failure the freshness policy warns about. Checked within the candidate
+# set only (both notes compete on the same query), so it stays O(results).
+_SUPERSEDES_RE = re.compile(r"(?m)^supersedes:\s*(.+)$")
+_WIKILINK_TARGET_RE = re.compile(r"\[\[([^\]|#]+)")
 _DATE_RE_FM = re.compile(r"(?m)^(?:updated|date):\s*['\"]?(\d{4})-(\d{2})-(\d{2})")
 _CURRENT_INTENT = {"current", "currently", "now", "today", "still", "latest", "actual"}
 _STATUS_FADE = float(os.environ.get("OBSIDIAN_SEARCH_STATUS_FADE") or "0.6")
@@ -102,18 +109,32 @@ def _freshness_rerank(results, vault: Path, current_intent: bool):
     (cheap): stale-status notes step back always (their own metadata says they
     no longer hold); recency reorders only when the query asks about the
     present. Rank-derived base scores keep this a reorder, never a rewrite."""
-    rescored = []
-    for i, r in enumerate(results):
-        weight = 1.0
+    # Pass 1: read heads once; collect every note some OTHER candidate claims
+    # to supersede (by wikilink target stem, lowercased).
+    heads: list[str] = []
+    superseded_targets: set = set()
+    for r in results:
         try:
             head = (vault / r["path"]).read_text(encoding="utf-8-sig", errors="ignore")[:400]
-            sm = _STATUS_RE.search(head)
-            if sm and sm.group(1).lower() in _STALE_STATUSES:
-                weight *= _STATUS_FADE
-            if current_intent:
-                weight *= _freshness_weight(_note_age_days(head, vault / r["path"]), True)
         except OSError:
-            pass
+            head = ""
+        heads.append(head)
+        for line in _SUPERSEDES_RE.findall(head):
+            for target in _WIKILINK_TARGET_RE.findall(line):
+                superseded_targets.add(PurePosixPath(target.strip()).stem.lower())
+
+    rescored = []
+    for i, (r, head) in enumerate(zip(results, heads)):
+        weight = 1.0
+        sm = _STATUS_RE.search(head)
+        if sm and sm.group(1).lower() in _STALE_STATUSES:
+            weight *= _STATUS_FADE
+        # Reverse edge: a candidate that another candidate supersedes steps
+        # back even when its own status was never updated.
+        if superseded_targets and PurePosixPath(r["path"]).stem.lower() in superseded_targets:
+            weight *= _STATUS_FADE
+        if current_intent and head:
+            weight *= _freshness_weight(_note_age_days(head, vault / r["path"]), True)
         rescored.append((weight / (_RRF_K + i), r))
     rescored.sort(key=lambda t: t[0], reverse=True)
     return [r for _, r in rescored]
@@ -390,7 +411,10 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
         return _freshness_rerank(fused, vault, current_intent)
     for r in scored:
         r.pop("score", None)
-    return scored[:limit]
+    # The pure-lexical fallback gets the same freshness/supersession rerank -
+    # it used to skip it entirely, so keyless installs never got the status
+    # fade the comment above promises for the lexical arm.
+    return _freshness_rerank(scored[:limit], vault, current_intent)
 
 
 def read_note(rel: str) -> Dict[str, Any]:
