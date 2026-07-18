@@ -15,6 +15,14 @@ Audits an Obsidian vault for structural issues:
 Usage:
     python vault_health.py --path ~/my-vault
     python vault_health.py --path ~/my-vault --json     # JSON output (for Claude)
+
+Optional per-vault config at `<vault>/.vault-config.json` extends the built-in
+exclude list (additive, never overrides the hardcoded EXCLUDE_DIRS):
+    {
+      "exclude-dirs":  ["_card-pool", "_candidates"],  # dir names anywhere in the tree
+      "exclude-paths": ["Archive/Backup"]              # vault-relative path prefixes
+    }
+A missing or malformed file is ignored silently. See VaultExcludes.
 """
 
 import argparse
@@ -70,7 +78,76 @@ def parse_aliases(frontmatter: str) -> list:
     return [m.strip().strip('"\'').lower() for m in ALIAS_ITEM_RE.findall(block.group(1))]
 
 
-def index_vault_files(vault: Path) -> set:
+class VaultExcludes:
+    """Additive, user-configured exclusions loaded from `<vault>/.vault-config.json`.
+
+    Large or academic vaults carry directories that are pure noise to a health
+    scan (atomic-card pools, backup snapshots, imported transcription dumps).
+    Hardcoding every one into EXCLUDE_DIRS does not scale, and on a 10k+ note
+    vault the false positives drown the real findings. A vault can extend the
+    skip list per-vault instead; the hardcoded EXCLUDE_DIRS always applies on top.
+
+        {
+          "exclude-dirs":  ["_card-pool", "_candidates"],  # dir names, matched as path components
+          "exclude-paths": ["Archive/Backup"]              # vault-relative path prefixes (POSIX)
+        }
+    """
+
+    __slots__ = ("dirs", "paths")
+
+    def __init__(self, dirs=None, paths=None):
+        self.dirs = dirs or set()
+        self.paths = paths or []
+
+    def skip(self, parts, rel_posix) -> bool:
+        """True if a vault path is excluded from the scan (hardcoded + user rules)."""
+        if any(p in EXCLUDE_DIRS for p in parts):
+            return True
+        if self.dirs and any(p in self.dirs for p in parts):
+            return True
+        return any(rel_posix == pre or rel_posix.startswith(pre + "/") for pre in self.paths)
+
+    def skip_file_index(self, parts) -> bool:
+        """True if a path is excluded from the file index used for link resolution.
+
+        Only the hardcoded FILE_INDEX_EXCLUDE_DIRS (Templates stay indexed so
+        template assets still resolve) and the user's noisy `exclude-dirs` are
+        pruned here. User `exclude-paths` are deliberately NOT applied, so a live
+        link into an excluded path still resolves instead of ringing as broken."""
+        if any(p in FILE_INDEX_EXCLUDE_DIRS for p in parts):
+            return True
+        return bool(self.dirs) and any(p in self.dirs for p in parts)
+
+
+# Shared "nothing extra excluded" instance for callers that pass no config.
+_NO_EXCLUDES = VaultExcludes()
+
+
+def load_vault_config(vault: Path) -> VaultExcludes:
+    """Read `<vault>/.vault-config.json` if present. A missing or malformed file
+    is silently ignored (returns empty excludes): a health check must never fail
+    because of its own optional config file."""
+    cfg_path = vault / ".vault-config.json"
+    if not cfg_path.is_file():
+        return VaultExcludes()
+    try:
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return VaultExcludes()
+    if not isinstance(data, dict):
+        return VaultExcludes()
+    raw_dirs = data.get("exclude-dirs", [])
+    raw_paths = data.get("exclude-paths", [])
+    dirs = set()
+    if isinstance(raw_dirs, list):
+        dirs = {d for d in raw_dirs if isinstance(d, str) and d}
+    paths = []
+    if isinstance(raw_paths, list):
+        paths = [p.strip("/") for p in raw_paths if isinstance(p, str) and p.strip("/")]
+    return VaultExcludes(dirs, paths)
+
+
+def index_vault_files(vault: Path, excludes=None) -> set:
     """Lowercased relative paths and bare filenames of every non-excluded vault file.
 
     Wikilinks can target non-markdown assets ([[Bases/Tasks.base]], [[map.canvas]],
@@ -78,10 +155,11 @@ def index_vault_files(vault: Path) -> set:
     .md-note stem index alone cannot resolve those, so broken-link checks also
     consult this full-file index.
     """
+    excludes = excludes or _NO_EXCLUDES
     files = set()
     for f in vault.rglob("*"):
         parts = f.relative_to(vault).parts
-        if any(p in FILE_INDEX_EXCLUDE_DIRS for p in parts):
+        if excludes.skip_file_index(parts):
             continue
         if len(parts) == 1 and parts[0] in EXCLUDE_ROOT_FILES:
             continue
@@ -92,7 +170,8 @@ def index_vault_files(vault: Path) -> set:
     return files
 
 
-def load_vault(vault: Path) -> dict:
+def load_vault(vault: Path, excludes=None) -> dict:
+    excludes = excludes or _NO_EXCLUDES
     notes = {}
     for md in vault.rglob("*.md"):
         parts = md.relative_to(vault).parts
@@ -100,7 +179,9 @@ def load_vault(vault: Path) -> dict:
         # <%...%> Templater syntax is intentional, not a "template leftover" bug.
         if len(parts) == 1 and parts[0] in EXCLUDE_ROOT_FILES:
             continue
-        if any(p in EXCLUDE_DIRS or p.lower().endswith("templates") for p in parts):
+        if any(p.lower().endswith("templates") for p in parts):
+            continue
+        if excludes.skip(parts, md.relative_to(vault).as_posix()):
             continue
         # rglob matches names, not files: a dangling symlink or a directory named
         # *.md would crash the read and abort the whole scan (stress-test fix 2/24).
@@ -302,10 +383,11 @@ def check_code_fence_wrapped(notes: dict) -> list:
     return issues
 
 
-def check_empty_folders(vault: Path) -> list:
+def check_empty_folders(vault: Path, excludes=None) -> list:
+    excludes = excludes or _NO_EXCLUDES
     issues = []
     for folder in vault.rglob("*/"):
-        if any(p in EXCLUDE_DIRS for p in folder.parts):
+        if excludes.skip(folder.parts, folder.relative_to(vault).as_posix()):
             continue
         if not folder.is_dir():
             continue
@@ -380,7 +462,7 @@ def _normalize_dashes(s: str) -> str:
     return s.replace(_EM_DASH, "-").replace(_EN_DASH, "-")
 
 
-def check_wanted_notes(notes: dict, vault: Path) -> list:
+def check_wanted_notes(notes: dict, vault: Path, excludes=None) -> list:
     """Find links whose target note does not exist yet. These are NOT errors -
     in a wiki-style vault you link a thing the moment you mention it, long before
     (or instead of) writing its note. They are a demand-ranked wishlist of notes
@@ -389,7 +471,7 @@ def check_wanted_notes(notes: dict, vault: Path) -> list:
     all_stems = {note["stem"].lower(): rel for rel, note in notes.items()}
     # Full-file index so links to non-markdown assets and links written with an
     # explicit extension resolve instead of being flagged broken.
-    all_files = index_vault_files(vault)
+    all_files = index_vault_files(vault, excludes)
     # also index stems with em-dashes normalized to regular hyphens so a
     # wikilink written with `-` still matches a filename written with `-`
     all_stems_dash_norm = {
@@ -476,7 +558,8 @@ def check_template_leftovers(notes: dict) -> list:
 def run_health_check(vault: Path) -> dict:
     # Progress goes to stderr so `--json` stdout is clean and machine-parseable.
     print(f"🔍 Scanning vault: {vault}\n", file=sys.stderr)
-    notes = load_vault(vault)
+    excludes = load_vault_config(vault)
+    notes = load_vault(vault, excludes)
     print(f"   Found {len(notes)} notes\n", file=sys.stderr)
 
     checks = [
@@ -485,8 +568,8 @@ def run_health_check(vault: Path) -> dict:
         ("Stale tasks", check_stale_tasks(notes)),
         ("Code-fence-wrapped notes", check_code_fence_wrapped(notes)),
         ("Missing frontmatter", check_missing_frontmatter(notes)),
-        ("Empty folders", check_empty_folders(vault)),
-        ("Wanted notes", check_wanted_notes(notes, vault)),
+        ("Empty folders", check_empty_folders(vault, excludes)),
+        ("Wanted notes", check_wanted_notes(notes, vault, excludes)),
         ("Template leftovers", check_template_leftovers(notes)),
     ]
 
