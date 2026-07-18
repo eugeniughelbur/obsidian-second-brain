@@ -218,6 +218,49 @@ def _searcher(mode: str):
     if mode == "default":
         return "shipped default: vault_ops.search (lexical + semantic RRF when available)", \
             lambda q: vault_ops.search(q, limit=SEARCH_LIMIT)
+    if mode == "external":
+        # Benchmark ANY external retrieval engine on the same cases: point
+        # RETRIEVAL_EVAL_EXTERNAL_CMD at a command that takes the query as its
+        # final argument and prints ranked results - a JSON array of paths (or
+        # of {"path": ...} objects), or plain newline-separated paths. This is
+        # how a TypeAgent / structured-RAG / vector-DB runner competes against
+        # the shipped search without being imported or vendored (pattern from
+        # the structured-rag eval fork, fork-insights round 2).
+        import os
+        import shlex
+        import subprocess
+        cmd = os.environ.get("RETRIEVAL_EVAL_EXTERNAL_CMD", "").strip()
+        if not cmd:
+            raise SystemExit(
+                "External mode needs RETRIEVAL_EVAL_EXTERNAL_CMD - a command that "
+                "takes the query as its final argument and prints ranked note "
+                "paths (JSON array or one per line)."
+            )
+
+        def _external(q: str) -> list[dict[str, Any]]:
+            proc = subprocess.run(
+                shlex.split(cmd) + [q],
+                capture_output=True, text=True, timeout=120,
+            )
+            if proc.returncode != 0:
+                print(f"[external] engine failed on {q!r}: {proc.stderr.strip()[:200]}", file=sys.stderr)
+                return []
+            out = proc.stdout.strip()
+            if not out:
+                return []
+            try:
+                parsed = json.loads(out)
+                items = parsed if isinstance(parsed, list) else []
+            except json.JSONDecodeError:
+                items = out.splitlines()
+            results = []
+            for item in items:
+                path = item.get("path") if isinstance(item, dict) else item
+                if isinstance(path, str) and path.strip():
+                    results.append({"path": path.strip()})
+            return results[:SEARCH_LIMIT]
+
+        return f"external engine: {cmd}", _external
     import semantic_search as ss  # local module; needs Ollama running
     vault = vault_ops.resolve_vault()
     if not ss.ollama_available():
@@ -317,7 +360,7 @@ def main() -> int:
     ap.add_argument("--cases", type=Path, default=DEFAULT_CASES,
                     help=f"Cases JSONL path (default: {DEFAULT_CASES})")
     ap.add_argument("--json", action="store_true", help="Emit JSON instead of a text report")
-    ap.add_argument("--mode", choices=("lexical", "default", "semantic", "hybrid"),
+    ap.add_argument("--mode", choices=("lexical", "default", "semantic", "hybrid", "external"),
                     default="lexical",
                     help="Retrieval to score: lexical (pure word-match, default), "
                          "default (exactly what the shipped MCP serves), semantic "

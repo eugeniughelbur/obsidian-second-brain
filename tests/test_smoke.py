@@ -805,3 +805,42 @@ def test_update_vault_integration_script_guards():
         )
         assert bogus.returncode != 0
         assert "unknown platform" in bogus.stderr
+
+
+def test_retrieval_eval_external_mode(tmp_path):
+    """--mode external benchmarks any engine via RETRIEVAL_EVAL_EXTERNAL_CMD:
+    the command gets the query as final argv and prints ranked paths (JSON
+    array or lines). A fake always-right engine must score recall@1 = 1.0."""
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "real.md").write_text("# real\n", encoding="utf-8")
+
+    cases = tmp_path / "cases.jsonl"
+    cases.write_text('{"q": "test question", "gold": ["real.md"], "title": "real"}\n', encoding="utf-8")
+
+    engine = tmp_path / "engine.sh"
+    engine.write_text('#!/usr/bin/env bash\necho \'["real.md", "other.md"]\'\n', encoding="utf-8")
+    engine.chmod(0o755)
+
+    env = dict(os.environ,
+               OBSIDIAN_VAULT_PATH=str(vault),
+               RETRIEVAL_EVAL_EXTERNAL_CMD=f"bash {engine}")
+    result = subprocess.run(
+        [sys.executable, "scripts/eval/retrieval_eval.py",
+         "--cases", str(cases), "--mode", "external", "--json"],
+        cwd=REPO_ROOT, env=env, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout[result.stdout.find("{"):])
+    assert payload["summary"]["recall_at"]["1"] == 1.0
+    assert "external engine" in payload["summary"]["search"]
+
+    # Without the env var, external mode must fail with a clear message.
+    env.pop("RETRIEVAL_EVAL_EXTERNAL_CMD")
+    missing = subprocess.run(
+        [sys.executable, "scripts/eval/retrieval_eval.py",
+         "--cases", str(cases), "--mode", "external"],
+        cwd=REPO_ROOT, env=env, capture_output=True, text=True,
+    )
+    assert missing.returncode != 0
+    assert "RETRIEVAL_EVAL_EXTERNAL_CMD" in missing.stderr
