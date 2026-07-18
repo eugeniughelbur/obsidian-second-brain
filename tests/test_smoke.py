@@ -779,3 +779,29 @@ def test_research_key_in_config_env_selects_paid_mode(tmp_path, module, paid_fn,
     vault_line = f"OBSIDIAN_VAULT_PATH={vault}\n"
     assert "CHOSE=paid" in chosen_mode(vault_line + "PERPLEXITY_API_KEY=pplx-smoke-test-key\n")
     assert "CHOSE=free" in chosen_mode(vault_line)
+
+
+def test_update_vault_integration_script_guards():
+    """The updater must be syntactically valid and fail loudly on bad input
+    (missing --vault, unknown platform) BEFORE touching anything. The full
+    pull->build->gate->backup->install->rollback flow is exercised manually
+    (it needs a clean repo + a real vault); these fences catch regressions in
+    the argument and platform guards."""
+    script = REPO_ROOT / "scripts/update-vault-integration.sh"
+    assert script.is_file()
+
+    syntax = subprocess.run(["bash", "-n", str(script)], capture_output=True, text=True)
+    assert syntax.returncode == 0, syntax.stderr
+
+    no_vault = subprocess.run(["bash", str(script)], capture_output=True, text=True)
+    assert no_vault.returncode != 0
+    assert "--vault is required" in no_vault.stderr
+
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        bogus = subprocess.run(
+            ["bash", str(script), "--vault", tmp, "--platform", "bogus"],
+            capture_output=True, text=True,
+        )
+        assert bogus.returncode != 0
+        assert "unknown platform" in bogus.stderr
