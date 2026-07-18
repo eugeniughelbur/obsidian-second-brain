@@ -149,6 +149,69 @@ def test_pi_build_generates_package():
     assert ".pi/skills/obsidian-second-brain" in prompt_body
 
 
+def test_agent_skills_build_generates_spec_compliant_tree():
+    """The agent-skills adapter must emit one spec-compliant Agent Skills tree
+    that Antigravity / Codex CLI / OpenCode all read from `.agents/skills/`:
+    skills/<name>/SKILL.md per command plus the shared obsidian-core engine
+    skill, with NO root SKILL.md (which would shadow the nested skills)."""
+    result = subprocess.run(
+        ["bash", "scripts/build.sh", "--platform", "agent-skills"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    assert result.returncode == 0, result.stderr
+
+    skills_dir = REPO_ROOT / "dist/agent-skills/skills"
+    assert skills_dir.is_dir()
+    # A root SKILL.md shadows every nested skill in skills.sh discovery.
+    assert not (REPO_ROOT / "dist/agent-skills/SKILL.md").exists()
+
+    # A command skill: spec-minimal frontmatter, self-sufficiency preamble, the
+    # full command body, and the embedded write spec.
+    save = skills_dir / "obsidian-save/SKILL.md"
+    assert save.is_file()
+    save_text = save.read_text(encoding="utf-8")
+    head = save_text[:600]
+    assert "name: obsidian-save" in head
+    assert "description:" in head
+    assert "Triggers: save this" in head
+    # Capture-type commands carry the proactive selection policy.
+    assert "Use proactively" in head
+    assert "$OBSIDIAN_VAULT_PATH" in save_text
+    assert "Use the obsidian-second-brain skill. Execute `/obsidian-save`:" in save_text
+    assert "## AI-first vault rule (embedded)" in save_text
+    assert "## For future Claude" in save_text
+
+    # Non-capture commands get the explicit-only policy, not the proactive one.
+    research = (skills_dir / "research/SKILL.md").read_text(encoding="utf-8")
+    assert "Use only when the user explicitly asks" in research
+    assert "Use proactively" not in research
+    # SKILL_ROOT is rewritten to the installed obsidian-core location.
+    assert "SKILL_ROOT" not in research
+    assert 'uv run --directory ".agents/skills/obsidian-core"' in research
+
+    # The shared engine skill ships references, scripts, and its uv project.
+    core = skills_dir / "obsidian-core"
+    assert (core / "SKILL.md").is_file()
+    assert (core / "pyproject.toml").is_file()
+    assert (core / "references/ai-first-rules.md").is_file()
+    assert (core / "scripts").is_dir()
+
+    # Calendar depends on a Claude-only MCP and is excluded from this build.
+    assert not (skills_dir / "obsidian-calendar").exists()
+
+    # Install docs cover both the skills.sh path and the manual fallback.
+    install_text = (REPO_ROOT / "dist/agent-skills/INSTALL.md").read_text(encoding="utf-8")
+    assert "npx skills add" in install_text
+    assert "cp -R dist/agent-skills/skills/." in install_text
+    assert (REPO_ROOT / "dist/agent-skills/global-rule-snippet.md").is_file()
+
+
 def test_vault_health_json_reports_clean_linked_vault(tmp_path):
     """A minimal two-note vault with reciprocal wikilinks should report zero
     issues: no orphans, no broken links, no missing frontmatter."""

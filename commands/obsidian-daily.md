@@ -1,6 +1,7 @@
 ---
 description: Create or update today's daily note - pulls calendar events, overdue tasks, and conversation context
 category: vault
+trigger-mode: proactive
 triggers_en: ["todays note", "create todays daily", "open daily", "today daily note"]
 triggers_es: ["nota de hoy", "crea la diaria de hoy", "abre mi diaria", "la nota diaria de hoy"]
 ---

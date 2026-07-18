@@ -1,6 +1,7 @@
 ---
 description: Add a task to the right kanban board with inferred priority and due date
 category: vault
+trigger-mode: proactive
 triggers_en: ["add task", "new todo", "track this", "remind me"]
 triggers_es: ["añade una tarea", "nuevo pendiente", "haz seguimiento de esto", "recuérdamelo"]
 ---

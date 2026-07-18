@@ -249,7 +249,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
   +------------------------------------------+
 ```
 
-44 commands total. The calendar command (`/obsidian-calendar`) is Claude Code only (needs the Google Calendar MCP), so the Codex / Gemini / OpenCode / Hermes / Pi builds ship 43.
+44 commands total. The calendar command (`/obsidian-calendar`) is Claude Code only (needs the Google Calendar MCP), so the Codex / Gemini / OpenCode / Hermes / Pi / Agent Skills builds ship 43.
 
 **Layer 1** saves, organizes, ingests, reconciles, exports, schedules your calendar, and maintains your vault.
 **Layer 2** challenges your ideas, surfaces hidden patterns, bridges unrelated domains, and graduates ideas into projects.
@@ -581,7 +581,7 @@ vault/
 
 ## Install
 
-> **One codebase, six platforms.** Pick yours below. The vault behavior is identical across all of them; only the install path and the dispatcher file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md` / `.pi/`) differ.
+> **One codebase, seven builds.** Pick yours below. The vault behavior is identical across all of them; only the install path and the dispatcher file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md` / `.agents/skills/` / `.pi/`) differ.
 
 **Prerequisites:** [Claude Code](https://claude.com/claude-code) (or one of the other five platforms below), `git`, and [`uv`](https://docs.astral.sh/uv/) for the Python helpers (health check, research toolkit, bootstrap). Optional: `jq` (used by `setup.sh`), [Ollama](https://ollama.com) for local semantic search. No API keys needed for the core vault commands.
 
@@ -642,6 +642,23 @@ Then start your CLI from the vault root.
 The **Codex build emits native [Codex Agent Skills](https://developers.openai.com/codex/skills)**: one skill per command under `.agents/skills/<name>/SKILL.md`. Codex discovers them automatically with progressive disclosure (only each skill's name + description load until it's selected), and they run **in your current session** - invoke one with `$<name>`, pick it from `/skills`, or just describe the task and let Codex match it implicitly. `AGENTS.md` stays as a thin always-on manual (vault conventions + the AI-first rule); there is no routing table to maintain because the skill list is the router. The Gemini / OpenCode builds still emit a `GEMINI.md` / `AGENTS.md` dispatcher with an auto-generated routing table to command files under `.gemini/` / `.opencode/`.
 
 Run `bash scripts/build.sh` with no arguments to build every platform at once. See [`dist/<platform>/INSTALL.md`](scripts/build.sh) after building for platform-specific notes.
+
+### Google Antigravity (and any `.agents/skills/` harness)
+
+Antigravity, Codex CLI, and OpenCode have all converged on the open [Agent Skills](https://github.com/vercel-labs/skills) standard: workspace skills at `.agents/skills/<name>/SKILL.md`. The `agent-skills` build emits one spec-compliant tree that all three read.
+
+```bash
+git clone https://github.com/eugeniughelbur/obsidian-second-brain
+cd obsidian-second-brain
+bash scripts/build.sh --platform agent-skills
+
+# install with skills.sh (writes one shared .agents/skills/ tree), from your vault root:
+npx skills add /path/to/obsidian-second-brain/dist/agent-skills -a antigravity -a codex -a opencode
+# or copy manually, no skills.sh required:
+cp -R dist/agent-skills/skills/. /path/to/your/vault/.agents/skills/
+```
+
+Each command becomes a skill under `.agents/skills/`; a shared `obsidian-core` skill carries the Python toolkit and the AI-first write spec the others call into. The skills are self-sufficient (they resolve the vault root from `$OBSIDIAN_VAULT_PATH` or the working directory and embed the write spec), so they need no session-start hook. This is the recommended path for **Google Antigravity**, whose skill discovery differs from classic Gemini CLI: Antigravity still reads the `gemini-cli` build's `GEMINI.md` as passive context, but only detects active skills under `.agents/skills/`, so install this build (not `gemini-cli`) if you want Antigravity to surface the commands as skills. See [`dist/agent-skills/INSTALL.md`](scripts/build.sh) for the full story (skills.sh, manual copy, per-harness notes, and the optional always-on vault-routing rule).
 
 ### Pi Coding Agent
 
@@ -747,7 +764,7 @@ An Obsidian plugin runs inside Obsidian and is written in TypeScript against Obs
 Run the one-line installer from the Install section below. It clones the repo to `~/.claude/skills/obsidian-second-brain` and symlinks the slash commands into `~/.claude/commands/` so Claude Code picks them up automatically. Restart Claude Code after install. The skill loads on every session that touches an Obsidian vault.
 
 ### Does this work with Codex CLI, Gemini CLI, or OpenCode?
-Yes. The repo ships a build script that compiles the platform-neutral source into six platform-specific outputs: Claude Code (slash commands + `CLAUDE.md`), Codex CLI (native Agent Skills), Gemini CLI (`GEMINI.md` + `.gemini/commands/`), OpenCode (`AGENTS.md` + `.opencode/commands/`), Hermes (native skills), and Pi (`package.json` + `.pi/`). Run `bash scripts/build.sh --platform codex-cli` (or another platform name), then copy the resulting `dist/<platform>/` tree into your vault. The non-Claude builds auto-generate a routing table that maps natural-language triggers to command files, so the same 43 cross-platform commands work no matter which CLI you use (the calendar command is Claude Code only, since it depends on the Google Calendar MCP). The vault rules (AI-first notes, frontmatter, wikilinks, recency markers) are identical across all six platforms.
+Yes. The repo ships a build script that compiles the platform-neutral source into seven platform-specific outputs: Claude Code (slash commands + `CLAUDE.md`), Codex CLI (native Agent Skills), Gemini CLI (`GEMINI.md` + `.gemini/commands/`), OpenCode (`AGENTS.md` + `.opencode/commands/`), Hermes (native skills), Pi (`package.json` + `.pi/`), and a unified Agent Skills build (one `.agents/skills/` tree for Antigravity / Codex / OpenCode). Run `bash scripts/build.sh --platform codex-cli` (or another platform name), then copy the resulting `dist/<platform>/` tree into your vault. The non-Claude builds either emit native skills or auto-generate a routing table that maps natural-language triggers to command files, so the same 43 cross-platform commands work no matter which CLI you use (the calendar command is Claude Code only, since it depends on the Google Calendar MCP). The vault rules (AI-first notes, frontmatter, wikilinks, recency markers) are identical across every platform.
 
 ### Does this run on Hermes or other open models?
 Yes. The skill is model-agnostic - the OpenCode, Codex, and Gemini builds are plain instruction files, so they run on whatever model the host CLI uses, including open models like Nous Research Hermes. The most common path is OpenCode pointed at Hermes via OpenRouter (or a local Hermes through Ollama / LM Studio for full privacy). See "Run on Hermes / open models" in the Install section for the exact config. Honest expectation: the core save / daily / capture / find / task commands and free-mode `/research` hold up well; the sub-agent-heavy and deep-synthesis commands (`/obsidian-architect`, `/obsidian-reconcile`, `/research-deep`) want a stronger instruction-follower, so prefer `hermes-4-405b` or Claude for those.

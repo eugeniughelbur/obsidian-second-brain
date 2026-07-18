@@ -1,6 +1,7 @@
 ---
 description: Create or update a person note from conversation context
 category: vault
+trigger-mode: proactive
 triggers_en: ["save this person", "add person", "new contact note", "create person note"]
 triggers_es: ["guarda a esta persona", "añade una persona", "nueva nota de contacto", "crea una nota de persona"]
 ---

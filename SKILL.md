@@ -655,7 +655,7 @@ Backed by `scripts/link_graph.py` (deterministic link extraction - no whole-vaul
 
 **Scaffolds a new obsidian-second-brain command through a short interview - no markdown or frontmatter editing.**
 
-A guided conversation (intent, name, category, trigger phrases, behavior steps, AI-first compliance, external APIs) writes a fully-formed `commands/<name>.md` that the build pipeline picks up on the next `bash scripts/build.sh`, flowing into all six platform builds. The optional seed pre-fills suggestions. Every command created this way lands AI-first-compliant by construction. (This is the command that creates commands; it does not run on itself.)
+A guided conversation (intent, name, category, trigger phrases, behavior steps, AI-first compliance, external APIs) writes a fully-formed `commands/<name>.md` that the build pipeline picks up on the next `bash scripts/build.sh`, flowing into all seven platform builds. The optional seed pre-fills suggestions. Every command created this way lands AI-first-compliant by construction. (This is the command that creates commands; it does not run on itself.)
 
 ---
 

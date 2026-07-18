@@ -32,6 +32,7 @@ Usage: bash scripts/build.sh [--platform <name>]
 Without --platform, builds every platform listed under adapters/.
 
 Available platforms:
+  agent-skills  - Antigravity / Codex CLI / OpenCode (unified .agents/skills/ tree)
   claude-code   - Claude Code (slash commands + CLAUDE.md)
   codex-cli     - OpenAI Codex CLI (native Agent Skills, .agents/skills/)
   gemini-cli    - Gemini CLI (GEMINI.md + .gemini/commands/)
