@@ -8,7 +8,7 @@ Last reviewed against commit `ff0319c` (2026-06-05).
 
 ## System overview
 
-obsidian-second-brain is a cross-CLI **skill** (not a plugin, not a hosted service) that turns any Obsidian vault into an AI-first second brain. One platform-neutral command source compiles to six AI CLIs - Claude Code, Codex CLI, Gemini CLI, OpenCode, Hermes, Pi - through a build-time adapter pattern. At runtime a slash command reads and writes the user's vault as plain markdown; commands shell out to Python helpers for anything deterministic (vault health, research fetches, codebase scans).
+obsidian-second-brain is a cross-CLI **skill** (not a plugin, not a hosted service) that turns any Obsidian vault into an AI-first second brain. One platform-neutral command source compiles to seven AI CLIs - Claude Code, Codex CLI, Gemini CLI, OpenCode, Antigravity, Hermes, Pi - through a build-time adapter pattern. At runtime a slash command reads and writes the user's vault as plain markdown; commands shell out to Python helpers for anything deterministic (vault health, research fetches, codebase scans).
 
 - **44 commands**, grouped by `category:` frontmatter: vault 16, thinking 13, research 8, meta 7.
 - **43 commands are cross-platform.** Only `/obsidian-calendar` carries `exclude: [codex-cli, gemini-cli, opencode, hermes, pi, agent-skills]` because it depends on the Google Calendar MCP, so it ships on Claude Code only. The Codex / Gemini / OpenCode / Hermes / Pi / Agent Skills builds ship 43.

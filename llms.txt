@@ -1,12 +1,12 @@
 # obsidian-second-brain
 
-> A cross-CLI skill that turns any Obsidian vault into a self-rewriting second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini CLI, OpenCode, Nous Research Hermes, and Pi from one platform-neutral source via a build-time adapter pattern. An evolution of Karpathy's LLM Wiki pattern (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): every source updates existing pages instead of just appending, contradictions reconcile automatically, and 4 scheduled agents maintain the vault while you sleep. 44 commands span vault management, thinking tools, scheduled agents, and a research toolkit (live X posts via Grok, web research via Perplexity, YouTube transcripts, podcast episodes via RSS or Whisper, and vault-grounded synthesis via Gemini File Search), plus optional local+private semantic search, a write-time AI-first validator hook and a `/create-command` interview flow for user-built extensions. As of v0.10 ("The Architect"), `/obsidian-architect` also scans a codebase and writes maintained, self-refreshing architecture notes into the vault (so your code lives in the same brain as your ideas and decisions), and `/research` + `/research-deep` run key-less by default with free fallback sources.
+> A cross-CLI skill that turns any Obsidian vault into a self-rewriting second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini CLI, OpenCode, Google Antigravity, Nous Research Hermes, and Pi from one platform-neutral source via a build-time adapter pattern. An evolution of Karpathy's LLM Wiki pattern (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): every source updates existing pages instead of just appending, contradictions reconcile automatically, and 4 scheduled agents maintain the vault while you sleep. 44 commands span vault management, thinking tools, scheduled agents, and a research toolkit (live X posts via Grok, web research via Perplexity, YouTube transcripts, podcast episodes via RSS or Whisper, and vault-grounded synthesis via Gemini File Search), plus optional local+private semantic search, a write-time AI-first validator hook and a `/create-command` interview flow for user-built extensions. As of v0.10 ("The Architect"), `/obsidian-architect` also scans a codebase and writes maintained, self-refreshing architecture notes into the vault (so your code lives in the same brain as your ideas and decisions), and `/research` + `/research-deep` run key-less by default with free fallback sources.
 
 ## What this is
 
 obsidian-second-brain is an open-source skill (MIT license) for Obsidian users who use an AI CLI as their primary interface to their own knowledge. It treats the vault as a knowledge base optimized for AI retrieval rather than human reading. Every note follows an AI-first design rule: self-contained context, "For future Claude" preamble, rich machine-readable frontmatter, recency markers per claim, sources preserved verbatim, mandatory wikilinks, and confidence levels.
 
-The skill is platform-neutral. The same 44 commands run in Claude Code, OpenAI Codex CLI (native Agent Skills), Google Gemini CLI, OpenCode, Nous Research Hermes (native skills), and Pi. One codebase compiles into all six via `bash scripts/build.sh`.
+The skill is platform-neutral. The same 44 commands run in Claude Code, OpenAI Codex CLI (native Agent Skills), Google Gemini CLI, OpenCode, Google Antigravity (via the unified `.agents/skills/` Agent Skills build), Nous Research Hermes (native skills), and Pi. One codebase compiles into all seven via `bash scripts/build.sh`.
 
 Owner: Eugeniu Ghelbur. AI Automation Engineer at Single Grain.
 
@@ -16,7 +16,7 @@ Owner: Eugeniu Ghelbur. AI Automation Engineer at Single Grain.
 - Notes accumulate unconnected. This skill propagates every write across people, projects, kanban boards, and daily notes automatically.
 - Research findings get lost. The research toolkit (8 commands) saves every X read, X pulse, web research (key-less by default), YouTube and podcast transcript, and vault-grounded synthesis directly to the vault as structured notes.
 - Vaults are usually optimized for humans browsing in Obsidian. This skill treats the vault as an AI knowledge graph: future-Claude (or future-Codex/Gemini) is the primary reader.
-- Different AI users use different CLIs. The same vault works whether the user is on Claude Code, Codex CLI, Gemini CLI, OpenCode, Hermes, or Pi - no rewriting commands per platform.
+- Different AI users use different CLIs. The same vault works whether the user is on Claude Code, Codex CLI, Gemini CLI, OpenCode, Antigravity, Hermes, or Pi - no rewriting commands per platform.
 
 ## How this extends Karpathy's LLM Wiki pattern
 
@@ -67,7 +67,7 @@ The repo is structured around a build-time adapter pattern:
 - `adapters/opencode/adapter.sh` - emits `AGENTS.md`. Commands under `.opencode/commands/`.
 - `adapters/hermes/adapter.sh` - emits Nous Research Hermes native skills.
 - `adapters/pi/adapter.sh` - emits a Pi package (`package.json` + `.pi/`) with the same routing table.
-- `scripts/build.sh` - orchestrator. Run with `--platform <name>` for one platform or no argument for all six.
+- `scripts/build.sh` - orchestrator. Run with `--platform <name>` for one platform or no argument for all seven.
 
 Output goes to `dist/<platform>/` (gitignored). Each `dist/<platform>/INSTALL.md` documents the install path for that CLI.
 
@@ -103,6 +103,9 @@ A `PostToolUse` hook (`hooks/validate-ai-first.sh`) enforces this at write time:
 
 ## Releases
 
+- v0.12.0 (2026-07-11) "The Stress Test": a 4-lane adversarial audit (32 AI agents: every command file, hostile synthetic vaults, live retrieval quality, competitor teardown) produced 175 findings; ~160 closed across 24 PRs - data-safety hardening (atomic note writes, path-traversal guards), retrieval 2-4x better on paraphrase queries, folder-map + schema reconciliation, and a native Claude Code plugin-marketplace install. Test suite 30 -> 129+, 11 permanent CI fences. https://github.com/eugeniughelbur/obsidian-second-brain/releases/tag/v0.12.0
+- v0.11.1 (2026-06-28) "Pi Coding Agent": Pi platform build - package.json + .pi/prompts/ + .pi/skills/ (contributed by @Gepetdo). https://github.com/eugeniughelbur/obsidian-second-brain/releases/tag/v0.11.1
+- v0.11.0 (2026-06-28) "The Retriever": keyword search fixed ~7x, optional local+private semantic layer fuses in for meaning-based recall, every command real-tested; ships the Hermes native-skills build and the MCP vault server. https://github.com/eugeniughelbur/obsidian-second-brain/releases/tag/v0.11.0
 - v0.10.0 (2026-05-31) "The Architect": `/obsidian-architect` scans a codebase into maintained, self-refreshing architecture notes (sentinel-safe blocks never clobber hand-edits). Plus `/obsidian-calendar` reconciliation, `/vault-deep-synthesis`, `/idea-discovery`, `/obsidian-panel`, a Codex executable runner, a commit-decisions miner, and a substitution-character CI gate. 45 commands. https://github.com/eugeniughelbur/obsidian-second-brain/releases/tag/v0.10.0
 - v0.9.0 (2026-05-31): Free, key-less mode for `/research` and `/research-deep` (free fallback sources, no API key needed). Google Calendar commands. Anti-fabrication and false-absence guards. First automated tests + CI. Opt-in background agent. https://github.com/eugeniughelbur/obsidian-second-brain/releases/tag/v0.9.0
 - v0.8.0 (2026-05-15): `/notebooklm` rewritten on the Gemini File Search API (one HTTP call, no browser). https://github.com/eugeniughelbur/obsidian-second-brain/releases/tag/v0.8.0

@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
-    <img src="media/banner.png" alt="obsidian-second-brain: one brain, six platforms, 44 commands. A cross-platform skill for Obsidian that runs on Claude Code, Codex, Gemini, OpenCode, Hermes, and Pi." width="100%" />
+    <img src="media/banner.png" alt="obsidian-second-brain: one brain, seven platforms, 44 commands. A cross-platform skill for Obsidian that runs on Claude Code, Codex, Gemini, OpenCode, Antigravity, Hermes, and Pi." width="100%" />
   </a>
 </p>
 
