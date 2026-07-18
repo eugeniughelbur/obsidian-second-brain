@@ -184,6 +184,15 @@ CONSTRAINTS:
 - If the summary contains nothing vault-worthy, exit without making any changes.
 - Match the vault's existing writing style, frontmatter schemas, and naming conventions exactly.
 - Do not archive, delete, or merge anything - only add or update.
+- SENSITIVE CONTENT stays out of entity/project/concept notes when running
+  unattended. If the summary contains credentials or secrets (API keys,
+  passwords, tokens), health details, personal finances, intimate or
+  relationship matters, or legal disputes: do NOT propagate them into normal
+  notes. Instead append a one-line pointer (topic only, no details) to a
+  staging note "Staging [TODAY].md" in the vault's inbox/capture folder per
+  _CLAUDE.md (vault root if none), so the human reviews and places it
+  deliberately. Raw secrets (the actual key/password strings) are NEVER
+  written anywhere - not even in staging; name that they exist, nothing more.
 INSTRUCTIONS
 
 log_run "starting" summary_chars "${#SUMMARY}" hints_chars "${#PROJECT_HINTS}"

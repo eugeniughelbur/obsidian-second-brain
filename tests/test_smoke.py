@@ -874,3 +874,35 @@ def test_mcp_search_supersedes_reverse_edge(tmp_path, monkeypatch):
     assert any("ADR-1" in p for p in paths) and any("ADR-2" in p for p in paths)
     assert paths.index(next(p for p in paths if "ADR-2" in p)) < \
            paths.index(next(p for p in paths if "ADR-1" in p)), paths
+
+
+def test_validate_hook_flags_secrets(tmp_path):
+    """Check 6: real key material in a vault note must warn and exit 1; naming
+    a key by env-var NAME stays clean. High precision - prose about passwords
+    is not a finding."""
+    hook = REPO_ROOT / "hooks/validate-ai-first.sh"
+    frontmatter = "---\ntype: note\ndate: 2026-07-18\ntags: [t]\nai-first: true\n---\n\n## For future Claude\n\n"
+
+    leaky = tmp_path / "leaky.md"
+    leaky.write_text(frontmatter + "key sk-test1234567890abcdefghijklmnop here\n", encoding="utf-8")
+    clean = tmp_path / "clean.md"
+    clean.write_text(frontmatter + "Use XAI_API_KEY from .env. Choose a strong password.\n", encoding="utf-8")
+
+    def run(f):
+        return subprocess.run(
+            ["bash", str(hook)],
+            input=json.dumps({"tool_input": {"file_path": str(f)}}),
+            env=dict(os.environ, OBSIDIAN_VAULT_PATH=str(tmp_path)),
+            capture_output=True, text=True,
+        )
+
+    r_leaky = run(leaky)
+    assert r_leaky.returncode == 1
+    assert "secret material" in r_leaky.stderr
+    r_clean = run(clean)
+    assert r_clean.returncode == 0, r_clean.stderr
+
+    # The bg-agent prompt must carry the sensitive-content staging constraint.
+    bg = (REPO_ROOT / "hooks/obsidian-bg-agent.sh").read_text(encoding="utf-8")
+    assert "SENSITIVE CONTENT" in bg
+    assert "NEVER" in bg and "staging" in bg.lower()
