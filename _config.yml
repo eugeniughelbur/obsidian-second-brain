@@ -1,6 +1,6 @@
 title: obsidian-second-brain
 description: >-
-  A 44-command cross-CLI skill that turns any Obsidian vault into a living
+  A 45-command cross-CLI skill that turns any Obsidian vault into a living
   AI-first second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini
   CLI, OpenCode, Google Antigravity, Nous Research Hermes, and Pi from one
   platform-neutral source. Vault management, thinking tools, scheduled agents,

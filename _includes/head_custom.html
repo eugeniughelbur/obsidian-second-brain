@@ -17,13 +17,15 @@
   ],
   "applicationCategory": "DeveloperApplication",
   "applicationSubCategory": "AI CLI skill",
-  "operatingSystem": "macOS, Linux",
-  "description": "A cross-CLI skill that turns any Obsidian vault into a living AI-first second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini CLI, OpenCode, Google Antigravity, Nous Research Hermes, and Pi from one platform-neutral source via a build-time adapter pattern. 44 commands across 4 categories (vault, thinking, research, meta), including /obsidian-architect, which scans a codebase and writes maintained architecture notes into your vault. Key-less web research, hybrid keyword+semantic retrieval, Google Calendar commands, anti-hallucination guards, and a write-time AI-first validator hook. Open-source, MIT licensed.",
+  "operatingSystem": "macOS, Linux, Windows",
+  "description": "A cross-CLI skill that turns any Obsidian vault into a living AI-first second brain. Runs in Claude Code, OpenAI Codex CLI, Google Gemini CLI, OpenCode, Google Antigravity, Nous Research Hermes, and Pi from one platform-neutral source via a build-time adapter pattern. 45 commands across 4 categories (vault, thinking, research, meta), including /obsidian-architect, which scans a codebase and writes maintained architecture notes into your vault. Key-less web research, hybrid keyword+semantic retrieval, Google Calendar commands, anti-hallucination guards, and a write-time AI-first validator hook. Open-source, MIT licensed.",
   "url": "https://github.com/eugeniughelbur/obsidian-second-brain",
   "downloadUrl": "https://github.com/eugeniughelbur/obsidian-second-brain",
   "license": "https://opensource.org/licenses/MIT",
-  "softwareVersion": "0.12.0",
-  "releaseNotes": "v0.12.0 The Stress Test: a 4-lane adversarial audit produced 175 findings and ~160 fixes across 24 PRs - data-safety hardening, retrieval 2-4x better on paraphrase queries, a native Claude Code plugin-marketplace install, and 11 permanent CI fences.",
+  "softwareRequirements": "An AI CLI (Claude Code, Codex CLI, Gemini CLI, OpenCode, Antigravity, Hermes, or Pi); Python 3.10+ with uv for the research toolkit",
+  "dateModified": "2026-07-18",
+  "softwareVersion": "0.13.0",
+  "releaseNotes": "v0.13.0 The Open Standard: one unified Agent Skills build (.agents/skills) serving Codex CLI, OpenCode, Google Antigravity, and GitHub Copilot CLI; Tavily research source; per-vault health-check excludes; seven-platform consistency.",
   "featureList": [
     "Save conversations to linked vault notes (people, projects, decisions, tasks)",
     "Self-rewriting vault: ingest sources, reconcile contradictions, synthesize patterns",
@@ -62,7 +64,7 @@
       "name": "What is obsidian-second-brain?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "obsidian-second-brain is an open-source skill that turns any Obsidian vault into an AI-first second brain you operate by talking to Claude Code (and Codex CLI, Gemini CLI, OpenCode, Antigravity, Hermes, or Pi). It reads, writes, and reasons over your notes: it saves conversations as linked notes, rewrites existing pages instead of just appending, reconciles contradictions, and surfaces patterns. 44 commands, MIT licensed."
+        "text": "obsidian-second-brain is an open-source skill that turns any Obsidian vault into an AI-first second brain you operate by talking to Claude Code (and Codex CLI, Gemini CLI, OpenCode, Antigravity, Hermes, or Pi). It reads, writes, and reasons over your notes: it saves conversations as linked notes, rewrites existing pages instead of just appending, reconciles contradictions, and surfaces patterns. 45 commands, MIT licensed."
       }
     },
     {
@@ -95,6 +97,14 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Yes. One platform-neutral source compiles into platform-specific builds via a build-time adapter pattern: Claude Code (slash commands), a unified Agent Skills tree at .agents/skills/ that Codex CLI, OpenCode, and Google Antigravity all discover natively, Gemini CLI (GEMINI.md), Hermes (native skills), and Pi (a Pi package). The same commands work across all seven platforms."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I update it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude Code plugin installs update with /plugin update obsidian-second-brain. Classic symlink installs update with git pull. Dist builds copied into a vault (Codex, OpenCode, Antigravity, Gemini, Pi) update with scripts/update-vault-integration.sh - a guarded updater that pulls fast-forward-only, rebuilds, gates on the smoke tests, backs up your current integration, and rolls back on any failure."
       }
     },
     {

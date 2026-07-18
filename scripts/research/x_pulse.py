@@ -78,7 +78,7 @@ def main(argv: list[str]) -> int:
     preamble = (
         f"For future Claude: This note is a Grok Live Search scan of X discourse "
         f"about \"{topic}\" performed on {now.strftime('%Y-%m-%d %H:%M')}. It captures "
-        f"emerging themes, gaps, hook formats, and content angles for Eugeniu's posting strategy. "
+        f"emerging themes, gaps, hook formats, and content angles for the user's posting strategy. "
         f"X posts are time-sensitive - claims here may be stale within days."
     )
     fm = {

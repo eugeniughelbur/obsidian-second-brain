@@ -21,7 +21,7 @@ Requires Ollama (https://ollama.com) with an embedding model pulled:
     ollama pull bge-m3
 Configure via env: OLLAMA_URL (default http://localhost:11434),
 OBSIDIAN_EMBED_MODEL (default bge-m3, multilingual),
-OBSIDIAN_EMBED_EXCLUDE (default empty; e.g. "wiki/private/,Faith,Masha").
+OBSIDIAN_EMBED_EXCLUDE (default empty; e.g. "wiki/private/,Journal,Private").
 """
 
 from __future__ import annotations

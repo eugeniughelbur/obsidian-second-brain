@@ -32,7 +32,7 @@ The optional argument is the format: `json` (default), `markdown`, or `okf`.
    **JSON** (default):
    ```json
    {
-     "vault": "Eugeniu's Vault",
+     "vault": "Example Vault",
      "exported": "2026-04-07",
      "total_notes": 238,
      "notes": [
@@ -40,8 +40,8 @@ The optional argument is the format: `json` (default), `markdown`, or `okf`.
          "path": "wiki/entities/Ada Lovelace.md",
          "title": "Ada Lovelace",
          "type": "entity",
-         "summary": "CEO of Single Grain...",
-         "links_to": ["Single Grain", "Centralized API Gateway"],
+         "summary": "CEO of Currentscale Labs...",
+         "links_to": ["Currentscale Labs", "Tide Gateway"],
          "tags": ["entity", "person"]
        }
      ]

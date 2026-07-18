@@ -2,16 +2,21 @@ cff-version: 1.2.0
 message: "If you use this software in research or write about it, please cite as below."
 title: "obsidian-second-brain"
 abstract: >
-  A 34-command cross-CLI skill that turns any Obsidian vault into a living
+  A 45-command cross-CLI skill that turns any Obsidian vault into a living
   AI-first second brain. Runs in Claude Code, OpenAI Codex CLI, Google
-  Gemini CLI, and OpenCode from one platform-neutral source via a
-  build-time adapter pattern. Includes vault management, thinking tools,
-  scheduled agents, and a dual-track research toolkit: open-web via
-  Perplexity + Grok, and vault-grounded via Google Gemini File Search.
-  Also ships a write-time AI-first validator hook and an interview-driven
-  /create-command flow for user-built extensions. Vault notes follow a
-  strict AI-first design rule optimized for future-Claude retrieval
-  rather than human reading.
+  Gemini CLI, OpenCode, Google Antigravity, Nous Research Hermes, and Pi
+  from one platform-neutral source via a build-time adapter pattern,
+  including a unified Agent Skills build (one .agents/skills tree serving
+  Codex, OpenCode, Antigravity, and GitHub Copilot CLI). Includes vault
+  management, thinking tools, scheduled agents, hybrid lexical+semantic
+  retrieval with freshness and supersession reranking, and a dual-track
+  research toolkit: open-web via Perplexity + Grok (with optional Tavily
+  and Brave sources and full-page reading), and vault-grounded via Google
+  Gemini File Search. Also ships a write-time AI-first validator hook with
+  secret detection, an opt-in bounded-recall hook, a guarded updater, and
+  an interview-driven /create-command flow. Vault notes follow a strict
+  AI-first design rule optimized for future-Claude retrieval rather than
+  human reading.
 authors:
   - family-names: "Ghelbur"
     given-names: "Eugeniu"

@@ -534,7 +534,7 @@ def test_semantic_search_math_and_carveout(monkeypatch):
     carve-out excludes configured path prefixes."""
     import importlib
     sys.path.insert(0, str(REPO_ROOT / "scripts/eval"))
-    monkeypatch.setenv("OBSIDIAN_EMBED_EXCLUDE", "wiki/private/,Faith")
+    monkeypatch.setenv("OBSIDIAN_EMBED_EXCLUDE", "wiki/private/,Journal")
     ss = importlib.reload(importlib.import_module("semantic_search"))
 
     assert ss.cosine([1, 2, 3], [1, 2, 3]) == 1.0
@@ -543,8 +543,8 @@ def test_semantic_search_math_and_carveout(monkeypatch):
 
     # carve-out: configured prefixes never get embedded
     assert ss._excluded("wiki/private/diary.md")
-    assert ss._excluded("Faith/prayer.md")
-    assert not ss._excluded("wiki/projects/Codru.md")
+    assert ss._excluded("Journal/diary.md")
+    assert not ss._excluded("wiki/projects/Tide Gateway.md")
 
     # hybrid RRF: a note present in both rankings outranks one present in only one
     monkeypatch.setattr(ss, "semantic_search",

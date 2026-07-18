@@ -129,7 +129,7 @@ Claude should auto-save the following **without asking**:
 
 Claude should **ask before saving**:
 - Anything touching Finances/ or personal financial data
-- Faith/ or Partner/ (private notes)
+- Private/ or Journal/ (private notes)
 - Anything that involves deleting or archiving an existing note
 
 ---
@@ -216,7 +216,7 @@ Completed:
 ## Do Not Touch
 
 - `Templates/` - Never modify templates during normal vault operations
-- `Faith/` - Private. Read only if directly asked.
+- `Private/` - Private. Read only if directly asked.
 - `[Other private folders]` - [Reason]
 
 ---

@@ -13,7 +13,7 @@ A vault skill is only as useful as the domain knowledge it carries. PubMed routi
 Instead, upstream ships the **primitives** that forks plug into:
 
 - Vault management, AI-first rule enforcement, the rewrite engine
-- Multi-platform adapter layer (Claude Code / Codex CLI / Gemini CLI / OpenCode)
+- Multi-platform adapter layer (Claude Code / Codex CLI / Gemini CLI / OpenCode / Antigravity / Hermes / Pi, incl. the unified Agent Skills build)
 - The generic research toolkit shape (Phase 1 vault scan, Phase 2/3 external research, Phase 4 synthesis)
 - A pluggable **Backend protocol** for Phase 3 (in progress, per [Discussion #38](https://github.com/eugeniughelbur/obsidian-second-brain/discussions/38)) so any domain can add its own research backends without forking the engine
 

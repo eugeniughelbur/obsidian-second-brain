@@ -25,7 +25,7 @@ The optional argument is a scope: an EXACT note title or alias (a project, an en
    {
      "nodes": [
        {"id": "1", "type": "file", "file": "wiki/entities/Ada Lovelace.md", "x": 0, "y": 0, "width": 250, "height": 60},
-       {"id": "2", "type": "file", "file": "wiki/projects/Centralized API Gateway.md", "x": 300, "y": 0, "width": 250, "height": 60}
+       {"id": "2", "type": "file", "file": "wiki/projects/Tide Gateway.md", "x": 300, "y": 0, "width": 250, "height": 60}
      ],
      "edges": [
        {"id": "e1", "fromNode": "1", "toNode": "2"}
