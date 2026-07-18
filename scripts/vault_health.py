@@ -40,6 +40,58 @@ EXCLUDE_DIRS = {
 }
 FILE_INDEX_EXCLUDE_DIRS = EXCLUDE_DIRS - {"Templates"}
 EXCLUDE_ROOT_FILES = {"AGENTS.md", "INSTALL.md"}
+
+
+# User-configurable excludes loaded from `<vault>/.vault-config.json`.
+# Schema:
+#   {
+#     "exclude-dirs":  ["_蒸馏池_书稿", "_candidates", ...],   # merged with EXCLUDE_DIRS
+#     "exclude-paths": ["Archive_归档/04_备份", ...]            # path-prefix exclusions
+#   }
+# `exclude-dirs` adds dir names to the skip check; `exclude-paths` matches any
+# vault-relative path that starts with one of the prefixes (POSIX separator).
+# Both lists are optional and additive - the hardcoded EXCLUDE_DIRS always applies.
+_USER_EXCLUDES: dict = {"dirs": set(), "paths": []}
+
+
+def load_vault_config(vault: Path) -> dict:
+    cfg_path = vault / ".vault-config.json"
+    out = {"dirs": set(), "paths": []}
+    if not cfg_path.is_file():
+        return out
+    try:
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return out
+    if not isinstance(data, dict):
+        return out
+    raw_dirs = data.get("exclude-dirs", [])
+    if isinstance(raw_dirs, list):
+        out["dirs"] = {str(d) for d in raw_dirs if isinstance(d, str) and d}
+    raw_paths = data.get("exclude-paths", [])
+    if isinstance(raw_paths, list):
+        out["paths"] = [str(p).strip("/") for p in raw_paths if isinstance(p, str) and p]
+    return out
+
+
+def _should_skip_path(rel_parts: tuple[str, ...], rel_posix: str) -> bool:
+    if any(p in EXCLUDE_DIRS for p in rel_parts):
+        return True
+    if _USER_EXCLUDES["dirs"] and any(p in _USER_EXCLUDES["dirs"] for p in rel_parts):
+        return True
+    if _USER_EXCLUDES["paths"]:
+        for prefix in _USER_EXCLUDES["paths"]:
+            if rel_posix == prefix or rel_posix.startswith(prefix + "/"):
+                return True
+    return False
+
+
+def _should_skip_path_file_index(rel_parts: tuple[str, ...]) -> bool:
+    if any(p in FILE_INDEX_EXCLUDE_DIRS for p in rel_parts):
+        return True
+    if _USER_EXCLUDES["dirs"] and any(p in _USER_EXCLUDES["dirs"] for p in rel_parts):
+        return True
+    return False
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 # A note whose entire body was accidentally saved inside a ```markdown code fence:
 # the first non-blank line opens a fence and the real frontmatter (---) lives INSIDE it.
@@ -81,7 +133,7 @@ def index_vault_files(vault: Path) -> set:
     files = set()
     for f in vault.rglob("*"):
         parts = f.relative_to(vault).parts
-        if any(p in FILE_INDEX_EXCLUDE_DIRS for p in parts):
+        if _should_skip_path_file_index(parts):
             continue
         if len(parts) == 1 and parts[0] in EXCLUDE_ROOT_FILES:
             continue
@@ -100,7 +152,10 @@ def load_vault(vault: Path) -> dict:
         # <%...%> Templater syntax is intentional, not a "template leftover" bug.
         if len(parts) == 1 and parts[0] in EXCLUDE_ROOT_FILES:
             continue
-        if any(p in EXCLUDE_DIRS or p.lower().endswith("templates") for p in parts):
+        if any(p.lower().endswith("templates") for p in parts):
+            continue
+        rel_posix = md.relative_to(vault).as_posix()
+        if _should_skip_path(parts, rel_posix):
             continue
         # rglob matches names, not files: a dangling symlink or a directory named
         # *.md would crash the read and abort the whole scan (stress-test fix 2/24).
@@ -305,7 +360,8 @@ def check_code_fence_wrapped(notes: dict) -> list:
 def check_empty_folders(vault: Path) -> list:
     issues = []
     for folder in vault.rglob("*/"):
-        if any(p in EXCLUDE_DIRS for p in folder.parts):
+        rel_posix = folder.relative_to(vault).as_posix()
+        if _should_skip_path(folder.parts, rel_posix):
             continue
         if not folder.is_dir():
             continue
@@ -476,6 +532,8 @@ def check_template_leftovers(notes: dict) -> list:
 def run_health_check(vault: Path) -> dict:
     # Progress goes to stderr so `--json` stdout is clean and machine-parseable.
     print(f"🔍 Scanning vault: {vault}\n", file=sys.stderr)
+    _USER_EXCLUDES.clear()
+    _USER_EXCLUDES.update(load_vault_config(vault))
     notes = load_vault(vault)
     print(f"   Found {len(notes)} notes\n", file=sys.stderr)
 
