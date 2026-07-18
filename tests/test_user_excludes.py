@@ -96,3 +96,37 @@ def test_malformed_config_is_silently_ignored(tmp_path):
     payload = _health(vault)
     assert isinstance(payload, dict)
     assert "issues" in payload
+
+
+def test_link_scan_defaults_skip_echo_notes(tmp_path):
+    """Broken links quoted in log.md or a prior Vault Health report must not be
+    re-reported (they echo findings, they don't own them) - while the same link
+    in a regular note IS reported."""
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "real.md").write_text("# Real\n\nSee [[Missing Note]].\n", encoding="utf-8")
+    (vault / "log.md").write_text("## 2026-07-18\n- flagged [[Missing Note]] and [[Echo Only]]\n", encoding="utf-8")
+    (vault / "Vault Health 2026-07-11.md").write_text("- broken: [[Echo Only]]\n", encoding="utf-8")
+
+    wanted = [i for i in _health(vault).get("issues", []) if i["type"] == "wanted_note"]
+    messages = " | ".join(i["message"] for i in wanted)
+    # The real note's link is still reported.
+    assert "Missing Note" in messages
+    # Echo Only appears ONLY in excluded notes, so it must not be reported at all.
+    assert "Echo Only" not in messages
+
+
+def test_link_scan_user_globs_from_config(tmp_path):
+    """`exclude-link-scan` globs in .vault-config.json extend the defaults."""
+    vault = tmp_path / "vault"
+    (vault / "Meetings").mkdir(parents=True)
+    (vault / "Meetings" / "2024-01-01 standup.md").write_text("[[Never Written]]\n", encoding="utf-8")
+    (vault / "Meetings" / "2026-01-01 standup.md").write_text("[[Never Written]]\n", encoding="utf-8")
+
+    _write_config(vault, {"exclude-link-scan": ["Meetings/2024-*"]})
+
+    wanted = [i for i in _health(vault).get("issues", []) if i["type"] == "wanted_note"]
+    files = [f for i in wanted for f in i["files"]]
+    # The 2026 meeting still reports its broken link; the 2024 one is excluded.
+    assert any("2026-01-01" in f for f in files)
+    assert not any("2024-01-01" in f for f in files)

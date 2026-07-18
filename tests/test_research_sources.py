@@ -187,3 +187,113 @@ def test_free_sources_include_tavily_only_with_key(monkeypatch):
     # Academic mode stays untouched either way.
     academic = {type(s).__name__ for s in research._free_sources(academic=True)}
     assert "TavilySource" not in academic
+
+
+def test_brave_source_search(monkeypatch, tmp_path):
+    """BraveSource hits the REST API with the X-Subscription-Token header and
+    maps web.results to Result objects; rows without a URL are dropped."""
+    from unittest.mock import MagicMock
+
+    from scripts.research.lib.sources.brave import BraveSource
+
+    monkeypatch.setenv("BRAVE_API_KEY", "brv-test-key")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+
+    fake_resp = MagicMock()
+    fake_resp.json.return_value = {
+        "web": {
+            "results": [
+                {"title": "Brave Result", "url": "https://example.com", "description": "A snippet"},
+                {"title": "dropped", "url": "", "description": "no url"},
+            ]
+        }
+    }
+    fake_resp.raise_for_status.return_value = None
+
+    src = BraveSource()
+    fake_session = MagicMock()
+    fake_session.get.return_value = fake_resp
+    src._session = fake_session
+
+    results = src.search("test query", n=5)
+
+    assert len(results) == 1
+    assert results[0].source == "brave"
+    assert results[0].title == "Brave Result"
+    assert results[0].snippet == "A snippet"
+    _, kwargs = fake_session.get.call_args
+    assert kwargs["headers"]["X-Subscription-Token"] == "brv-test-key"
+    assert kwargs["params"]["count"] == 5
+
+    monkeypatch.delenv("BRAVE_API_KEY")
+    with pytest.raises(RuntimeError):
+        BraveSource()
+
+
+def test_free_sources_gate_brave_on_key(monkeypatch):
+    """Brave joins the free-mode pool only when BRAVE_API_KEY is set."""
+    from scripts.research import research
+
+    monkeypatch.delenv("BRAVE_API_KEY", raising=False)
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    without = {type(s).__name__ for s in research._free_sources(academic=False)}
+    assert "BraveSource" not in without
+
+    monkeypatch.setenv("BRAVE_API_KEY", "brv-test-key")
+    with_key = {type(s).__name__ for s in research._free_sources(academic=False)}
+    assert "BraveSource" in with_key
+
+
+def test_usage_ledger_is_fail_soft(monkeypatch, tmp_path, capsys):
+    """A broken ledger path must warn and return - never raise into the paid
+    call it observes (the api-ledger fork's fail-soft contract)."""
+    from scripts.research.lib import usage
+
+    # Point the ledger at a path whose parent is a FILE - mkdir will fail.
+    blocker = tmp_path / "blocker"
+    blocker.write_text("not a dir")
+    monkeypatch.setattr(usage, "USAGE_LOG", blocker / "usage.log")
+
+    usage.log_call("research", "sonar-pro", 100, 200, 0.01)  # must not raise
+    assert "could not record call" in capsys.readouterr().err
+
+
+def test_perplexity_cost_estimate_known_and_unknown_models():
+    from scripts.research.lib import usage
+
+    known = usage.estimate_perplexity_cost("sonar-pro", 1_000_000, 1_000_000)
+    assert known == pytest.approx(3.00 + 15.00)
+    # Unknown model: log tokens, never invent a price.
+    assert usage.estimate_perplexity_cost("sonar-reasoning-pro", 1_000_000, 1_000_000) == 0.0
+
+
+def test_gemini_call_maps_response_and_uses_header_auth(monkeypatch, tmp_path):
+    """gemini.call returns the grok.call shape, and the key travels in the
+    x-goog-api-key header - never in the URL query string."""
+    from unittest.mock import MagicMock
+
+    monkeypatch.setenv("GEMINI_API_KEY", "gem-test-key")
+    monkeypatch.setattr("scripts.research.lib.usage.USAGE_LOG", tmp_path / "usage.log")
+    from scripts.research.lib import gemini
+
+    fake_resp = MagicMock()
+    fake_resp.status_code = 200
+    fake_resp.json.return_value = {
+        "candidates": [{"content": {"parts": [{"text": "summary "}, {"text": "text"}]}}],
+        "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 20},
+    }
+
+    captured = {}
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        captured.update(url=url, headers=headers)
+        return fake_resp
+
+    monkeypatch.setattr(gemini.requests, "post", fake_post)
+    result = gemini.call("summarize this", command="youtube")
+
+    assert result["text"] == "summary text"
+    assert result["input_tokens"] == 10 and result["output_tokens"] == 20
+    assert captured["headers"]["x-goog-api-key"] == "gem-test-key"
+    assert "key=" not in captured["url"]

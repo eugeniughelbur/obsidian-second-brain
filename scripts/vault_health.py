@@ -27,6 +27,7 @@ A missing or malformed file is ignored silently. See VaultExcludes.
 
 import argparse
 import difflib
+import fnmatch
 import json
 import re
 import sys
@@ -89,15 +90,27 @@ class VaultExcludes:
 
         {
           "exclude-dirs":  ["_card-pool", "_candidates"],  # dir names, matched as path components
-          "exclude-paths": ["Archive/Backup"]              # vault-relative path prefixes (POSIX)
+          "exclude-paths": ["Archive/Backup"],             # vault-relative path prefixes (POSIX)
+          "exclude-link-scan": ["Meetings/2024-*"]         # globs: notes whose OUTGOING links are not audited
         }
+
+    `exclude-link-scan` exists because some notes echo every link they mention
+    without owning them - activity logs and prior health reports quote broken
+    links verbatim, so auditing them re-reports each finding once per echo
+    (fork-insights round 2). Built-in defaults: `_CLAUDE.md`, `log.md`, and
+    `Vault Health*` report notes. Globs match the bare filename and the
+    vault-relative path.
     """
 
-    __slots__ = ("dirs", "paths")
+    __slots__ = ("dirs", "paths", "link_scan")
 
-    def __init__(self, dirs=None, paths=None):
+    #: Notes whose outgoing links are never audited (see class docstring).
+    DEFAULT_LINK_SCAN_EXCLUDES = ("_CLAUDE.md", "log.md", "Vault Health*")
+
+    def __init__(self, dirs=None, paths=None, link_scan=None):
         self.dirs = dirs or set()
         self.paths = paths or []
+        self.link_scan = list(self.DEFAULT_LINK_SCAN_EXCLUDES) + list(link_scan or [])
 
     def skip(self, parts, rel_posix) -> bool:
         """True if a vault path is excluded from the scan (hardcoded + user rules)."""
@@ -106,6 +119,16 @@ class VaultExcludes:
         if self.dirs and any(p in self.dirs for p in parts):
             return True
         return any(rel_posix == pre or rel_posix.startswith(pre + "/") for pre in self.paths)
+
+    def skip_link_scan(self, rel_posix: str) -> bool:
+        """True if this note's OUTGOING links are excluded from the audit.
+        The note itself still resolves as a link target and is scanned by
+        every other check - only its outgoing-link report is suppressed."""
+        name = rel_posix.rsplit("/", 1)[-1]
+        return any(
+            fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(rel_posix, pat)
+            for pat in self.link_scan
+        )
 
     def skip_file_index(self, parts) -> bool:
         """True if a path is excluded from the file index used for link resolution.
@@ -138,13 +161,17 @@ def load_vault_config(vault: Path) -> VaultExcludes:
         return VaultExcludes()
     raw_dirs = data.get("exclude-dirs", [])
     raw_paths = data.get("exclude-paths", [])
+    raw_link = data.get("exclude-link-scan", [])
     dirs = set()
     if isinstance(raw_dirs, list):
         dirs = {d for d in raw_dirs if isinstance(d, str) and d}
     paths = []
     if isinstance(raw_paths, list):
         paths = [p.strip("/") for p in raw_paths if isinstance(p, str) and p.strip("/")]
-    return VaultExcludes(dirs, paths)
+    link_scan = []
+    if isinstance(raw_link, list):
+        link_scan = [g for g in raw_link if isinstance(g, str) and g]
+    return VaultExcludes(dirs, paths, link_scan)
 
 
 def index_vault_files(vault: Path, excludes=None) -> set:
@@ -483,14 +510,16 @@ def check_wanted_notes(notes: dict, vault: Path, excludes=None) -> list:
         for alias in note["aliases"]:
             all_aliases[alias.lower()] = rel
 
-    # Operating manuals contain example wikilinks like [[wikilinks]], [[Related Project]],
-    # [[Links]] as syntax demonstrations, not as real references. Skip them from the
-    # scan so they don't generate dozens of false positives per scan.
-    SKIP_FROM_LINK_SCAN = {"_CLAUDE.md"}
+    # Some notes echo links without owning them: operating manuals show example
+    # wikilinks as syntax demonstrations, and activity logs / prior health
+    # reports quote every audited link verbatim - scanning them re-reports each
+    # finding once per echo. Defaults (_CLAUDE.md, log.md, Vault Health*) live
+    # on VaultExcludes; users extend via .vault-config.json "exclude-link-scan".
+    excludes = excludes or _NO_EXCLUDES
 
     issues = []
     for rel, note in notes.items():
-        if Path(rel).name in SKIP_FROM_LINK_SCAN:
+        if excludes.skip_link_scan(Path(rel).as_posix()):
             continue
         # Re-extract links from code-stripped content so example wikilinks inside
         # code fences / inline code are not counted (issue #82).

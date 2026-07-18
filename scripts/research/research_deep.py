@@ -234,7 +234,7 @@ def run_paid_deep(topic: str) -> int:
     print(f"[/research-deep] Phase 2: identifying gaps via Perplexity (sonar-pro, fast)...", file=sys.stderr)
     gap_prompt = GAP_PROMPT.format(topic=topic, today=today, baseline=baseline)
     try:
-        gap_result = perplexity.call(gap_prompt, deep=False, max_tokens=2000)
+        gap_result = perplexity.call(gap_prompt, deep=False, max_tokens=2000, command="research-deep")
     except Exception as e:
         print(f"Phase 2 (gap analysis) failed: {e}", file=sys.stderr)
         return 1
@@ -250,7 +250,7 @@ def run_paid_deep(topic: str) -> int:
         try:
             if src == "web":
                 print(f"  [web] {q}", file=sys.stderr)
-                r = perplexity.call(f"Research this question: {q}\n\nReturn 3-5 specific facts with recency markers (date) and source domain. Be concise.", deep=False, max_tokens=1200)
+                r = perplexity.call(f"Research this question: {q}\n\nReturn 3-5 specific facts with recency markers (date) and source domain. Be concise.", deep=False, max_tokens=1200, command="research-deep")
                 findings_chunks.append(f"### Web - {q}\n\n{r['text']}")
                 for c in r.get("citations", []):
                     if isinstance(c, dict):
@@ -284,7 +284,7 @@ def run_paid_deep(topic: str) -> int:
     try:
         # Use sonar-reasoning-pro for synthesis (follows instructions, supports markdown structure).
         # sonar-deep-research has a hardcoded "10k-word academic narrative" that overrides our prompt.
-        synth = perplexity.call(synth_prompt, model="sonar-reasoning-pro", max_tokens=3500)
+        synth = perplexity.call(synth_prompt, model="sonar-reasoning-pro", max_tokens=3500, command="research-deep")
     except Exception as e:
         print(f"Phase 4 (synthesis) failed: {e}", file=sys.stderr)
         return 1

@@ -18,6 +18,7 @@ Default behavior: print to chat AND save AI-first note to Research/YouTube/.
 
 import argparse
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -185,12 +186,24 @@ def main(argv: list[str]) -> int:
         comments_section=comments_section,
     )
 
-    print(f"[/youtube] Summarizing via Grok...\n", file=sys.stderr)
-    try:
-        result = grok.call(prompt, command="youtube", max_output_tokens=3000)
-    except Exception as e:
-        print(f"\n❌ /youtube summarize failed: {e}", file=sys.stderr)
-        return 1
+    # Prefer Gemini for the summary when its key is set (generous free tier),
+    # fall back to Grok - transparently, since gemini.call mirrors grok.call's
+    # return shape. No Gemini key = exactly the old Grok-only behavior.
+    result = None
+    if os.environ.get("GEMINI_API_KEY", "").strip():
+        print(f"[/youtube] Summarizing via Gemini (free tier)...\n", file=sys.stderr)
+        try:
+            from .lib import gemini
+            result = gemini.call(prompt, command="youtube", max_output_tokens=3000)
+        except Exception as e:  # noqa: BLE001 - fall back to Grok on any Gemini failure
+            print(f"[/youtube] Gemini failed ({e}); falling back to Grok...", file=sys.stderr)
+    if result is None:
+        print(f"[/youtube] Summarizing via Grok...\n", file=sys.stderr)
+        try:
+            result = grok.call(prompt, command="youtube", max_output_tokens=3000)
+        except Exception as e:
+            print(f"\n❌ /youtube summarize failed: {e}", file=sys.stderr)
+            return 1
 
     print(f"# {title}")
     print(f"**Channel:** {channel} · **Published:** {published}")

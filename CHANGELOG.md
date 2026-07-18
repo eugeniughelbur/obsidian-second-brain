@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Fork gold, round 2 - four upgrades mined from the 2026-07-18 sweep of all 408 forks** (see `FORK_INSIGHTS.md` round 2; each idea credited to the fork that built it there):
+  - **Brave Search as an optional research source.** When `BRAVE_API_KEY` is set, Brave joins the `/research` free-mode pool (free tier: 2,000 queries/month as of 2026-07); without it the pool stays fully key-less. Same plain-requests + shared-cache shape as the Tavily source; the key travels in the `X-Subscription-Token` header.
+  - **The usage ledger now covers Perplexity, and can never break a paid call.** `usage.log_call` previously logged only Grok calls and would raise on an unwritable ledger path - failing the research call it was observing. It is now fail-soft by contract (warns on stderr, never raises), and every Perplexity call logs tokens plus an estimated cost (sonar/sonar-pro/sonar-deep-research rates as of 2026-07; unknown models log tokens with cost 0.0 rather than inventing a price). `/research` and `/research-deep` label their entries so per-command spend is auditable.
+  - **`/youtube` summarizes via Gemini when `GEMINI_API_KEY` is set, with automatic Grok fallback.** New `lib/gemini.py` mirrors `grok.call`'s return shape (drop-in swap), retries with backoff, logs to the usage ledger, and sends the key in the `x-goog-api-key` header - never in the URL query string, so it cannot leak into access logs. `gemini-2.5-flash` default (generous free tier); no Gemini key means exactly the old Grok-only behavior.
+  - **The health check no longer re-reports links echoed by logs and old reports.** Activity logs and prior health reports quote every broken link they mention without owning it, so the wanted-notes scan counted each finding once per echo. Notes matching `_CLAUDE.md`, `log.md`, or `Vault Health*` are now excluded from the outgoing-link audit by default (they still resolve as link targets and get every other check), and `.vault-config.json` gains an `exclude-link-scan` glob list for user extensions. Covered by `tests/test_user_excludes.py`.
+
 ## [0.13.0] - 2026-07-18 - The Open Standard
 
 ### Security

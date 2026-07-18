@@ -5,6 +5,7 @@ import time
 import requests
 from typing import Any
 
+from . import usage
 from .config import PERPLEXITY_API_KEY, PERPLEXITY_RESEARCH_MODEL, PERPLEXITY_DEEP_MODEL
 
 API_URL = "https://api.perplexity.ai/chat/completions"
@@ -16,7 +17,7 @@ BACKOFF_SECONDS = (1, 3, 8)
 _THINK_BLOCK = re.compile(r"<think>.*?</think>\s*", re.DOTALL | re.IGNORECASE)
 
 
-def call(prompt: str, *, model: str | None = None, deep: bool = False, max_tokens: int = 4000) -> dict[str, Any]:
+def call(prompt: str, *, model: str | None = None, deep: bool = False, max_tokens: int = 4000, command: str = "research") -> dict[str, Any]:
     model = model or (PERPLEXITY_DEEP_MODEL if deep else PERPLEXITY_RESEARCH_MODEL)
     headers = {
         "Authorization": f"Bearer {PERPLEXITY_API_KEY()}",
@@ -42,6 +43,17 @@ def call(prompt: str, *, model: str | None = None, deep: bool = False, max_token
                     text = text.split("<think>")[0]
                 text = text.strip()
                 citations = data.get("citations") or data.get("search_results") or []
+                # Record the paid call in the shared usage ledger (fail-soft;
+                # log_call itself never raises). Token counts come from the
+                # OpenAI-shaped `usage` block when present.
+                u = data.get("usage") or {}
+                in_tok = int(u.get("prompt_tokens") or 0)
+                out_tok = int(u.get("completion_tokens") or 0)
+                usage.log_call(
+                    command, model, in_tok, out_tok,
+                    usage.estimate_perplexity_cost(model, in_tok, out_tok),
+                    extra={"provider": "perplexity"},
+                )
                 return {
                     "text": text,
                     "citations": citations,

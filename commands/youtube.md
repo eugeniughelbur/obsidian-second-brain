@@ -1,5 +1,5 @@
 ---
-description: Extract transcript, metadata, and top comments from a YouTube video - summarized via Grok and saved to vault. Add --visual to also read the video's frames (scene detection)
+description: Extract transcript, metadata, and top comments from a YouTube video - summarized via Gemini (free tier) or Grok and saved to vault. Add --visual to also read the video's frames (scene detection)
 category: research
 triggers_en: ["summarize youtube", "youtube transcript", "extract video", "youtube to vault", "watch this video", "what's on screen in this video"]
 triggers_es: ["resume este vídeo de youtube", "transcripción de youtube", "extrae este vídeo", "youtube al vault", "mira este vídeo", "qué se ve en este vídeo"]
@@ -21,7 +21,7 @@ Use the obsidian-second-brain skill. Execute `/youtube [url] [--visual]`:
 3. The script:
    - Extracts the transcript via `youtube-transcript-api` (free, no API key).
    - If `YOUTUBE_API_KEY` is set, also fetches title, channel, view/like counts, top comments. Otherwise skips metadata silently.
-   - Sends the transcript (and optional comments) to Grok for AI-first summarization.
+   - Sends the transcript (and optional comments) for AI-first summarization: Gemini (`gemini-2.5-flash`, generous free tier) when `GEMINI_API_KEY` is set, otherwise Grok; a Gemini failure falls back to Grok automatically.
    - Returns: TL;DR, Key Points, Notable Quotes, Themes & Topics, Comment Sentiment, Worth Following Up On.
    - With `--visual`: downloads the video (yt-dlp, <=720p) and extracts one frame per scene change (ffmpeg scene detection, not a fixed timer), so visual substance is captured. Hero frames are copied into the vault and embedded in the note; the full keyframe set is left on disk for you to read. Requires `yt-dlp` and `ffmpeg` on PATH (`brew install yt-dlp ffmpeg`). If either is missing or download fails, the visual layer is skipped with a warning and the transcript summary still saves.
 

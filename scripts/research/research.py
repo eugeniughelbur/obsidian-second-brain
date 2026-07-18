@@ -85,13 +85,17 @@ def _free_sources(academic: bool):
         SemanticScholarSource(),
     ]
 
-    # Optional paid extra: Tavily joins the pool when its key is set. The
-    # shared .env is already loaded by main() via source_config (the #125
-    # lesson: never read a key before load_dotenv has run).
+    # Optional keyed extras join the pool when their key is set. The shared
+    # .env is already loaded by main() via source_config (the #125 lesson:
+    # never read a key before load_dotenv has run).
     if os.environ.get("TAVILY_API_KEY", "").strip():
         from .lib.sources.tavily import TavilySource
 
         sources.append(TavilySource())
+    if os.environ.get("BRAVE_API_KEY", "").strip():
+        from .lib.sources.brave import BraveSource
+
+        sources.append(BraveSource())
 
     return sources
 
