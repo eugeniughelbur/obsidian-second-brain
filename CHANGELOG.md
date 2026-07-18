@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Deprecated
 
-- **The `codex-cli` and `opencode` per-platform builds are deprecated in favor of the unified `agent-skills` build (0.13.0).** Both emit into the same `.agents/skills/` layout the new build does, so they are redundant now that one spec-compliant tree serves Codex CLI, OpenCode, and Google Antigravity together and installs via `npx skills`. Their generated `INSTALL.md` now carries a deprecation banner pointing at `dist/agent-skills/INSTALL.md`; the builds still work and will be removed in a future release. `claude-code`, `gemini-cli`, `hermes`, and `pi` are unaffected.
+- **The `codex-cli` and `opencode` per-platform builds are deprecated in favor of the unified `agent-skills` build (0.13.0).** The `codex-cli` build emits into the same `.agents/skills/` layout the unified build covers, and OpenCode natively reads `.agents/skills/` directly (verified live: all 44 skills load from the unified tree with zero validation warnings), so both per-platform builds are redundant now that one spec-compliant tree serves Codex CLI, OpenCode, and Google Antigravity together and installs via `npx skills`. Their generated `INSTALL.md` now carries a deprecation banner pointing at `dist/agent-skills/INSTALL.md`; the builds still work and will be removed in a future release. `claude-code`, `gemini-cli`, `hermes`, and `pi` are unaffected.
 
 ### Fixed
 
