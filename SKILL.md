@@ -102,7 +102,7 @@ See `references/vault-schema.md` for full structural details.
 ## Core Operating Principles
 
 ### AI-first vault rule (applies to every note)
-The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 44 commands - must follow `references/ai-first-rules.md`:
+The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 45 commands - must follow `references/ai-first-rules.md`:
 
 1. **Self-contained context** - each note explains itself; don't rely on backlinks alone
 2. **"For future Claude" preamble** - 2-3 sentence summary so Claude can decide relevance in 10 seconds
@@ -685,6 +685,14 @@ A single ingest should touch 5-15 files. Compile knowledge once, distribute ever
 ## Thinking Tools
 
 These commands use the vault as a thinking partner - not just storage. They surface insights, challenge assumptions, and generate connections that the user cannot see on their own.
+
+---
+
+### `/obsidian-brainstorm`
+
+**Multi-turn Socratic brainstorm - the only stateful thinking tool.**
+
+Every other thinking tool is a single-shot analytical pass; this one interviews the user one question per turn (multiple-choice preferred) across six categories - problem framing, constraints, trade-off forcing, scope bounding, prior-decision linking, anti-goals - until an internal 6-item convergence checklist reaches at least 5, then presents 2-3 named approaches with exactly one (Recommended), and writes a `type: brainstorm` note (conclusions and reasoning, never the transcript). Grounds its questions in the vault first: related decisions, contradictions, and open questions become interview material. Offers `/obsidian-graduate` or `/obsidian-decide` when the outcome is project- or ADR-shaped. Full flow in `commands/obsidian-brainstorm.md`.
 
 ---
 

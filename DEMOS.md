@@ -16,7 +16,7 @@ Tape: [media/obsidian-save.tape](media/obsidian-save.tape)
 
 ## Install as a Claude Code plugin
 
-Two commands and the whole skill is installed: 44 commands, the session hooks, and the vault MCP server.
+Two commands and the whole skill is installed: 45 commands, the session hooks, and the vault MCP server.
 
 <img src="media/plugin-install.gif" alt="Adding the marketplace from GitHub, installing the plugin, and the plugin list showing status enabled." width="100%" />
 

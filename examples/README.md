@@ -37,7 +37,7 @@ Everything here is fictional. **Alex Rivera**, **Sam Patel**, **Tide**, **Curren
 
 ## How to use this for your own vault
 
-You don't copy this folder into your vault. The skill builds your vault for you when you run `/obsidian-init` and grows it through normal usage of the 44 commands. This folder exists only to show what the output looks like before you install.
+You don't copy this folder into your vault. The skill builds your vault for you when you run `/obsidian-init` and grows it through normal usage of the 45 commands. This folder exists only to show what the output looks like before you install.
 
 If you want a clean starting point, run:
 

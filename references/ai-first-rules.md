@@ -258,6 +258,23 @@ supersedes: "[[Knowledge/ADR-...]]"   # optional
 ai-first: true
 ```
 
+### `type: brainstorm`
+
+```yaml
+---
+type: brainstorm
+date: "YYYY-MM-DD"
+tags: [brainstorm, <topic-tags>]
+ai-first: true
+topic: "<one-line topic>"
+chosen-approach: "<name of the selected approach, or TBD>"
+related-project: "[[...]]"       # optional
+open-questions: <count>          # unresolved checklist items
+---
+```
+
+Body: `## For future Claude` preamble, `## Problem` (one sentence), `## Constraints and anti-goals`, `## Approaches considered` (named alternatives + trade-off table, chosen one marked), `## Decisions made` (with reasoning + wikilinks), `## Open questions`. Conclusions and reasoning only - never the interview transcript.
+
 ### `type: synthesis` / `type: emerge` / `type: connect` / `type: challenge`
 Outputs from thinking tools. Each saves to the concepts/ideas folder (resolved per `references/folder-map.md`) with:
 ```yaml
