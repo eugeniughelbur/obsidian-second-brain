@@ -906,3 +906,50 @@ def test_validate_hook_flags_secrets(tmp_path):
     bg = (REPO_ROOT / "hooks/obsidian-bg-agent.sh").read_text(encoding="utf-8")
     assert "SENSITIVE CONTENT" in bg
     assert "NEVER" in bg and "staging" in bg.lower()
+
+
+def test_recall_hook_contract(tmp_path):
+    """Bounded recall: inert without the double gate, injects a bounded brief
+    on a relevant prompt, abstains (silently, exit 0) on an irrelevant one,
+    and logs every decision to <vault>/.claude-runs/."""
+    hook = REPO_ROOT / "hooks/obsidian-recall.py"
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "Solar Panel Project.md").write_text(
+        "---\ntype: project\n---\n# Solar Panel Project\n\nInstalling solar panels, budget 4000 EUR.\n",
+        encoding="utf-8",
+    )
+
+    def run(prompt, enabled=True):
+        env = dict(os.environ, OBSIDIAN_VAULT_PATH=str(vault))
+        env.pop("OBSIDIAN_RECALL_ENABLED", None)
+        if enabled:
+            env["OBSIDIAN_RECALL_ENABLED"] = "1"
+        return subprocess.run(
+            [sys.executable, str(hook)],
+            input=json.dumps({"prompt": prompt}),
+            env=env, capture_output=True, text=True,
+        )
+
+    # Gate: disabled -> silent no-op.
+    off = run("what is the status of the solar panel installation?", enabled=False)
+    assert off.returncode == 0 and off.stdout == ""
+
+    # Relevant prompt -> bounded brief with the note wikilinked.
+    on = run("what is the status of the solar panel installation?")
+    assert on.returncode == 0, on.stderr
+    payload = json.loads(on.stdout)
+    ctx = payload["hookSpecificOutput"]["additionalContext"]
+    assert "[[Solar Panel Project]]" in ctx
+    assert len(ctx) <= 900
+
+    # Irrelevant prompt -> abstains with no output.
+    miss = run("explain quantum chromodynamics lattice regularization")
+    assert miss.returncode == 0 and miss.stdout == ""
+
+    # Observability: both decisions logged.
+    logs = list((vault / ".claude-runs").glob("recall-*.jsonl"))
+    assert logs, "recall log missing"
+    entries = [json.loads(l) for l in logs[0].read_text().splitlines()]
+    assert any(e.get("abstained") is False for e in entries)
+    assert any(e.get("abstained") is True for e in entries)

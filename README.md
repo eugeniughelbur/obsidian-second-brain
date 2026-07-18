@@ -549,6 +549,8 @@ PostCompact -> obsidian-bg-agent.sh -> claude -p (headless) -> vault updated
 
 **Save reminders:** Claude nudges you to `/obsidian-save` after 10+ exchanges or when you say "done" or "thanks". No lost conversations.
 
+**Bounded recall (opt-in):** on every prompt, a `UserPromptSubmit` hook injects a small brief of the most relevant vault notes - max 4 notes, ~900 chars - or **nothing at all** when confidence is low (abstention beats noise). Read-only, fail-closed, and every inject/abstain decision is logged to `<vault>/.claude-runs/` for audit. Ships inert; arm it with `OBSIDIAN_RECALL_ENABLED=1` per [hooks/recall.hook.example.json](hooks/recall.hook.example.json).
+
 ---
 
 ## Vault Architecture
