@@ -248,6 +248,8 @@ def test_free_sources_gate_brave_on_key(monkeypatch):
 def test_usage_ledger_is_fail_soft(monkeypatch, tmp_path, capsys):
     """A broken ledger path must warn and return - never raise into the paid
     call it observes (the api-ledger fork's fail-soft contract)."""
+    # lib.config (pulled in by usage) hard-requires a vault path at import time.
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(tmp_path))
     from scripts.research.lib import usage
 
     # Point the ledger at a path whose parent is a FILE - mkdir will fail.
@@ -259,7 +261,8 @@ def test_usage_ledger_is_fail_soft(monkeypatch, tmp_path, capsys):
     assert "could not record call" in capsys.readouterr().err
 
 
-def test_perplexity_cost_estimate_known_and_unknown_models():
+def test_perplexity_cost_estimate_known_and_unknown_models(monkeypatch, tmp_path):
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(tmp_path))
     from scripts.research.lib import usage
 
     known = usage.estimate_perplexity_cost("sonar-pro", 1_000_000, 1_000_000)
@@ -274,8 +277,9 @@ def test_gemini_call_maps_response_and_uses_header_auth(monkeypatch, tmp_path):
     from unittest.mock import MagicMock
 
     monkeypatch.setenv("GEMINI_API_KEY", "gem-test-key")
-    monkeypatch.setattr("scripts.research.lib.usage.USAGE_LOG", tmp_path / "usage.log")
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(tmp_path))
     from scripts.research.lib import gemini
+    monkeypatch.setattr("scripts.research.lib.usage.USAGE_LOG", tmp_path / "usage.log")
 
     fake_resp = MagicMock()
     fake_resp.status_code = 200
