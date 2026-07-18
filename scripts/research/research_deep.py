@@ -274,6 +274,23 @@ def run_paid_deep(topic: str) -> int:
 
     findings = "\n\n".join(findings_chunks) if findings_chunks else "(no findings - all targeted queries failed)"
 
+    # Phase 3.5 (optional): read the top sources in full via Tavily Extract, so
+    # synthesis sees actual page content instead of snippets. Skipped silently
+    # without TAVILY_API_KEY; never fatal.
+    from .lib import web_reader
+    if web_reader.available() and sources_collected:
+        print(f"[/research-deep] Phase 3.5: extracting full text of top sources (Tavily)...", file=sys.stderr)
+        extracted = web_reader.read(sources_collected)
+        if extracted:
+            blocks = "\n\n".join(
+                f"#### Full text: {url}\n\n{text}" for url, text in extracted.items()
+            )
+            findings += (
+                "\n\n### Extracted source content (full-page text, use to verify and deepen the findings above)\n\n"
+                + blocks
+            )
+            print(f"[/research-deep] Extracted {len(extracted)} pages.", file=sys.stderr)
+
     print(f"[/research-deep] Phase 4: synthesizing delta vs vault baseline...", file=sys.stderr)
     synth_prompt = SYNTHESIS_PROMPT.format(
         topic=topic,

@@ -301,3 +301,59 @@ def test_gemini_call_maps_response_and_uses_header_auth(monkeypatch, tmp_path):
     assert result["input_tokens"] == 10 and result["output_tokens"] == 20
     assert captured["headers"]["x-goog-api-key"] == "gem-test-key"
     assert "key=" not in captured["url"]
+
+
+def test_web_reader_unavailable_without_key(monkeypatch):
+    """No TAVILY_API_KEY -> read() returns {} without any network call."""
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", "/tmp/x")
+    from scripts.research.lib import web_reader
+
+    assert web_reader.available() is False
+    assert web_reader.read(["https://example.com"]) == {}
+
+
+def test_web_reader_caps_urls_and_truncates(monkeypatch, tmp_path):
+    """read() dedupes, caps at MAX_EXTRACT_URLS, truncates page text, and never
+    lets an HTTP failure escape."""
+    from unittest.mock import MagicMock
+
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-key")
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(tmp_path))
+    from scripts.research.lib import web_reader
+
+    monkeypatch.setattr("scripts.research.lib.usage.USAGE_LOG", tmp_path / "usage.log")
+
+    long_text = "x" * (web_reader.MAX_EXTRACT_CHARS + 500)
+    fake_resp = MagicMock()
+    fake_resp.json.return_value = {
+        "results": [
+            {"url": "https://a.example", "raw_content": long_text},
+            {"url": "https://b.example", "raw_content": "short"},
+        ]
+    }
+    fake_resp.raise_for_status.return_value = None
+    captured = {}
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        captured.update(json=json, headers=headers)
+        return fake_resp
+
+    monkeypatch.setattr(web_reader.requests, "post", fake_post)
+
+    urls = ["https://a.example", "https://a.example", "https://b.example",
+            "https://c.example", "https://d.example", "not-a-url"]
+    out = web_reader.read(urls)
+
+    # Dedup + cap: only 3 unique http URLs sent.
+    assert captured["json"]["urls"] == ["https://a.example", "https://b.example", "https://c.example"]
+    assert captured["headers"]["Authorization"] == "Bearer tvly-test-key"
+    assert len(out["https://a.example"]) == web_reader.MAX_EXTRACT_CHARS
+    assert out["https://b.example"] == "short"
+
+    # Total failure -> {} and no exception.
+    def broken_post(*a, **k):
+        raise OSError("network down")
+
+    monkeypatch.setattr(web_reader.requests, "post", broken_post)
+    assert web_reader.read(["https://a.example"]) == {}
