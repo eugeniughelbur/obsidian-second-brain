@@ -3,6 +3,7 @@ description: Measure how well vault search finds the right note for a natural-la
 category: meta
 triggers_en: ["evaluate retrieval", "how good is my vault search", "retrieval eval", "test vault search quality", "measure find quality"]
 triggers_es: ["evalúa la búsqueda", "qué tal funciona la búsqueda de mi vault", "evaluación de recuperación", "prueba la calidad de la búsqueda", "comprueba si encuentra bien mis notas"]
+triggers_pt: ["avalie a recuperação", "quão boa é a busca do meu vault", "avaliação de recuperação", "teste a qualidade da busca do vault", "meça a qualidade da busca"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-retrieval-eval $ARGUMENTS`:

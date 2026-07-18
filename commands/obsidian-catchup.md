@@ -3,6 +3,7 @@ description: Review and process everything captured on the go from the Telegram 
 category: vault
 triggers_en: ["catch up", "catchup", "what did I dump from telegram", "process my captures", "go through my telegram dumps", "anything new from the phone", "process my catchup", "review what I captured", "what did I capture on the go"]
 triggers_es: ["ponme al día", "qué mandé por telegram", "procesa mis capturas", "revisa lo que capturé desde el móvil", "hay algo nuevo del móvil", "repasa mi cola de capturas"]
+triggers_pt: ["coloque em dia", "catchup", "o que eu despejei do telegram", "processe minhas capturas", "passe pelas minhas capturas do telegram", "tem algo novo do telefone", "processe meu catchup", "revise o que capturei", "o que capturei na correria"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-catchup $ARGUMENTS`:

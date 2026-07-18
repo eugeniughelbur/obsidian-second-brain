@@ -4,6 +4,7 @@ category: vault
 trigger-mode: proactive
 triggers_en: ["todays note", "create todays daily", "open daily", "today daily note"]
 triggers_es: ["nota de hoy", "crea la diaria de hoy", "abre mi diaria", "la nota diaria de hoy"]
+triggers_pt: ["nota de hoje", "crie a nota diária de hoje", "abra a diária", "nota diária de hoje"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-daily`:

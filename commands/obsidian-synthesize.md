@@ -3,6 +3,7 @@ description: Automatic synthesis - scans the vault for unnamed patterns and writ
 category: thinking
 triggers_en: ["synthesize", "auto-synthesis", "make synthesis notes", "find unnamed patterns"]
 triggers_es: ["sintetiza", "síntesis automática", "crea notas de síntesis", "busca patrones sin nombrar"]
+triggers_pt: ["sintetize", "auto-síntese", "crie notas de síntese", "encontre padrões sem nome"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-synthesize`:

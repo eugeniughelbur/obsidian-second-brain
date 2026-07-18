@@ -4,6 +4,7 @@ category: thinking
 trigger-mode: explicit
 triggers_en: ["brainstorm this", "brainstorm with me", "think this through with me", "help me design this", "interview me about this idea"]
 triggers_es: ["haz una lluvia de ideas conmigo", "piensa esto conmigo", "ayúdame a diseñar esto", "entrevístame sobre esta idea"]
+triggers_pt: ["faça um brainstorm comigo", "pense nisso comigo", "me ajude a desenhar isto", "me entreviste sobre esta ideia"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-brainstorm $ARGUMENTS`:

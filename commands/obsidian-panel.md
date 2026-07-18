@@ -3,6 +3,7 @@ description: Convene a panel of distinct perspectives on a decision - one indepe
 category: thinking
 triggers_en: ["convene a panel", "advisor panel", "get multiple perspectives on", "panel review", "what would the experts say about"]
 triggers_es: ["convoca un panel", "panel de asesores", "dame varias perspectivas sobre esto", "revisión en panel", "qué dirían los expertos sobre esto"]
+triggers_pt: ["convoque um painel", "painel de especialistas", "obtenha múltiplas perspectivas sobre", "revisão em painel", "o que os especialistas diriam sobre"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-panel [decision or question]`:

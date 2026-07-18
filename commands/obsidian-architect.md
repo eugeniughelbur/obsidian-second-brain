@@ -3,6 +3,7 @@ description: Scan a codebase and write a maintained set of architecture notes in
 category: meta
 triggers_en: ["document this codebase", "architect this project", "map this code into my vault", "generate architecture notes", "refresh architecture docs"]
 triggers_es: ["documenta este código", "analiza la arquitectura de este proyecto", "lleva este código a mi vault", "genera notas de arquitectura", "actualiza la documentación de arquitectura"]
+triggers_pt: ["documente este código", "arquitete este projeto", "mapeie este código no vault", "gere notas de arquitetura", "atualize a documentação de arquitetura"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-architect [path-to-codebase]`:

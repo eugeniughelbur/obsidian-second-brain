@@ -3,6 +3,7 @@ description: Generate a visual canvas map of your vault - see the shape of your 
 category: meta
 triggers_en: ["visualize vault", "vault map", "canvas of vault", "show me the vault shape"]
 triggers_es: ["visualiza el vault", "mapa del vault", "canvas del vault", "muéstrame la forma de mi vault"]
+triggers_pt: ["visualize o vault", "mapa do vault", "canvas do vault", "mostre a forma do vault"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-visualize $ARGUMENTS`:

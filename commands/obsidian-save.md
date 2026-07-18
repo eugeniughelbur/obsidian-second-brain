@@ -4,6 +4,7 @@ category: vault
 trigger-mode: proactive
 triggers_en: ["save this", "save the conversation", "save to vault", "obsidian save"]
 triggers_es: ["guarda esto", "guarda la conversación", "guarda al vault"]
+triggers_pt: ["salve isto", "salve a conversa", "salve no vault", "obsidian save"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-save`:

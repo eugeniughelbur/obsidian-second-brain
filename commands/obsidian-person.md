@@ -4,6 +4,7 @@ category: vault
 trigger-mode: proactive
 triggers_en: ["save this person", "add person", "new contact note", "create person note"]
 triggers_es: ["guarda a esta persona", "añade una persona", "nueva nota de contacto", "crea una nota de persona"]
+triggers_pt: ["salve esta pessoa", "adicione uma pessoa", "nova nota de contato", "crie uma nota de pessoa"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-person $ARGUMENTS`:

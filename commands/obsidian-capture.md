@@ -4,6 +4,7 @@ category: vault
 trigger-mode: proactive
 triggers_en: ["capture this idea", "save this idea", "quick note", "drop a thought"]
 triggers_es: ["captura esta idea", "guarda esta idea", "nota rápida", "apunta esto"]
+triggers_pt: ["capture esta ideia", "salve esta ideia", "anotação rápida", "registre um pensamento"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-capture $ARGUMENTS`:

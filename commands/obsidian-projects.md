@@ -3,6 +3,7 @@ description: Live project status from git + local docs - infers all context from
 category: vault
 triggers_en: ["projects overview", "project status", "what am I working on", "show projects"]
 triggers_es: ["resumen de proyectos", "estado de los proyectos", "en qué estoy trabajando", "muéstrame los proyectos"]
+triggers_pt: ["visão geral de projetos", "status dos projetos", "em que estou trabalhando", "mostre os projetos"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-projects $ARGUMENTS`:

@@ -3,6 +3,7 @@ description: Scan your vault and generate a _CLAUDE.md operating manual, index.m
 category: meta
 triggers_en: ["init vault", "bootstrap vault", "setup vault", "scan vault"]
 triggers_es: ["inicializa el vault", "arranca el vault", "configura el vault", "escanea el vault"]
+triggers_pt: ["inicialize o vault", "bootstrap do vault", "configure o vault", "escaneie o vault"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-init`:

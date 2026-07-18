@@ -3,6 +3,7 @@ description: Run a vault health check - grouped by severity, detects contradicti
 category: meta
 triggers_en: ["vault health", "check vault", "audit vault", "vault diagnostics"]
 triggers_es: ["salud del vault", "revisa el vault", "audita el vault", "diagnóstico del vault"]
+triggers_pt: ["saúde do vault", "verifique o vault", "audite o vault", "diagnóstico do vault"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-health`:

@@ -3,6 +3,7 @@ description: Smart vault search - returns results with context, not just filenam
 category: vault
 triggers_en: ["find in vault", "search my notes", "where is", "what did I write about"]
 triggers_es: ["busca en el vault", "busca en mis notas", "dónde está", "qué escribí sobre"]
+triggers_pt: ["encontre no vault", "pesquise minhas notas", "onde está", "o que eu escrevi sobre"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-find $ARGUMENTS`:

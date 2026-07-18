@@ -3,6 +3,7 @@ description: Deep cross-reference of everything the vault knows about one topic 
 category: thinking
 triggers_en: ["synthesize what I know about", "deep synthesis on", "cross-reference my notes on", "what does my vault say about"]
 triggers_es: ["sintetiza lo que sé sobre", "síntesis profunda sobre", "cruza mis notas sobre", "qué dice mi vault sobre"]
+triggers_pt: ["sintetize o que eu sei sobre", "síntese profunda sobre", "cruze minhas notas sobre", "o que meu vault diz sobre"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/vault-deep-synthesis [topic]`:

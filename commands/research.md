@@ -3,6 +3,7 @@ description: Web research with citations - Perplexity Sonar when an API key is s
 category: research
 triggers_en: ["research this", "look up", "find information about", "perplexity research"]
 triggers_es: ["investiga esto", "búscalo", "busca información sobre", "investigación con perplexity"]
+triggers_pt: ["pesquise isto", "procure", "encontre informações sobre", "pesquisa perplexity"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/research [topic]`:

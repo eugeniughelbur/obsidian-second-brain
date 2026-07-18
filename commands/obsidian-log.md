@@ -4,6 +4,7 @@ category: vault
 trigger-mode: proactive
 triggers_en: ["log this work", "log this session", "log this dev session", "obsidian log"]
 triggers_es: ["registra este trabajo", "registra esta sesión", "registra esta sesión de desarrollo", "obsidian log"]
+triggers_pt: ["registre este trabalho", "registre esta sessão", "registre esta sessão de desenvolvimento", "obsidian log"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-log`:

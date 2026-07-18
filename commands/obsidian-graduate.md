@@ -3,6 +3,7 @@ description: Promote an idea fragment into a full project spec with tasks, board
 category: thinking
 triggers_en: ["promote idea", "graduate this to project", "make a project from this", "elevate idea"]
 triggers_es: ["promociona esta idea", "convierte esto en proyecto", "haz un proyecto de esto", "eleva esta idea"]
+triggers_pt: ["promova esta ideia", "transforme isto em projeto", "crie um projeto a partir disto", "eleve esta ideia"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-graduate $ARGUMENTS`:
