@@ -22,11 +22,11 @@ The AI-first vault rule ties it all together: every note a command writes is des
 
 ## The adapter pattern (the core idea)
 
-`commands/` is the single source of truth. The build compiles it per platform instead of maintaining six command sets.
+`commands/` is the single source of truth. The build compiles it per platform instead of maintaining seven command sets.
 
 - `commands/<name>.md` uses Claude Code's slash-command shape and declares `description:`, `category:`, `triggers_en:`, and optional `exclude:` frontmatter.
 - `scripts/build.sh` orchestrates the `adapters/` layer. `bash scripts/build.sh` builds all platforms; `--platform <name>` builds one.
-- The **Claude Code adapter is an identity copy**. The other five adapters (Codex CLI, Gemini CLI, OpenCode, Hermes, Pi) emit a dispatcher file at the dist root (`AGENTS.md`, `GEMINI.md`, or the Pi/Hermes equivalent) with an auto-generated routing table built from each command's `description:`, grouped by `category:` then language, plus the command bodies under `.codex/commands/` (or `.gemini/`, `.opencode/`, `.pi/`, Hermes skills).
+- The **Claude Code adapter is an identity copy**. The other six adapters translate per platform: `codex-cli`, `hermes`, and `agent-skills` emit **native skills** (one `SKILL.md` per command; `agent-skills` is a single spec-compliant `.agents/skills/` tree that Codex CLI, OpenCode, and Google Antigravity all read, with a shared `obsidian-core` engine skill), `pi` emits a Pi package (`.pi/prompts/` + `.pi/skills/`), and `gemini-cli` / `opencode` emit a dispatcher file (`GEMINI.md` / `AGENTS.md`) with an auto-generated routing table built from each command's `description:`, grouped by `category:` then language, plus the command bodies under `.gemini/` / `.opencode/`.
 - Claude-specific wording is neutralized for the other CLIs (for example `Read tool` becomes `read files`).
 - Output lands in `dist/<platform>/`, which is gitignored and regenerated - never hand-edited.
 
@@ -56,7 +56,7 @@ obsidian-second-brain/
 |-- commands/            # 44 command .md files (the source)
 |-- references/          # ai-first-rules.md (canonical) + schemas + templates + bases/
 |-- scripts/             # build.sh, lib.sh, vault tooling, research/, architect_scan.py, ...
-|-- adapters/            # lib.sh + {claude-code,codex-cli,gemini-cli,opencode,hermes,pi}/adapter.sh
+|-- adapters/            # lib.sh + {claude-code,codex-cli,gemini-cli,opencode,hermes,pi,agent-skills}/adapter.sh
 |-- hooks/               # validate-ai-first.sh, load_vault_context.py, obsidian-bg-agent.sh
 |-- dist/                # build output per platform (gitignored)
 |-- tests/               # smoke tests + CI fixtures

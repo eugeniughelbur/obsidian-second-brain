@@ -101,6 +101,13 @@ _opencode_emit_install_hint() {
   cat > "$dst/INSTALL.md" <<'EOF'
 # Install on OpenCode
 
+> **Deprecated.** This per-platform build is superseded by the unified Agent
+> Skills build (`bash scripts/build.sh --platform agent-skills`), which emits
+> one spec-compliant `.agents/skills/` tree that OpenCode, Codex CLI, and
+> Google Antigravity all read, and installs via `npx skills`. This opencode
+> build still works but will be removed in a future release. See
+> `dist/agent-skills/INSTALL.md`.
+
 ```bash
 # After running `bash scripts/build.sh --platform opencode`:
 cp -R dist/opencode/. /path/to/your/vault/

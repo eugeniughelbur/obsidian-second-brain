@@ -151,6 +151,13 @@ _codex_emit_install_hint() {
   cat > "$dst/INSTALL.md" <<'EOF'
 # Install on Codex CLI
 
+> **Deprecated.** This per-platform build is superseded by the unified Agent
+> Skills build (`bash scripts/build.sh --platform agent-skills`), which emits
+> one spec-compliant `.agents/skills/` tree that Codex CLI, OpenCode, and
+> Google Antigravity all read, and installs via `npx skills`. This codex-cli
+> build still works but will be removed in a future release. See
+> `dist/agent-skills/INSTALL.md`.
+
 ```bash
 # From the repo root, after running `bash scripts/build.sh --platform codex-cli`:
 # Copy (or symlink) the built tree into your vault root:

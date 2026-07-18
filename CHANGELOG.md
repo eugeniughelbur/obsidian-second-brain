@@ -14,6 +14,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - **`/youtube` summarizes via Gemini when `GEMINI_API_KEY` is set, with automatic Grok fallback.** New `lib/gemini.py` mirrors `grok.call`'s return shape (drop-in swap), retries with backoff, logs to the usage ledger, and sends the key in the `x-goog-api-key` header - never in the URL query string, so it cannot leak into access logs. `gemini-2.5-flash` default (generous free tier); no Gemini key means exactly the old Grok-only behavior.
   - **The health check no longer re-reports links echoed by logs and old reports.** Activity logs and prior health reports quote every broken link they mention without owning it, so the wanted-notes scan counted each finding once per echo. Notes matching `_CLAUDE.md`, `log.md`, or `Vault Health*` are now excluded from the outgoing-link audit by default (they still resolve as link targets and get every other check), and `.vault-config.json` gains an `exclude-link-scan` glob list for user extensions. Covered by `tests/test_user_excludes.py`.
 
+### Deprecated
+
+- **The `codex-cli` and `opencode` per-platform builds are deprecated in favor of the unified `agent-skills` build (0.13.0).** Both emit into the same `.agents/skills/` layout the new build does, so they are redundant now that one spec-compliant tree serves Codex CLI, OpenCode, and Google Antigravity together and installs via `npx skills`. Their generated `INSTALL.md` now carries a deprecation banner pointing at `dist/agent-skills/INSTALL.md`; the builds still work and will be removed in a future release. `claude-code`, `gemini-cli`, `hermes`, and `pi` are unaffected.
+
+### Fixed
+
+- **`architecture.md` still described the pre-agent-skills adapter set.** The adapter-pattern section said "the other five adapters (Codex CLI, Gemini CLI, OpenCode, Hermes, Pi) emit a dispatcher file ... with an auto-generated routing table" - which omitted `agent-skills` and misdescribed `codex-cli` and `hermes`, both of which emit native skills, not a routing-table dispatcher. Corrected the adapter description, the "command sets" count, and the repo-tree listing to include `agent-skills`. (`CLAUDE.md` was already updated upstream.)
+
 ## [0.13.0] - 2026-07-18 - The Open Standard
 
 ### Security
