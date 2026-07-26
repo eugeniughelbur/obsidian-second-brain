@@ -15,12 +15,15 @@ or wire it into a client's MCP config (see README.md).
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import os
 import sys
 
+
 # Make `vault_ops` importable regardless of the working directory the client
 # launches us from.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, Path(__file__).parent.as_posix())
+
 
 import vault_ops  # noqa: E402
 from mcp.server.fastmcp import FastMCP  # noqa: E402
