@@ -173,7 +173,7 @@ def _freshness_rerank(results, vault: Path, current_intent: bool):
                 superseded_targets.add(PurePosixPath(target.strip()).stem.lower())
 
     rescored = []
-    for i, (r, head) in enumerate(zip(results, heads)):
+    for i, (r, head) in enumerate(zip(results, heads, strict=True)):
         weight = 1.0
         sm = _STATUS_RE.search(head)
         if sm and sm.group(1).lower() in _STALE_STATUSES:
@@ -313,7 +313,11 @@ def resolve_vault() -> Path:
 def _cosine(a: List[float], b: List[float]) -> float:
     if not a or not b or len(a) != len(b):
         return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
+    # strict=True: a and b are already verified equal-length above, so this
+    # never raises. It documents that invariant instead of letting a future
+    # edit that removes the length check silently reintroduce a truncated,
+    # wrong-but-plausible-looking dot product (see #164).
+    dot = sum(x * y for x, y in zip(a, b, strict=True))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(y * y for y in b))
     return dot / (na * nb) if na and nb else 0.0
@@ -339,7 +343,11 @@ def _dot(a: List[float], b: List[float]) -> float:
     """
     if len(a) != len(b):
         return 0.0
-    return sum(x * y for x, y in zip(a, b))
+    # strict=True: see _cosine above - this is defence in depth, not a live
+    # bug fix, since the length check just above already guarantees a and b
+    # match. It's called in a tight loop over every chunk in the vault, so
+    # keep it a documented invariant rather than a silent truncation risk.
+    return sum(x * y for x, y in zip(a, b, strict=True))
 
 
 def _embed_query(text: str, model: Optional[str] = None) -> Optional[List[float]]:

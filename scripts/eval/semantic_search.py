@@ -238,7 +238,9 @@ def cosine(a: list[float], b: list[float]) -> float:
     """Cosine similarity in [-1, 1]; how close two meaning-coordinates point."""
     if not a or not b or len(a) != len(b):
         return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
+    # strict=True: a and b are already verified equal-length above, so this
+    # never raises here - it documents the invariant for future edits (#164).
+    dot = sum(x * y for x, y in zip(a, b, strict=True))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(y * y for y in b))
     if na == 0 or nb == 0:
