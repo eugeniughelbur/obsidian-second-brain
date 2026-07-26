@@ -1,8 +1,9 @@
 """Loads research-toolkit credentials and model defaults from ~/.config/obsidian-second-brain/.env"""
 
-from pathlib import Path
-from dotenv import load_dotenv
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 CONFIG_DIR = Path.home() / ".config" / "obsidian-second-brain"
 ENV_PATH = CONFIG_DIR / ".env"

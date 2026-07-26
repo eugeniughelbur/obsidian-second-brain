@@ -6,8 +6,8 @@ import re
 import xml.etree.ElementTree as ET
 
 from .. import cache, http
-from ..source_config import load
 from ..result import Result
+from ..source_config import load
 
 ENDPOINT = "http://export.arxiv.org/api/query"
 NS = {

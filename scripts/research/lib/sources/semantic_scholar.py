@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 
 from .. import cache, http
-from ..source_config import load
 from ..result import Result
+from ..source_config import load
 
 ENDPOINT = "https://api.semanticscholar.org/graph/v1/paper/search"
 FIELDS = "title,abstract,authors,year,url,externalIds"

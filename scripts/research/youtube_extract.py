@@ -25,7 +25,7 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
-from .lib import grok, video_frames, vault, youtube
+from .lib import grok, vault, video_frames, youtube
 
 # Frames the visual layer reads by default. Kept modest: each frame is an image
 # Claude reads, so cost scales with count. Override with --max-frames.

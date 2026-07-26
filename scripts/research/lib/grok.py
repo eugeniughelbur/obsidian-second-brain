@@ -7,11 +7,12 @@ now returns HTTP 410 - do not reintroduce it. Live X/web access comes from the
 
 import re
 import time
-import requests
 from typing import Any
 
-from .config import GROK_MODEL, XAI_API_KEY
+import requests
+
 from . import usage
+from .config import GROK_MODEL, XAI_API_KEY
 
 # Strip Grok's internal tool-call protocol XML if it leaks into output text.
 # Seen patterns:

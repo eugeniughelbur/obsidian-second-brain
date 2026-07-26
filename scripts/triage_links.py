@@ -19,8 +19,7 @@ from datetime import date
 from pathlib import Path
 
 from note_io import read_exact, write_exact
-from vault_health import (load_vault, check_wanted_notes, replace_outside_code,
-                          load_vault_config)
+from vault_health import check_wanted_notes, load_vault, load_vault_config, replace_outside_code
 
 LINK_IN_MSG = re.compile(r"\[\[(.+?)\]\]")
 MODEL = "claude-haiku-4-5"

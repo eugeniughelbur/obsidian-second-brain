@@ -32,9 +32,9 @@ Options:
 
 import argparse
 import sys
-from typing import NamedTuple
-from pathlib import Path
 from datetime import date
+from pathlib import Path
+from typing import NamedTuple
 
 # Force UTF-8 stdout/stderr so emoji print statements work on Windows (cp1252).
 for _stream in (sys.stdout, sys.stderr):

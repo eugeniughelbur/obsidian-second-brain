@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 
 from .. import cache, http
-from ..source_config import load
 from ..result import Result
+from ..source_config import load
 
 ENDPOINT = "https://dev.to/api/articles"
 

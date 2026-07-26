@@ -5,8 +5,8 @@ from __future__ import annotations
 import urllib.parse
 
 from .. import cache, http
-from ..source_config import load
 from ..result import Result
+from ..source_config import load
 
 SEARCH = "https://en.wikipedia.org/w/api.php"
 SUMMARY = "https://en.wikipedia.org/api/rest_v1/page/summary/"

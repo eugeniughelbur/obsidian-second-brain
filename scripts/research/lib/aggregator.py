@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 import sys
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FuturesTimeout
 from dataclasses import asdict
 from typing import Any, Protocol
 

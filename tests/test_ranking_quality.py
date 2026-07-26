@@ -20,8 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "integrations" / "obsidian-mcp-server"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "eval"))
 
-import vault_ops  # noqa: E402
 import semantic_search as ss  # noqa: E402
+import vault_ops  # noqa: E402
 
 
 @pytest.fixture()

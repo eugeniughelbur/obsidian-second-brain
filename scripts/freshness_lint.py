@@ -29,15 +29,16 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(_Path(__file__).resolve().parent))
-from vault_scan import BASE_EXCLUDE_DIRS  # noqa: E402
 
+_sys.path.insert(0, str(_Path(__file__).resolve().parent))
 import argparse
 import json
 import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
+
+from vault_scan import BASE_EXCLUDE_DIRS  # noqa: E402
 
 DEFAULT_WINDOW_DAYS = 7
 

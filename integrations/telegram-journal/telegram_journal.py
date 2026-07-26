@@ -22,14 +22,14 @@ Config/secrets come from ~/.config/obsidian-second-brain/telegram_journal.env
 TRANSCRIBE_BACKEND=openai, the default), ANTHROPIC_API_KEY, VAULT_PATH
 This file holds no secrets and is safe to read or share.
 """
-import os
-import re
-import sys
-import json
 import base64
 import datetime
+import json
+import os
 import pathlib
+import re
 import subprocess
+import sys
 
 import requests
 

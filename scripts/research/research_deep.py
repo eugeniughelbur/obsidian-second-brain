@@ -22,6 +22,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+
 from .lib.config import VAULT_PATH
 
 VAULT_SCAN_DIRS = ["wiki", "Research", "Knowledge", "Projects", "Ideas"]
@@ -222,7 +223,7 @@ def run_free_deep(topic: str, academic: bool) -> int:
 
 
 def run_paid_deep(topic: str) -> int:
-    from .lib import perplexity, grok, vault
+    from .lib import grok, perplexity, vault
 
     today = datetime.now().strftime("%Y-%m-%d")
 

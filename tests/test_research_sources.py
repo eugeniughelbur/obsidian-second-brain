@@ -16,10 +16,9 @@ import os
 
 import pytest
 
-from scripts.research.lib import cache, http
+from scripts.research.lib import cache, http, source_config
 from scripts.research.lib.aggregator import aggregate
 from scripts.research.lib.result import Result, encode_results
-from scripts.research.lib import source_config
 
 
 def test_library_imports_without_vault_path():

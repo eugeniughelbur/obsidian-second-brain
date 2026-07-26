@@ -33,8 +33,8 @@ import os
 import re
 import sys
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
@@ -56,8 +56,10 @@ EXCLUDE_PREFIXES = tuple(
 # index and the lexical scan can never drift into different universes
 # (stress-test fix 10/24).
 import sys as _sys
+
 _sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "integrations" / "obsidian-mcp-server"))
 from vault_ops import _SKIP_DIRS as SKIP_DIRS  # noqa: E402
+
 INDEX_FILE = ".obsidian-semantic-index.json"  # written at vault root
 # Embedding models have a token limit (typically ~512 tokens). Long notes
 # must be split into safe chunks and averaged, or the model 500s. ~1200 chars sits

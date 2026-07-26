@@ -6,6 +6,7 @@ Default behavior: print to chat. Does NOT save to vault unless the user explicit
 """
 
 import sys
+
 from .lib import grok
 
 PROMPT_TEMPLATE = """Analyze this X post and return a structured deep-read.
