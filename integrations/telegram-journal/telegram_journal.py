@@ -163,12 +163,13 @@ def transcribe_local(audio, suffix):
             cmd += ["--initial_prompt", WHISPER_HINT]
         try:
             subprocess.run(cmd, check=True, capture_output=True, text=True)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             raise RuntimeError(
                 f"local transcription needs the '{WHISPER_BIN}' CLI - "
-                "pip install openai-whisper (and install ffmpeg), or set WHISPER_BIN")
+                "pip install openai-whisper (and install ffmpeg), or set WHISPER_BIN"
+            ) from e
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"whisper failed: {(e.stderr or '').strip()[-300:]}")
+            raise RuntimeError(f"whisper failed: {(e.stderr or '').strip()[-300:]}") from e
         out = pathlib.Path(tmp) / f"{src.stem}.txt"
         return out.read_text().strip() if out.exists() else ""
 
