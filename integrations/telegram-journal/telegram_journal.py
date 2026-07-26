@@ -122,7 +122,8 @@ def download(file_id):
     info = tg("getFile", file_id=file_id)
     path = info["result"]["file_path"]
     data = requests.get(f"{FILE_API}/{path}", timeout=120).content
-    return data, os.path.splitext(path)[1].lower()
+    return data, pathlib.Path(path).suffix.lower()
+
 
 
 def transcribe(file_id):
