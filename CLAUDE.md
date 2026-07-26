@@ -2,7 +2,7 @@
 
 Operating instructions for Claude Code when working inside this repo.
 
-This is the source repo for **obsidian-second-brain**, a Claude Code skill that turns any Obsidian vault into a living AI-first second brain. The skill ships 45 slash commands across 4 layers (vault management, thinking tools, research toolkit, scheduled agents).
+This is the source repo for **obsidian-second-brain**, a Claude Code skill that turns any Obsidian vault into a living AI-first second brain. The skill ships 46 slash commands across 4 layers (vault management, thinking tools, research toolkit, scheduled agents).
 
 If you are Claude operating on a user's vault, you want `_CLAUDE.md` inside their vault, not this file. This file is for working on the skill's source code.
 

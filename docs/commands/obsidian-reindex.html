@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>/obsidian-reindex - obsidian-second-brain</title>
+<meta name="description" content="Refresh the vault&#x27;s semantic search index and report coverage before and after">
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--dim:#5c5c5c;--line:#e3e3e3;--accent:#4c2889;--card:#fafafa}
+@media(prefers-color-scheme:dark){:root{--bg:#121212;--fg:#e8e8e8;--dim:#9a9a9a;--line:#2c2c2c;--accent:#b191e8;--card:#1a1a1a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+ font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:52rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+a{color:var(--accent)}
+h1{font-size:1.9rem;line-height:1.2;margin:0 0 .5rem}
+h2{font-size:1.15rem;margin:2.5rem 0 .25rem;padding-top:1.25rem;border-top:1px solid var(--line)}
+h2:first-of-type{border-top:0;padding-top:0}
+.lede{color:var(--dim);font-size:1.05rem;margin:0 0 2rem}
+.note{color:var(--dim);font-size:.9rem;margin:.25rem 0 1.25rem}
+.cmd{display:block;padding:.7rem .9rem;margin:.4rem 0;border:1px solid var(--line);
+ border-radius:8px;background:var(--card);text-decoration:none;color:inherit}
+.cmd:hover{border-color:var(--accent)}
+.cmd code{color:var(--accent);font-weight:600}
+.cmd span{display:block;color:var(--dim);font-size:.9rem;margin-top:.15rem}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
+input[type=search]{width:100%;padding:.7rem .9rem;font-size:1rem;border-radius:8px;
+ border:1px solid var(--line);background:var(--card);color:var(--fg);margin-bottom:1.5rem}
+ul.say{list-style:none;padding:0}
+ul.say li{padding:.45rem .8rem;margin:.3rem 0;border-left:3px solid var(--line);
+ background:var(--card);border-radius:0 6px 6px 0}
+.lang{color:var(--dim);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;
+ margin:1.25rem 0 .25rem}
+footer{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--line);
+ color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1><code>/obsidian-reindex</code></h1>
+<p class="lede">Refresh the vault&#x27;s semantic search index and report coverage before and after</p>
+<p>Type the command, or just say what you want. The skill matches on meaning, so the phrases below are examples of the shape, not a list you have to memorise.</p>
+<p class="lang">English</p>
+<ul class="say">
+<li>reindex vault</li>
+<li>rebuild semantic index</li>
+<li>refresh semantic search</li>
+<li>update vault embeddings</li>
+</ul>
+<p class="lang">Espanol</p>
+<ul class="say">
+<li>reindexa el vault</li>
+<li>reconstruye el índice semántico</li>
+<li>actualiza la búsqueda semántica</li>
+<li>actualiza los embeddings del vault</li>
+</ul>
+<p class="lang">Portugues</p>
+<ul class="say">
+<li>reindexe o vault</li>
+<li>reconstrua o índice semântico</li>
+<li>atualize a busca semântica</li>
+<li>atualize os embeddings do vault</li>
+</ul>
+<p class="note"><a href="https://github.com/eugeniughelbur/obsidian-second-brain/blob/main/commands/obsidian-reindex.md">Read what this command actually does</a> - the command file is the instruction set the agent follows, and it is plain markdown.</p>
+<footer>
+<a href="../index.html">All commands</a> &middot;
+<a href="https://github.com/eugeniughelbur/obsidian-second-brain">Source on GitHub</a>
+</footer>
+</div>
+</body>
+</html>

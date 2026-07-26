@@ -102,7 +102,7 @@ See `references/vault-schema.md` for full structural details.
 ## Core Operating Principles
 
 ### AI-first vault rule (applies to every note)
-The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 45 commands - must follow `references/ai-first-rules.md`:
+The vault is designed for **future-Claude** to read and reason over, not for human review. Every note Claude writes - across all 46 commands - must follow `references/ai-first-rules.md`:
 
 1. **Self-contained context** - each note explains itself; don't rely on backlinks alone
 2. **"For future Claude" preamble** - 2-3 sentence summary so Claude can decide relevance in 10 seconds
@@ -582,6 +582,14 @@ Steps:
 6. For safe fixes (missing frontmatter, obvious duplicates, creating pages for concept gaps), offer to fix them automatically
 7. For destructive fixes (archiving, merging, resolving contradictions), list them and ask for explicit confirmation before touching anything
 8. Append an operation-log entry with severity counts - if `Logs/` exists write the entry to `Logs/YYYY-MM-DD.md`, otherwise append to `log.md` (SKILL.md's own rule: the root `log.md` is a pointer file in v0.9+ vaults, never an entry target)
+
+---
+
+### `/obsidian-reindex`
+
+**Refreshes the semantic search index and makes its coverage visible.** Full steps in `commands/obsidian-reindex.md` (the source of truth).
+
+In short: reads the vault path from `_CLAUDE.md`, reports the current `index_coverage`, runs the existing incremental `semantic_search.py --build`, and reports coverage again with the builder's new, cached, excluded, degraded, and dropped counts. A backend failure stops the flow and is shown to the user; it is never presented as a successful refresh. The command updates only `.obsidian-semantic-index.json`, not Markdown notes.
 
 ---
 

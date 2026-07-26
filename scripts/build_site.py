@@ -210,7 +210,7 @@ def build(out: Path, cmds: list[dict]) -> dict[str, str]:
         ".nojekyll": "",
         # Title and description are written in the words people actually search
         # with ("persistent memory", "across sessions"), not the words the project
-        # uses for itself ("cross-CLI skill", "45 commands"). Repos with a fraction
+        # uses for itself ("cross-CLI skill", "46 commands"). Repos with a fraction
         # of the stars outrank this one on those queries purely by saying the
         # problem out loud. Same claims either way; only the ordering changed.
         "index.html": page(
