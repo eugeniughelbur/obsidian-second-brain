@@ -39,4 +39,4 @@ target-version = "py310"
 #   E731  lambda assignment. Used intentionally in research/lib/config.py.
 # Widening this list means fixing the backlog first, not adding a noqa sweep.
 [tool.ruff.lint]
-select = ["F"]
+select = ["F","I"]

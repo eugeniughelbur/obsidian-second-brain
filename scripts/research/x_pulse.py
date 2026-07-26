@@ -7,6 +7,7 @@ Default behavior: print to chat AND save AI-first note to Research/X-pulse/.
 
 import sys
 from datetime import datetime
+
 from .lib import grok, vault
 
 PROMPT_TEMPLATE = """You are a social-media-aware analyst with live access to X. Topic: "{topic}"

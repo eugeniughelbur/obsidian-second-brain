@@ -113,6 +113,7 @@ def test_a_poisoned_note_is_filtered_out_of_automatic_recall(tmp_path, monkeypat
     monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault))
 
     import importlib
+
     import vault_ops
     importlib.reload(vault_ops)
 

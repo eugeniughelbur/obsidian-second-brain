@@ -16,6 +16,7 @@ the episode is resolved to its open feed and pulled from there, never from Spoti
 import os
 import sys
 from datetime import datetime
+
 from .lib import grok, podcast, vault
 
 SUMMARIZE_PROMPT = """You are summarizing a podcast episode for a knowledge vault. The note will be read by future-Claude (an AI), not by a human. Optimize for AI retrieval.

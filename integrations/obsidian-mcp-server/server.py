@@ -22,9 +22,8 @@ import sys
 # launches us from.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from mcp.server.fastmcp import FastMCP  # noqa: E402
-
 import vault_ops  # noqa: E402
+from mcp.server.fastmcp import FastMCP  # noqa: E402
 
 mcp = FastMCP("obsidian-second-brain")
 

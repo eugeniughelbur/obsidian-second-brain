@@ -34,9 +34,13 @@ FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 # All values are lowercase - comparison uses part.lower() so casing in the vault doesn't matter.
 import sys as _sys
 from pathlib import Path as _Path
+
 _sys.path.insert(0, str(_Path(__file__).resolve().parent))
-from vault_scan import BASE_EXCLUDE_DIRS  # noqa: E402
-from vault_scan import STATS_ONLY_EXCLUDES  # noqa: E402
+from vault_scan import (
+    BASE_EXCLUDE_DIRS,  # noqa: E402
+    STATS_ONLY_EXCLUDES,  # noqa: E402
+)
+
 # Base policy plus raw/ and references/, which are real vault content but not
 # user notes for the purpose of counting.
 EXCLUDED_FOLDERS = frozenset(d.lower() for d in (*BASE_EXCLUDE_DIRS, *STATS_ONLY_EXCLUDES))

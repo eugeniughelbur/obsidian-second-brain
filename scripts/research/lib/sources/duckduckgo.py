@@ -11,8 +11,8 @@ from html import unescape
 from urllib.parse import parse_qs, unquote, urlparse
 
 from .. import cache, http
-from ..source_config import load
 from ..result import Result
+from ..source_config import load
 
 DDG = "https://html.duckduckgo.com/html/"
 RESULT_RE = re.compile(

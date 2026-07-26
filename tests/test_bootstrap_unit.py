@@ -26,7 +26,6 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import bootstrap_vault as bv  # noqa: E402
 
-
 # --- S19: write() ----------------------------------------------------------
 
 def test_write_creates_a_missing_file(tmp_path):

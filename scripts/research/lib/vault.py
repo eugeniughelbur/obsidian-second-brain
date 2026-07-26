@@ -10,9 +10,9 @@ Each note follows the AI-first vault rule:
 7. Confidence levels (where applicable)
 """
 
+import re
 from datetime import datetime
 from pathlib import Path
-import re
 from typing import Any
 from urllib.parse import quote
 

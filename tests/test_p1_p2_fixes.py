@@ -103,6 +103,7 @@ def test_update_note_reports_a_retrieval_affecting_status(tmp_path, monkeypatch)
     (v / "n.md").write_text("---\ntype: note\n---\n\nbody\n", encoding="utf-8")
     monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(v))
     import importlib
+
     import vault_ops
     importlib.reload(vault_ops)
 

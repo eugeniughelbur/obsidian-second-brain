@@ -39,9 +39,7 @@ from pathlib import Path
 
 # reuse the EXACT detection the health check uses, so our count == its count
 from note_io import read_exact, write_exact
-
-from vault_health import (load_vault, check_wanted_notes, replace_outside_code,
-                          load_vault_config)
+from vault_health import check_wanted_notes, load_vault, load_vault_config, replace_outside_code
 
 DECORATION = re.compile(r"[#|].*$")          # a #heading anchor or |display alias
 LINK_IN_MSG = re.compile(r"\[\[(.+?)\]\] - wanted by ")

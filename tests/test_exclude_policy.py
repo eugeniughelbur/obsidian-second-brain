@@ -39,12 +39,12 @@ def test_the_base_covers_every_machine_owned_directory():
 
 def test_every_scanning_tool_uses_the_base():
     """The regression this file exists for."""
-    from vault_scan import BASE_EXCLUDE_DIRS
     import export_okf
     import freshness_lint
     import link_graph
     import vault_health
     import vault_stats
+    from vault_scan import BASE_EXCLUDE_DIRS
 
     base = _lower(BASE_EXCLUDE_DIRS)
     for name, actual in (
@@ -60,8 +60,8 @@ def test_every_scanning_tool_uses_the_base():
 
 def test_the_mcp_server_literal_matches_the_base():
     """vault_ops cannot import from scripts/, so it is pinned instead."""
-    from vault_scan import BASE_EXCLUDE_DIRS
     import vault_ops
+    from vault_scan import BASE_EXCLUDE_DIRS
 
     missing = _lower(BASE_EXCLUDE_DIRS) - _lower(vault_ops._SKIP_DIRS)
     assert not missing, (

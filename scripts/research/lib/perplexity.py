@@ -2,11 +2,12 @@
 
 import re
 import time
-import requests
 from typing import Any
 
+import requests
+
 from . import usage
-from .config import PERPLEXITY_API_KEY, PERPLEXITY_RESEARCH_MODEL, PERPLEXITY_DEEP_MODEL
+from .config import PERPLEXITY_API_KEY, PERPLEXITY_DEEP_MODEL, PERPLEXITY_RESEARCH_MODEL
 
 API_URL = "https://api.perplexity.ai/chat/completions"
 MAX_RETRIES = 3
