@@ -1059,11 +1059,11 @@ def _write_atomic(path: Path, text: str) -> None:
         with _os.fdopen(fd, "w", encoding="utf-8", newline="") as fh:
             fh.write(text)
         if keep_mode is not None:
-            _os.chmod(tmp, keep_mode)
-        _os.replace(tmp, path)
+           Path(tmp).chmod(keep_mode)
+        Path(tmp).replace(path)
     except BaseException:
         try:
-            _os.unlink(tmp)
+         Path(tmp).unlink()
         except OSError:
             pass
         raise

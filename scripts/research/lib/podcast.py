@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import tempfile
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -380,7 +381,7 @@ def transcribe_via_whisper(audio_url: str, max_bytes: int = 25 * 1024 * 1024) ->
                     bytes_written += len(chunk)
                     if bytes_written > max_bytes:
                         tmp.close()
-                        os.unlink(tmp.name)
+                        Path(tmp.name).unlink()
                         print(
                             f"[podcast whisper: audio exceeds {max_bytes // (1024*1024)} MB while streaming]",
                             file=sys.stderr,
@@ -394,7 +395,7 @@ def transcribe_via_whisper(audio_url: str, max_bytes: int = 25 * 1024 * 1024) ->
 
     try:
         client = OpenAI(api_key=key)
-        with open(tmp_path, "rb") as f:
+        with Path(tmp_path).open("rb") as f:
             result = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=f,
@@ -413,7 +414,7 @@ def transcribe_via_whisper(audio_url: str, max_bytes: int = 25 * 1024 * 1024) ->
         return None
     finally:
         try:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
         except OSError:
             pass
 

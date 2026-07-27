@@ -43,7 +43,7 @@ def write_exact(path: Path, text: str) -> None:
     data = text.encode("utf-8")
     directory = path.parent
     try:
-        keep_mode = stat_mod.S_IMODE(os.stat(path).st_mode)
+       keep_mode = stat_mod.S_IMODE(Path(path).stat().st_mode)
     except OSError:
         keep_mode = None  # new file: let the umask decide, as write_bytes would have
 
@@ -57,14 +57,14 @@ def write_exact(path: Path, text: str) -> None:
             except OSError:
                 pass  # durability is best-effort; the atomic rename is not
         if keep_mode is not None:
-            os.chmod(tmp, keep_mode)
-        os.replace(tmp, path)
+            Path(tmp).chmod(keep_mode)
+        Path(tmp).replace(path)
     except BaseException:
         # Interrupted or failed before the rename: the original is untouched. Drop
         # the temp so a half-written file never lingers in the vault, then re-raise.
         # BaseException (not Exception) so a Ctrl-C mid-write still cleans up.
         try:
-            os.unlink(tmp)
+            Path(tmp).unlink()
         except OSError:
             pass
         raise

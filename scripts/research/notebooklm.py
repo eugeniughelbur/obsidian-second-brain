@@ -19,13 +19,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
 import tempfile
 import time
 from datetime import datetime
+from pathlib import Path
 
 from google import genai
 from google.genai import types
@@ -168,7 +168,7 @@ def upload_and_wait(client: genai.Client, store_name: str, hit: dict) -> None:
             operation = client.operations.get(operation)
     finally:
         try:
-            os.unlink(tmp_path)
+            Path(tmp_path).unlink()
         except OSError:
             pass
 

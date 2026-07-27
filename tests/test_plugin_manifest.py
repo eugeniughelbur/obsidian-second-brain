@@ -26,7 +26,7 @@ def _load(relpath: str):
 
 
 def _pyproject_version() -> str:
-    with open(REPO_ROOT / "pyproject.toml", "rb") as f:
+    with (REPO_ROOT / "pyproject.toml").open("rb") as f:
         return tomllib.load(f)["project"]["version"]
 
 

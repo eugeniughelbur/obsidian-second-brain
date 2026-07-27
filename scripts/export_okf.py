@@ -197,7 +197,7 @@ def main():
     if not vault.is_dir():
         print(f"vault not found: {vault}", file=sys.stderr)
         sys.exit(1)
-    out = (vault / args.out) if not os.path.isabs(args.out) else pathlib.Path(args.out)
+    out = (vault / args.out) if not pathlib.Path(args.out).is_absolute() else pathlib.Path(args.out)
 
     # 1) collect notes (relative path -> (src_file, fm, body, malformed))
     notes = {}

@@ -57,7 +57,7 @@ def _claim_once(marker: Path) -> bool:
     """
     try:
         marker.parent.mkdir(parents=True, exist_ok=True)
-        with open(marker, "x", encoding="utf-8") as fh:
+        with Path(marker).open("x", encoding="utf-8") as fh:
             fh.write("shown\n")
         return True
     except FileExistsError:

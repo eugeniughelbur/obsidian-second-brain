@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
 
 
 def _cache_dir() -> Path:
-    p = Path(os.path.expanduser("~/.cache/obsidian-second-brain/research"))
+    p = Path("~/.cache/obsidian-second-brain/research").expanduser()
     p.mkdir(parents=True, exist_ok=True)
     return p
 
