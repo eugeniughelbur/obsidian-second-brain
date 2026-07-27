@@ -150,10 +150,10 @@ def parse_feed(
     """Parse an RSS feed and return episode metadata + audio URL + show-notes + transcript-tag-url."""
     try:
         import feedparser
-    except ImportError:
+    except ImportError as e:
         raise RuntimeError(
             "feedparser is required. Install with: uv sync (or pip install feedparser)"
-        )
+        ) from e
     parsed = feedparser.parse(feed_url)
     if parsed.bozo and not parsed.entries:
         raise ValueError(f"Could not parse feed at {feed_url}: {parsed.bozo_exception}")
