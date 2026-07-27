@@ -4,6 +4,7 @@ category: thinking
 triggers_en: ["find patterns", "what is emerging", "surface themes", "unnamed patterns"]
 triggers_es: ["busca patrones", "qué está emergiendo", "saca a la luz los temas recurrentes", "patrones que no he nombrado"]
 triggers_pt: ["encontre padrões", "o que está emergindo", "mostre temas", "padrões sem nome"]
+triggers_zh: ["从最近的笔记里找规律", "最近有什么趋势正在浮现", "找出我还没说清的模式", "看看反复出现的主题"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-emerge $ARGUMENTS`:

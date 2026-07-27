@@ -4,6 +4,7 @@ category: research
 triggers_en: ["ingest this source", "add this article", "import this", "absorb this"]
 triggers_es: ["haz una ingesta de esta fuente", "añade este artículo", "importa esto", "absorbe esto"]
 triggers_pt: ["ingira esta fonte", "adicione este artigo", "importe isto", "absorva isto"]
+triggers_zh: ["把这篇文章纳入知识库", "导入这份资料", "用这个来源更新我的笔记", "消化这份材料"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-ingest $ARGUMENTS`:

@@ -125,6 +125,7 @@ Supported language codes (add more by editing `_lang_label()` in `adapters/lib.s
 | `pt` | Português |
 | `ru` | Русский |
 | `ja` | 日本語 |
+| `zh` | 简体中文 |
 
 Example: adding Spanish to `obsidian-save`:
 

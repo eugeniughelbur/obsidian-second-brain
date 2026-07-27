@@ -1,11 +1,11 @@
 """Generate the GitHub Pages site from commands/, which is the only source of truth.
 
 GitHub Pages has been live and building for this repo for some time, serving the
-README from the repo root. Meanwhile `commands/` holds 45 files that each carry a
+README from the repo root. Meanwhile `commands/` holds 46 files that each carry a
 one-line `description`, a `category`, and `triggers_en` / `triggers_es` /
-`triggers_pt` arrays. Those trigger arrays are, literally, the sentences a person
-would type when they want the thing - written by hand, in three languages, and
-until now visible only to the dispatcher adapters.
+`triggers_pt` / `triggers_zh` arrays. Those trigger arrays are, literally, the
+sentences a person would type when they want the thing - written by hand, in four
+languages, and until now visible only to the dispatcher adapters.
 
 So this generates one page per command plus an index. Content, hosting and build
 tooling all already existed and were wired to nothing.
@@ -42,7 +42,12 @@ CATEGORIES = [
      "Set up, extend and inspect the skill itself."),
 ]
 
-LANGS = [("en", "English"), ("es", "Espanol"), ("pt", "Portugues")]
+LANGS = [
+    ("en", "English"),
+    ("es", "Espanol"),
+    ("pt", "Portugues"),
+    ("zh", "简体中文"),
+]
 
 FM_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.S)
 
@@ -150,7 +155,7 @@ def render_index(cmds: list[dict]) -> str:
         f'<p class="lede">Your AI agent starts every session knowing nothing about '
         f"you. These {len(cmds)} commands give it long-term memory across "
         "sessions, kept as plain markdown in your own Obsidian vault. Every one works "
-        "by plain language, in English, Spanish or Portuguese.</p>",
+        "by plain language, in English, Spanish, Portuguese or Simplified Chinese.</p>",
         '<input type="search" id="q" placeholder="Filter commands..." '
         'aria-label="Filter commands">',
     ]
@@ -218,9 +223,9 @@ def build(out: Path, cmds: list[dict]) -> dict[str, str]:
             "- obsidian-second-brain",
             "Give Claude Code and six other CLI agents long-term memory across "
             "sessions, stored as plain markdown in your own Obsidian vault. Stop "
-            "re-explaining your projects, decisions and people every time. 45 "
-            "commands, with plain-language triggers in English, Spanish and "
-            "Portuguese.",
+            "re-explaining your projects, decisions and people every time. 46 "
+            "commands, with plain-language triggers in English, Spanish, Portuguese "
+            "and Simplified Chinese.",
             render_index(cmds),
         ),
     }

@@ -4,6 +4,7 @@ category: meta
 triggers_en: ["init vault", "bootstrap vault", "setup vault", "scan vault"]
 triggers_es: ["inicializa el vault", "arranca el vault", "configura el vault", "escanea el vault"]
 triggers_pt: ["inicialize o vault", "bootstrap do vault", "configure o vault", "escaneie o vault"]
+triggers_zh: ["初始化知识库", "为这个知识库生成初始配置", "扫描并配置我的知识库", "生成知识库操作手册"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-init`:

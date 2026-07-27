@@ -4,6 +4,7 @@ category: vault
 triggers_en: ["new project", "create project note", "project setup", "start a project"]
 triggers_es: ["nuevo proyecto", "crea una nota de proyecto", "configura el proyecto", "arranca un proyecto"]
 triggers_pt: ["novo projeto", "crie uma nota de projeto", "configuração de projeto", "inicie um projeto"]
+triggers_zh: ["创建一个新项目", "新建项目笔记", "开始这个项目", "为项目建立基本结构"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-project $ARGUMENTS`:

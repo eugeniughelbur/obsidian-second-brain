@@ -4,6 +4,7 @@ category: meta
 triggers_en: ["visualize vault", "vault map", "canvas of vault", "show me the vault shape"]
 triggers_es: ["visualiza el vault", "mapa del vault", "canvas del vault", "muéstrame la forma de mi vault"]
 triggers_pt: ["visualize o vault", "mapa do vault", "canvas do vault", "mostre a forma do vault"]
+triggers_zh: ["把知识库可视化", "生成知识图谱画布", "画出我的笔记关系", "看看知识库的整体结构"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-visualize $ARGUMENTS`:

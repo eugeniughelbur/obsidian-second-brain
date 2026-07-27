@@ -4,6 +4,7 @@ category: thinking
 triggers_en: ["synthesize", "auto-synthesis", "make synthesis notes", "find unnamed patterns"]
 triggers_es: ["sintetiza", "síntesis automática", "crea notas de síntesis", "busca patrones sin nombrar"]
 triggers_pt: ["sintetize", "auto-síntese", "crie notas de síntese", "encontre padrões sem nome"]
+triggers_zh: ["自动综合我的知识库", "生成综合笔记", "把未命名的模式写成总结", "扫描知识库并形成综合结论"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-synthesize`:

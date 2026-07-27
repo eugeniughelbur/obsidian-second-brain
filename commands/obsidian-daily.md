@@ -5,6 +5,7 @@ trigger-mode: proactive
 triggers_en: ["todays note", "create todays daily", "open daily", "today daily note"]
 triggers_es: ["nota de hoy", "crea la diaria de hoy", "abre mi diaria", "la nota diaria de hoy"]
 triggers_pt: ["nota de hoje", "crie a nota diária de hoje", "abra a diária", "nota diária de hoje"]
+triggers_zh: ["打开今天的日记", "创建今天的每日笔记", "更新今天的日记", "看看今天要做什么"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-daily`:

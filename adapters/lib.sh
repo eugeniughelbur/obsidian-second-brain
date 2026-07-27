@@ -210,6 +210,7 @@ _lang_label() {
     pt) echo "Português" ;;
     ru) echo "Русский" ;;
     ja) echo "日本語" ;;
+    zh) echo "简体中文" ;;
     *)  echo "${1^^}" ;;
   esac
 }

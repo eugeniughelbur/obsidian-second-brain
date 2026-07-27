@@ -5,6 +5,7 @@ trigger-mode: proactive
 triggers_en: ["extract decisions", "log decisions", "what did we decide", "log this decision", "ADR", "record decision", "decision record"]
 triggers_es: ["saca las decisiones de esta conversación", "registra las decisiones", "¿qué decidimos?", "anota esta decisión", "ADR", "acta de decisión formal"]
 triggers_pt: ["extraia decisões", "registre decisões", "o que decidimos", "registre esta decisão", "adr", "registrar decisão", "registro de decisão"]
+triggers_zh: ["记录这个决定", "我们刚才决定了什么", "把这些决策整理出来", "生成决策记录", "写一份 ADR"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-decide $ARGUMENTS`:

@@ -4,6 +4,7 @@ category: vault
 triggers_en: ["recurring task", "monthly obligation", "remind me every month", "recurring payment", "track a recurring"]
 triggers_es: ["tarea recurrente", "obligación mensual", "recuérdamelo cada mes", "pago recurrente", "haz seguimiento de algo recurrente"]
 triggers_pt: ["tarefa recorrente", "obrigação mensal", "me lembre todo mês", "pagamento recorrente", "acompanhe algo recorrente"]
+triggers_zh: ["添加一个周期任务", "每个月提醒我", "记录这项定期付款", "跟踪一个重复事项", "记录一件要定期处理的事"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-recurring $ARGUMENTS`:

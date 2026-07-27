@@ -4,6 +4,7 @@ category: meta
 triggers_en: ["vault health", "check vault", "audit vault", "vault diagnostics"]
 triggers_es: ["salud del vault", "revisa el vault", "audita el vault", "diagnóstico del vault"]
 triggers_pt: ["saúde do vault", "verifique o vault", "audite o vault", "diagnóstico do vault"]
+triggers_zh: ["检查知识库健康状况", "给我的知识库做体检", "审计我的笔记库", "诊断知识库问题"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-health`:

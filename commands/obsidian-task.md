@@ -5,6 +5,7 @@ trigger-mode: proactive
 triggers_en: ["add task", "new todo", "track this", "remind me"]
 triggers_es: ["añade una tarea", "nuevo pendiente", "haz seguimiento de esto", "recuérdamelo"]
 triggers_pt: ["adicione uma tarefa", "novo a fazer", "acompanhe isto", "me lembre disto"]
+triggers_zh: ["添加一个任务", "记个待办", "跟踪这件事", "提醒我处理这个", "把这件事放到看板"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-task $ARGUMENTS`:

@@ -48,6 +48,15 @@ def test_every_command_gets_a_page():
         )
 
 
+def test_every_command_has_every_published_trigger_language():
+    missing = []
+    for command in build_site.load_commands():
+        for code, _label in build_site.LANGS:
+            if not command["triggers"].get(code):
+                missing.append(f"{command['name']}: triggers_{code}")
+    assert not missing, "published trigger languages are incomplete:\n  " + "\n  ".join(missing)
+
+
 def test_the_generator_refuses_to_write_an_empty_site(tmp_path, monkeypatch):
     """A parser change that quietly matches nothing must fail, not publish a husk."""
     monkeypatch.setattr(build_site, "load_commands", lambda: [])

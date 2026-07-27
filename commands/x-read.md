@@ -4,6 +4,7 @@ category: research
 triggers_en: ["read this x post", "deep read this tweet", "analyze this tweet", "read this thread"]
 triggers_es: ["léeme este post de x", "profundiza en este tweet", "analiza este tweet", "léeme este hilo"]
 triggers_pt: ["leia este post do x", "leitura profunda deste tweet", "analise este tweet", "leia esta thread"]
+triggers_zh: ["读一下这条 X 帖子", "深入分析这条推文", "这条推文讲了什么", "梳理一下这串推文"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/x-read [url]`:

@@ -4,6 +4,7 @@ category: thinking
 triggers_en: ["review learnings", "what have I learned", "show lessons", "prune learnings"]
 triggers_es: ["revisa los aprendizajes", "qué he aprendido", "muéstrame las lecciones", "poda los aprendizajes"]
 triggers_pt: ["revise aprendizados", "o que eu aprendi", "mostre lições", "reduza aprendizados"]
+triggers_zh: ["回顾我学到的东西", "我最近学到了什么", "整理知识库里的经验", "清理过时的学习记录"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-learn $ARGUMENTS`:

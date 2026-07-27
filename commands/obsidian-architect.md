@@ -4,6 +4,7 @@ category: meta
 triggers_en: ["document this codebase", "architect this project", "map this code into my vault", "generate architecture notes", "refresh architecture docs"]
 triggers_es: ["documenta este código", "analiza la arquitectura de este proyecto", "lleva este código a mi vault", "genera notas de arquitectura", "actualiza la documentación de arquitectura"]
 triggers_pt: ["documente este código", "arquitete este projeto", "mapeie este código no vault", "gere notas de arquitetura", "atualize a documentação de arquitetura"]
+triggers_zh: ["给这个代码库写架构文档", "分析这个项目的架构", "把代码结构整理进知识库", "生成架构笔记", "更新架构文档"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-architect [path-to-codebase]`:

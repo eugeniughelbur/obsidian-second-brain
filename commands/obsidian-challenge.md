@@ -4,6 +4,7 @@ category: thinking
 triggers_en: ["challenge this", "grill me on this", "red team my idea", "stress test this"]
 triggers_es: ["cuestiona esta idea", "ponme a prueba con esto", "haz de abogado del diablo con mi idea", "pon esto a prueba"]
 triggers_pt: ["desafie isto", "questione minha ideia", "faça um red team da minha ideia", "teste esta ideia"]
+triggers_zh: ["挑战一下这个想法", "帮我找这个方案的问题", "站在反方审视它", "给这个想法做压力测试", "别客气地质疑我"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-challenge $ARGUMENTS`:

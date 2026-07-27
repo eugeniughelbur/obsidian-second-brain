@@ -4,6 +4,7 @@ category: thinking
 triggers_en: ["promote idea", "graduate this to project", "make a project from this", "elevate idea"]
 triggers_es: ["promociona esta idea", "convierte esto en proyecto", "haz un proyecto de esto", "eleva esta idea"]
 triggers_pt: ["promova esta ideia", "transforme isto em projeto", "crie um projeto a partir disto", "eleve esta ideia"]
+triggers_zh: ["把这个想法变成项目", "将这条灵感升级为项目", "为这个想法建立完整项目", "把它拆成项目和任务"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-graduate $ARGUMENTS`:

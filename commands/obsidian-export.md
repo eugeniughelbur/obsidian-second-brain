@@ -4,6 +4,7 @@ category: meta
 triggers_en: ["export vault", "snapshot vault", "dump vault", "vault export"]
 triggers_es: ["exporta el vault", "haz una foto del vault", "vuelca el vault", "exportación del vault"]
 triggers_pt: ["exporte o vault", "gere um snapshot do vault", "despeje o vault", "exportação do vault"]
+triggers_zh: ["导出知识库", "给知识库做个快照", "把笔记导成 JSON", "生成 OKF 知识包", "导出一份可移植的数据"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-export $ARGUMENTS`:

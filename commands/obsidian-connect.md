@@ -4,6 +4,7 @@ category: thinking
 triggers_en: ["connect domains", "cross-pollinate", "bridge ideas", "find an unexpected link"]
 triggers_es: ["conecta estos dos temas", "cruza ideas de distintos mundos", "tiende un puente entre ideas", "busca una conexión inesperada"]
 triggers_pt: ["conecte domínios", "cruze ideias", "crie pontes entre ideias", "encontre uma ligação inesperada"]
+triggers_zh: ["把这两个领域联系起来", "帮我找跨领域连接", "看看这些想法有什么意外联系", "用我的笔记做跨界联想"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-connect $ARGUMENTS`:

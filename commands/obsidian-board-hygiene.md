@@ -4,6 +4,7 @@ category: vault
 triggers_en: ["clean up my board", "triage my board", "board hygiene", "archive stale tasks", "my board is a mess"]
 triggers_es: ["limpia mi tablero", "haz triaje de mi tablero", "ordena el tablero", "archiva las tareas viejas", "mi tablero es un desastre"]
 triggers_pt: ["limpe meu board", "faça a triagem do meu board", "higiene do board", "arquive tarefas paradas", "meu board está uma bagunça"]
+triggers_zh: ["整理我的看板", "清理过期任务", "帮我归档看板上的旧任务", "我的看板太乱了", "批量梳理看板"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-board-hygiene [board]`:

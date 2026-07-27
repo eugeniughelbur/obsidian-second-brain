@@ -4,6 +4,7 @@ category: vault
 triggers_en: ["projects overview", "project status", "what am I working on", "show projects"]
 triggers_es: ["resumen de proyectos", "estado de los proyectos", "en qué estoy trabajando", "muéstrame los proyectos"]
 triggers_pt: ["visão geral de projetos", "status dos projetos", "em que estou trabalhando", "mostre os projetos"]
+triggers_zh: ["看看所有项目的状态", "我现在在做哪些项目", "项目进展怎么样", "显示项目总览"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/obsidian-projects $ARGUMENTS`:

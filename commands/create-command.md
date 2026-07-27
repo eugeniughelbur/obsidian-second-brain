@@ -4,6 +4,7 @@ category: meta
 triggers_en: ["create command", "new command", "add a command", "scaffold a command"]
 triggers_es: ["crea un comando", "nuevo comando", "añade un comando", "monta un comando"]
 triggers_pt: ["crie um comando", "novo comando", "adicione um comando", "gere um comando"]
+triggers_zh: ["创建一个新命令", "新增 Obsidian 命令", "帮我写个命令", "生成命令模板"]
 ---
 
 Use the obsidian-second-brain skill. Execute `/create-command $ARGUMENTS`:
