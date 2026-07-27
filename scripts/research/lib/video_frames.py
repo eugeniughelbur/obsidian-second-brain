@@ -70,7 +70,7 @@ def download_video(url: str, out_dir: Path) -> dict:
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                        check=False, timeout=600)
     except subprocess.TimeoutExpired as e:
-        raise FrameError(f"yt-dlp timed out after 600s downloading {url}") from None
+        raise FrameError(f"yt-dlp timed out after 600s downloading {url}") from e
 
     video = _pick_video(out_dir)
     if video is None:
