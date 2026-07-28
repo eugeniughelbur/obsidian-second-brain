@@ -43,7 +43,7 @@ def write_exact(path: Path, text: str) -> None:
     data = text.encode("utf-8")
     directory = path.parent
     try:
-       keep_mode = stat_mod.S_IMODE(Path(path).stat().st_mode)
+        keep_mode = stat_mod.S_IMODE(Path(path).stat().st_mode)
     except OSError:
         keep_mode = None  # new file: let the umask decide, as write_bytes would have
 

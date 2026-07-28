@@ -125,7 +125,6 @@ def download(file_id):
     return data, pathlib.Path(path).suffix.lower()
 
 
-
 def transcribe(file_id):
     audio, suffix = download(file_id)
     suffix = suffix or ".oga"

@@ -41,4 +41,3 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["F", "I", "PTH"]
 
-

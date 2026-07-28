@@ -22,7 +22,6 @@ from pathlib import Path
 # launches us from.
 sys.path.insert(0, Path(__file__).parent.as_posix())
 
-
 import vault_ops  # noqa: E402
 from mcp.server.fastmcp import FastMCP  # noqa: E402
 
