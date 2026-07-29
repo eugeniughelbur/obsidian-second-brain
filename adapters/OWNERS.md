@@ -18,7 +18,7 @@ So platform ownership is open. A platform owner is the person who would notice.
 | Platform | Owner | Previously contributed |
 |---|---|---|
 | agent-skills | unclaimed | |
-| claude-code | unclaimed | [@MPZ-00](https://github.com/MPZ-00) |
+| claude-code | [@born-in-autumn](https://github.com/born-in-autumn) | [@MPZ-00](https://github.com/MPZ-00) |
 | codex-cli | unclaimed | [@Litash](https://github.com/Litash), [@MPZ-00](https://github.com/MPZ-00) |
 | gemini-cli | unclaimed | [@MPZ-00](https://github.com/MPZ-00) |
 | hermes | unclaimed | [@Litash](https://github.com/Litash) |
