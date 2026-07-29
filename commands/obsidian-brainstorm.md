@@ -3,7 +3,7 @@ description: Multi-turn Socratic brainstorm - one question per turn until the id
 category: thinking
 trigger-mode: explicit
 triggers_en: ["brainstorm this", "brainstorm with me", "think this through with me", "help me design this", "interview me about this idea"]
-triggers_es: ["haz una lluvia de ideas conmigo", "piensa esto conmigo", "ayúdame a diseñar esto", "entrevístame sobre esta idea"]
+triggers_es: ["haz una lluvia de ideas conmigo", "piensa esto conmigo", "ayúdame a diseñar esto", "entrevístame sobre esta idea", "dale vueltas a esto conmigo"]
 triggers_pt: ["faça um brainstorm comigo", "pense nisso comigo", "me ajude a desenhar isto", "me entreviste sobre esta ideia"]
 triggers_zh: ["陪我头脑风暴", "和我一起把这个想清楚", "通过提问帮我完善这个想法", "帮我设计这个方案"]
 ---

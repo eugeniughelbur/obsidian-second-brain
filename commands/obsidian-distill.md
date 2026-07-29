@@ -2,7 +2,7 @@
 description: Condense a long note or source into key claims, each tagged with provenance back to the exact source block it came from
 category: thinking
 triggers_en: ["distill this", "condense this note", "summarize with sources", "distill this source", "boil this down with provenance"]
-triggers_es: ["destila esto", "condensa esta nota", "resúmelo con fuentes", "destila esta fuente", "resume esto sin perder la trazabilidad"]
+triggers_es: ["destila esto", "condensa esta nota", "resúmelo con fuentes", "destila esta fuente", "resume esto sin perder el contexto", "sácame lo importante de esto con las fuentes"]
 triggers_pt: ["destile isto", "condense esta nota", "resuma com fontes", "destile esta fonte", "reduza isto com proveniência"]
 triggers_zh: ["提炼这篇笔记", "把这个内容压缩成关键结论", "总结这份材料并标明出处", "精简内容但保留来源", "从这个来源提炼要点"]
 ---

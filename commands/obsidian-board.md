@@ -2,7 +2,7 @@
 description: Show or update a kanban board - flags overdue items, updates from conversation
 category: vault
 triggers_en: ["show board", "kanban", "what is on my board", "update board"]
-triggers_es: ["muestra el tablero", "kanban", "qué hay en mi tablero", "actualiza el tablero"]
+triggers_es: ["muestra el tablero", "kanban", "qué hay en mi tablero", "actualiza el tablero", "cómo va mi tablero"]
 triggers_pt: ["mostre o board", "kanban", "o que está no meu board", "atualize o board"]
 triggers_zh: ["打开我的看板", "看看看板上有什么", "更新看板", "查看任务看板"]
 ---

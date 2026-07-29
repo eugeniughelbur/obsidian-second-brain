@@ -2,7 +2,7 @@
 description: Automatic synthesis - scans the vault for unnamed patterns and writes synthesis pages without being asked
 category: thinking
 triggers_en: ["synthesize", "auto-synthesis", "make synthesis notes", "find unnamed patterns"]
-triggers_es: ["sintetiza", "síntesis automática", "crea notas de síntesis", "busca patrones sin nombrar"]
+triggers_es: ["sintetiza", "síntesis automática", "crea notas de síntesis", "busca patrones nuevos", "saca conclusiones de mis notas"]
 triggers_pt: ["sintetize", "auto-síntese", "crie notas de síntese", "encontre padrões sem nome"]
 triggers_zh: ["自动综合我的知识库", "生成综合笔记", "把未命名的模式写成总结", "扫描知识库并形成综合结论"]
 ---

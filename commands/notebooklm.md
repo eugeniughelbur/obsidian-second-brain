@@ -2,7 +2,7 @@
 description: Vault-first source-grounded research via Gemini File Search. One command, no browser. The grounded parallel to /research-deep (which is open-web via Perplexity).
 category: research
 triggers_en: ["notebooklm", "research grounded", "ground research in vault", "ask my notebook", "source-grounded research"]
-triggers_es: ["notebooklm", "investigación fundamentada en mis notas", "basa esto en mi vault", "pregúntale a mis notas", "investigación con fuentes propias"]
+triggers_es: ["notebooklm", "investigación fundamentada en mis notas", "basa esto en mi vault", "pregúntale a mis notas", "investigación con fuentes propias", "investiga en mis notas"]
 triggers_pt: ["notebooklm", "pesquisa ancorada", "ancore a pesquisa no vault", "pergunte ao meu notebook", "pesquisa ancorada em fontes"]
 triggers_zh: ["用我的资料做研究", "基于知识库回答", "问问我的笔记", "做有来源依据的研究", "用 NotebookLM 研究"]
 ---

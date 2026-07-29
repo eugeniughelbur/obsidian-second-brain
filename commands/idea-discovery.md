@@ -2,7 +2,7 @@
 description: Surface 3-5 next-direction candidates by reading ungraduated ideas, open project questions, and orphan research notes - what is worth working on next
 category: thinking
 triggers_en: ["what should I work on next", "idea discovery", "surface next directions", "what's worth pursuing"]
-triggers_es: ["¿en qué debería trabajar ahora?", "descubre ideas para seguir", "qué rumbos tomar", "qué vale la pena perseguir"]
+triggers_es: ["descubre ideas para seguir", "qué rumbos tomar", "qué vale la pena perseguir", "en qué me enfoco ahora", "dame ideas para seguir"]
 triggers_pt: ["em que devo trabalhar agora", "descoberta de ideias", "mostre próximos caminhos", "o que vale a pena perseguir"]
 triggers_zh: ["我接下来该做什么", "帮我找下一个方向", "有哪些想法值得继续", "从笔记里发现新方向"]
 ---

@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **Improve spanish commands triggers** Native speaker audit of all 46 command triggers. Replaced literal translations with natural phrases people actually say — e.g., "ponme al tanto de todo" instead of "carga mi mundo". Improves trigger recognition for Spanish users without breaking routing precedence. (19 commands refined)
+
 - **MCP tool names carried the plugin name twice (#177, reported by @mpuglin).** The `mcpServers` key in `.claude-plugin/plugin.json` was also `obsidian-second-brain`, and Claude Code composes tool names as `mcp__plugin_<plugin>_<server>__<tool>` - so every tool arrived as `mcp__plugin_obsidian-second-brain_obsidian-second-brain__obsidian_search`, 57 characters of prefix of which 21 were the name repeated for nothing. In a dropdown or a permission prompt the prefix crowds out the part that identifies the tool. The server key is now `vault`, giving `mcp__plugin_obsidian-second-brain_vault__obsidian_search`. The plugin name, install identity, marketplace entry and slash-command namespace are all unchanged; the reported request was to rename the plugin itself to `o2b`, which was declined because the name is the install identity of the repository and the commands are already `obsidian-*`, so `o2b:obsidian-daily` would save little. **Upgrade note:** if you allowlisted these tools by their full name in `settings.json`, update the server segment from `obsidian-second-brain` to `vault`.
 
 ### Fixed

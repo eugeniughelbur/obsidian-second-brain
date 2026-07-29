@@ -2,7 +2,7 @@
 description: Load your identity, values, priorities, and current state in one shot - with progressive context levels to avoid burning tokens
 category: vault
 triggers_en: ["load context", "what is going on", "where am I", "load my world"]
-triggers_es: ["carga el contexto", "qué está pasando", "dónde estoy", "carga mi mundo"]
+triggers_es: ["carga el contexto", "qué está pasando", "dónde estoy", "ponme al tanto de todo", "dame el resumen de mi vida"]
 triggers_pt: ["carregue contexto", "o que está acontecendo", "onde estou", "carregue meu mundo"]
 triggers_zh: ["加载我的完整背景", "告诉我现在的整体状况", "读取我的身份和当前重点", "先了解一下我的情况"]
 ---

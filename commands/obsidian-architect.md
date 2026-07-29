@@ -2,7 +2,7 @@
 description: Scan a codebase and write a maintained set of architecture notes into the vault - overview, per-module notes, key decisions. Re-run to refresh without clobbering your edits
 category: meta
 triggers_en: ["document this codebase", "architect this project", "map this code into my vault", "generate architecture notes", "refresh architecture docs"]
-triggers_es: ["documenta este código", "analiza la arquitectura de este proyecto", "lleva este código a mi vault", "genera notas de arquitectura", "actualiza la documentación de arquitectura"]
+triggers_es: ["documenta este código", "analiza la arquitectura de este proyecto", "lleva este código a mi vault", "genera notas de arquitectura", "actualiza la documentación de arquitectura", "pon la arquitectura en el vault"]
 triggers_pt: ["documente este código", "arquitete este projeto", "mapeie este código no vault", "gere notas de arquitetura", "atualize a documentação de arquitetura"]
 triggers_zh: ["给这个代码库写架构文档", "分析这个项目的架构", "把代码结构整理进知识库", "生成架构笔记", "更新架构文档"]
 ---
