@@ -270,12 +270,28 @@ def load_vault(vault: Path, excludes=None, only: str | None = None) -> dict:
 # duplicate, so they are exempt from duplicate detection (issue #82).
 DATED_SERIES_FOLDERS = {"daily", "logs", "dev logs", "reviews"}
 
+# Minimum normalized-title length for the truncated-title pass (see
+# _truncated_title_groups). Short titles are prefixes of each other by accident
+# ("api" prefixes "api keys"); long ones are not.
+_TRUNC_TITLE_MIN_LEN = 20
+
 
 def _norm_title(stem: str) -> str:
     """Normalize a filename stem to a comparable title. Keeps digits and dates -
     the old version stripped ISO dates, which collapsed every dated note in a
-    series onto one bucket and flagged them all as duplicates (issue #82)."""
-    norm = re.sub(r"[^a-z0-9 ]", " ", stem.lower())
+    series onto one bucket and flagged them all as duplicates (issue #82).
+
+    Unicode-aware by necessity: the class must NOT be spelled [^a-z0-9 ], which
+    deletes every non-Latin letter. Measured on a Ukrainian/Russian vault
+    (591 notes, 2026-07): "Зустріч команди 1" and "Огляд кварталу 1"
+    both normalized to "1", and any title carrying a Latin fragment collapsed
+    onto that fragment ("Огляд ринку та KPI" -> "kpi", "Підсумки за 2024" -> "2024"). 12 of the 14 reported duplicates were unrelated notes grouped this
+    way. str.isalnum() is script-agnostic, so Cyrillic, Greek, CJK and Latin
+    titles all keep their letters.
+    """
+    norm = "".join(
+        ch if (ch.isalnum() or ch.isspace()) else " " for ch in _nfc(stem).lower()
+    )
     return re.sub(r"\s+", " ", norm).strip()
 
 
@@ -300,6 +316,58 @@ def _max_pairwise_similarity(notes: dict, files: list) -> float:
     return best
 
 
+def _truncated_title_groups(candidates: list) -> list:
+    """Group notes whose title is a truncation of another note's title.
+
+    Exporters that derive a filename from a title cut it at a fixed length, so
+    one source item can land twice under names that differ only in the tail:
+    "...про управління компанією.md" and "...про управління компанією та.md" are one
+    book stored twice. Exact-title grouping cannot see that.
+
+    Strict prefix, not fuzzy similarity. That distinction was measured, not
+    assumed: a 0.90 difflib ratio on normalized titles rated the numbered series
+    "Огляд кварталу 1"/"2" at 0.95 and grouped them as duplicates, while a
+    genuine truncation pair scored 0.98 - the two are indistinguishable by ratio.
+    Body similarity cannot break the tie either: the false pair scored 1.00
+    (both are short stubs) and the true pair 0.40. A strict prefix separates them
+    cleanly, because a trailing "1" vs "2" is never a prefix of the other.
+
+    `candidates` is a list of (norm_title, rel). Returns lists of rels.
+    """
+    by_folder = defaultdict(list)
+    for norm, rel in candidates:
+        by_folder[rel.rsplit("/", 1)[0] if "/" in rel else ""].append((norm, rel))
+
+    groups = []
+    for bucket in by_folder.values():
+        if len(bucket) < 2:
+            continue
+        # Shortest first, so a truncated stem is compared as the prefix.
+        bucket.sort(key=lambda pair: len(pair[0]))
+        used = set()
+        for i, (norm_a, rel_a) in enumerate(bucket):
+            if rel_a in used:
+                continue
+            group = [rel_a]
+            for norm_b, rel_b in bucket[i + 1:]:
+                if rel_b in used or norm_b == norm_a:
+                    continue
+                if not norm_b.startswith(norm_a):
+                    continue
+                # "Notes" vs "Notes 2" is a numbered series, not a truncated
+                # title: an exporter cutting a title never appends a bare
+                # number. Requiring the tail to carry a word keeps parts of a
+                # series out of the duplicate report.
+                if not norm_b[len(norm_a):].strip().strip("0123456789 ."):
+                    continue
+                group.append(rel_b)
+                used.add(rel_b)
+            if len(group) > 1:
+                used.add(rel_a)
+                groups.append(group)
+    return groups
+
+
 def check_duplicates(notes: dict) -> list:
     issues = []
     groups = defaultdict(list)
@@ -321,6 +389,29 @@ def check_duplicates(notes: dict) -> list:
             "severity": "warning" if similar else "info",
             "message": (
                 f"{'Likely duplicates' if similar else 'Same title, different content'}: {norm!r}"
+            ),
+            "files": files,
+        })
+
+    # Second pass: one title is a truncation of another, which exact grouping
+    # cannot see. Severity still follows the body signal - a truncated title
+    # says the pair came from one source, the bodies say whether it is a copy.
+    already = {rel for files in groups.values() if len(files) > 1 for rel in files}
+    candidates = [
+        (norm, rel)
+        for norm, files in groups.items()
+        for rel in files
+        if rel not in already and len(norm) >= _TRUNC_TITLE_MIN_LEN
+    ]
+    for files in _truncated_title_groups(candidates):
+        similar = _max_pairwise_similarity(notes, files) >= 0.6
+        issues.append({
+            "type": "duplicate",
+            "severity": "warning" if similar else "info",
+            "message": (
+                "Truncated title of another note"
+                f"{' with matching content' if similar else ''}: "
+                f"{[Path(f).stem for f in files]}"
             ),
             "files": files,
         })
@@ -603,6 +694,19 @@ def _normalize_dashes(s: str) -> str:
     return s.replace(_EM_DASH, "-").replace(_EN_DASH, "-")
 
 
+# Suffixes that mean "this link points at an attachment, not at a note yet to be
+# written". A missing note is a knowledge gap worth writing; a missing attachment
+# is an import-cleanup task. Reporting both under one label hides the first
+# inside the second - on the vault this was found on, 43 of 43 "wanted notes"
+# were attachment links, so a genuine knowledge gap would have been invisible.
+_ASSET_SUFFIXES = (
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".tiff", ".heic",
+    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".rtf",
+    ".zip", ".gz", ".tar", ".7z", ".xmind", ".mp3", ".mp4", ".mov", ".wav",
+    ".m4a", ".webm", ".epub", ".mobi",
+)
+
+
 def check_wanted_notes(notes: dict, vault: Path, excludes=None) -> list:
     """Find links whose target note does not exist yet. These are NOT errors -
     in a wiki-style vault you link a thing the moment you mention it, long before
@@ -662,12 +766,24 @@ def check_wanted_notes(notes: dict, vault: Path, excludes=None) -> list:
                 or link_dash_norm in all_stems_dash_norm
                 or _nfc(link).lower() in all_files
                 or f"{_nfc(link).lower()}.md" in all_files
+                # Path-form links to assets. Notion exports write
+                # [[Attachments Folder/Screenshot_11.png]], where the folder
+                # segment is relative to the *note*, not to the vault root - so
+                # the full-path lookup above can never match. index_vault_files()
+                # already indexes bare filenames (and Obsidian itself resolves a
+                # link by name), so the last path component has to be checked
+                # too. Without this line every imported attachment link is
+                # reported as a wanted note: 43 of 43 on the vault where this
+                # was found, with all 43 files present on disk.
+                or link_stem in all_files
+                or link_dash_norm in all_files
             )
             if not resolved:
                 potential_folder = vault / link
                 if not potential_folder.is_dir():
+                    is_asset = link_name.lower().endswith(_ASSET_SUFFIXES)
                     issues.append({
-                        "type": "wanted_note",
+                        "type": "missing_attachment" if is_asset else "wanted_note",
                         "severity": "info",
                         # A '[' inside the captured name means the real filename
                         # contains brackets and the regex capture stopped early -
@@ -706,6 +822,11 @@ def run_health_check(vault: Path) -> dict:
     notes = load_vault(vault, excludes)
     print(f"   Found {len(notes)} notes\n", file=sys.stderr)
 
+    # Wanted notes and missing attachments come out of one scan but mean
+    # different things and get counted separately: a missing note is a gap to
+    # write, a missing attachment is import cleanup.
+    link_gaps = check_wanted_notes(notes, vault, excludes)
+
     checks = [
         ("Duplicates", check_duplicates(notes)),
         ("Orphans", check_orphans(notes)),
@@ -713,7 +834,9 @@ def run_health_check(vault: Path) -> dict:
         ("Code-fence-wrapped notes", check_code_fence_wrapped(notes)),
         ("Missing frontmatter", check_missing_frontmatter(notes)),
         ("Empty folders", check_empty_folders(vault, excludes)),
-        ("Wanted notes", check_wanted_notes(notes, vault, excludes)),
+        ("Wanted notes", [i for i in link_gaps if i["type"] == "wanted_note"]),
+        ("Missing attachments",
+         [i for i in link_gaps if i["type"] == "missing_attachment"]),
         ("Template leftovers", check_template_leftovers(notes)),
         ("Semantic index coverage", check_semantic_index(vault, notes)),
     ]

@@ -109,3 +109,86 @@ def test_inline_aliases_resolve_links(tmp_path):
 
     wanted = _issues(_health(vault), "wanted_note")
     assert wanted == [], wanted
+
+
+def test_non_latin_titles_are_not_collapsed_to_their_latin_fragments(tmp_path):
+    """[^a-z0-9 ] deleted every Cyrillic letter, so unrelated notes collided.
+
+    Found on a 591-note Ukrainian/Russian vault: 'Огляд ринку та KPI' normalized to
+    'kpi' and 'Зустріч команди 1' to '1', which grouped notes sharing
+    nothing but a stray Latin fragment. 12 of 14 reported duplicates were noise.
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "Огляд ринку та KPI.md").write_text("Про мотивацію.\n", encoding="utf-8")
+    (vault / "Правила роботи та KPI.md").write_text("Про роад-мап.\n", encoding="utf-8")
+    (vault / "Зустріч команди 1.md").write_text("Про навушники.\n", encoding="utf-8")
+    (vault / "Огляд кварталу 1.md").write_text("Про продажі.\n", encoding="utf-8")
+
+    dupes = _issues(_health(vault), "duplicate")
+    assert dupes == [], f"unrelated non-Latin titles reported as duplicates: {dupes}"
+
+
+def test_numbered_series_is_not_reported_as_a_truncated_title(tmp_path):
+    """'X 1' / 'X 2' are parts of a series; neither is a truncation of the other.
+
+    Measured: difflib rates them 0.95 and their bodies 1.00 (both are stubs), so
+    neither a title ratio nor a content gate can separate them from a real
+    truncation pair - only the strict-prefix rule can.
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    for part in (1, 2):
+        (vault / f"Довга назва серії матеріалів {part}.md").write_text(
+            "Коротка заглушка.\n", encoding="utf-8")
+
+    dupes = _issues(_health(vault), "duplicate")
+    assert dupes == [], f"numbered series reported as duplicates: {dupes}"
+
+
+def test_export_truncated_title_is_reported(tmp_path):
+    """An exporter cutting one title at two lengths stores one item twice."""
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "Довга назва книги про управління компанією.md").write_text(
+        "Перший запис.\n", encoding="utf-8")
+    (vault / "Довга назва книги про управління компанією та.md").write_text(
+        "Другий запис, інший текст.\n", encoding="utf-8")
+
+    dupes = _issues(_health(vault), "duplicate")
+    assert len(dupes) == 1, f"expected the truncation pair to be reported, got {dupes}"
+    assert len(dupes[0]["files"]) == 2
+
+
+def test_attachment_link_resolves_by_bare_filename(tmp_path):
+    """[[Folder/file.png]] from a Notion export must not be reported as missing.
+
+    The folder segment is relative to the note, not the vault root, so the
+    full-path lookup never matched and every imported attachment link was
+    reported as a wanted note - 43 of 43 on the vault where this was found,
+    with all 43 files present on disk.
+    """
+    vault = tmp_path / "vault"
+    (vault / "Проєкт" / "Вкладення").mkdir(parents=True)
+    (vault / "Проєкт" / "Вкладення" / "Screenshot_11.png").write_bytes(b"\x89PNG\r\n")
+    (vault / "Проєкт" / "Нотатка.md").write_text(
+        "Дивись [[Вкладення/Screenshot_11.png]].\n", encoding="utf-8")
+
+    payload = _health(vault)
+    assert _issues(payload, "wanted_note") == []
+    assert _issues(payload, "missing_attachment") == []
+
+
+def test_absent_attachment_is_reported_separately_from_a_wanted_note(tmp_path):
+    """A gap to write and an import to clean up are different work items."""
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "Нотатка.md").write_text(
+        "Картинка [[diagram.png]] і нотатка [[Ще не написана нотатка]].\n",
+        encoding="utf-8")
+
+    payload = _health(vault)
+    wanted = _issues(payload, "wanted_note")
+    missing = _issues(payload, "missing_attachment")
+    assert len(wanted) == 1 and "Ще не написана" in wanted[0]["message"]
+    assert len(missing) == 1 and "diagram.png" in missing[0]["message"]
