@@ -60,7 +60,7 @@
   <br />
   <em>One <code>/obsidian-save</code> - five cross-linked notes. Real footage, synthetic vault. <a href="DEMOS.md">More demos &rarr;</a></em>
   <br /><br />
-  <em>If this looks useful, <a href="https://github.com/eugeniughelbur/obsidian-second-brain/stargazers">star the repo</a>. It is how other people find it.</em>
+  <em>If this looks useful, <a href="https://github.com/eugeniughelbur/obsidian-second-brain">star the repo</a>. It is how other people find it.</em>
 </p>
 
 <p align="center">
@@ -656,7 +656,7 @@ bash ~/.claude/skills/obsidian-second-brain/install.sh
 bash ~/.claude/skills/obsidian-second-brain/scripts/setup.sh "/path/to/your/vault"
 ```
 
-> Cloning it? A [star](https://github.com/eugeniughelbur/obsidian-second-brain/stargazers) costs you nothing and is how the next person finds this.
+> Cloning it? A [star](https://github.com/eugeniughelbur/obsidian-second-brain) costs you nothing and is how the next person finds this.
 
 **No vault yet?** Create a ready-to-use one first (folders, templates, boards, dashboards - passes its own health check out of the box):
 
