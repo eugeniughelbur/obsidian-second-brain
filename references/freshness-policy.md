@@ -28,7 +28,7 @@ Deals live in the CRM. Invoices are issued monthly.
 **3. Pointer.** For facts where current state matters, store where the truth lives, plus (optionally) the last observed value with a stamp.
 
 ```markdown
-**Where truth lives:** [CRM pipeline board](https://example.com/crm/pipeline)
+**Where truth lives:** [CRM pipeline board](https://example.com/)
 Last observed: 13 open deals (as of 2026-07-13)
 ```
 
@@ -44,7 +44,7 @@ This is the sentence that becomes a lie next Tuesday while still reading as trut
 
 ## The stamp
 
-`(as of YYYY-MM-DD)` or `(as of YYYY-MM)`, with a source when the fact came from outside: `(as of 2026-07-13, example.com/crm/pipeline)`. Stamps are already required by [ai-first-rules.md](ai-first-rules.md) for external claims; this policy extends them to every fast fact, internal or external.
+`(as of YYYY-MM-DD)` or `(as of YYYY-MM)`, with a source when the fact came from outside: `(as of 2026-07-13, example.com)`. Stamps are already required by [ai-first-rules.md](ai-first-rules.md) for external claims; this policy extends them to every fast fact, internal or external.
 
 ## Lint rules (what a checker enforces)
 
