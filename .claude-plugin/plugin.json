@@ -15,7 +15,7 @@
       "args": [
         "run",
         "--with",
-        "mcp",
+        "mcp<2",
         "python",
         "${CLAUDE_PLUGIN_ROOT}/integrations/obsidian-mcp-server/server.py"
       ]

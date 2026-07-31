@@ -45,7 +45,7 @@ Requires the vault path in the environment and the `mcp` package:
 
 ```bash
 export OBSIDIAN_VAULT_PATH="/path/to/your/vault"
-uv run --with mcp python integrations/obsidian-mcp-server/server.py
+uv run --with 'mcp<2' python integrations/obsidian-mcp-server/server.py
 ```
 
 ## Wire it into a client
@@ -57,7 +57,7 @@ Hermes Agent and most MCP clients take a launch command. Example client config e
   "mcpServers": {
     "obsidian-second-brain": {
       "command": "uv",
-      "args": ["run", "--with", "mcp", "python", "/abs/path/integrations/obsidian-mcp-server/server.py"],
+      "args": ["run", "--with", "mcp<2", "python", "/abs/path/integrations/obsidian-mcp-server/server.py"],
       "env": { "OBSIDIAN_VAULT_PATH": "/path/to/your/vault" }
     }
   }
@@ -72,9 +72,9 @@ For Hermes specifically, add the server to its MCP config; Hermes picks the tool
 
 ```bash
 # read-only (safe against a real vault)
-OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with mcp python live_test.py "your query"
+OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with 'mcp<2' python live_test.py "your query"
 # also write one test note to Inbox/
-OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with mcp python live_test.py --save "your query"
+OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with 'mcp<2' python live_test.py --save "your query"
 ```
 
 Live-test checklist:

@@ -90,6 +90,49 @@ def test_plugin_manifest_paths_exist():
                 assert (REPO_ROOT / rel).is_file(), f"missing MCP file: {rel}"
 
 
+def test_mcp_launch_pins_the_mcp_dependency():
+    """`uv run --with mcp` resolves to the newest PyPI release at launch time,
+    so an upstream SDK release breaks every install at once. mcp 2.0.0 did
+    exactly that (#183): it removed `mcp.server.fastmcp`, server.py's
+    `from mcp.server.fastmcp import FastMCP` raised ModuleNotFoundError, and
+    Claude Code reported only a generic `-32000` reconnect failure. The
+    manifest arg must therefore carry a version constraint, not a bare name."""
+    plugin = _load(".claude-plugin/plugin.json")
+    for name, server in plugin["mcpServers"].items():
+        args = server.get("args", [])
+        assert "--with" in args, f"MCP server {name} must declare its deps with --with"
+        spec = args[args.index("--with") + 1]
+        assert spec.startswith("mcp"), f"MCP server {name}: unexpected --with target {spec!r}"
+        assert spec != "mcp", (
+            f"MCP server {name}: pin the mcp dependency (e.g. 'mcp<2'); an unpinned "
+            "--with lets the next breaking SDK release take the server down"
+        )
+
+
+# `--with mcp` not followed by a version constraint - the shape that breaks.
+UNPINNED_MCP_RE = re.compile(r"--with[\"',\s]+\"?mcp(?![<>=!~\w-])")
+
+# CHANGELOG entries quote the broken command verbatim while describing the fix.
+UNPINNED_SWEEP_SKIP = {"CHANGELOG.md", "tests/test_plugin_manifest.py"}
+
+
+def test_no_documented_command_reinstalls_the_unpinned_mcp():
+    """The pin only holds if every copy of the launch command carries it. The
+    command is duplicated across the manifest, setup.sh, SKILL.md, README.md and
+    the integration's own docs - fixing one and missing another leaves a path
+    that reinstalls the broken resolution."""
+    offenders = []
+    for path in REPO_ROOT.rglob("*"):
+        if not path.is_file() or path.suffix not in {".md", ".py", ".sh", ".json"}:
+            continue
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        if rel in UNPINNED_SWEEP_SKIP or rel.startswith((".git/", ".venv/")):
+            continue
+        if UNPINNED_MCP_RE.search(path.read_text(encoding="utf-8", errors="ignore")):
+            offenders.append(rel)
+    assert not offenders, f"unpinned `--with mcp` still documented in: {offenders}"
+
+
 def test_plugin_hooks_reference_shipped_executable_scripts():
     hooks = _load("hooks/hooks.json")["hooks"]
     assert set(hooks) == {"SessionStart", "PostCompact"}
