@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       # build.sh is pure bash and vault_health.py is stdlib-only, but the
@@ -54,7 +54,7 @@ jobs:
       # The Obsidian plugin is a second implementation of AI-FIRST.md, in a
       # second language, so it needs its own gate. A linter's failure mode is
       # false positives, and most of these tests are about not firing.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
