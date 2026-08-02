@@ -7,7 +7,10 @@ and add notes to an Obsidian vault. This is the "second brain as a tool" connect
 doorway into the knowledge vault.
 
 Run:
-    OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with mcp python server.py
+    OBSIDIAN_VAULT_PATH=/path/to/vault uv run --with "mcp<2" python server.py
+
+Pinned below 2.0: mcp 2.0.0 renamed mcp.server.fastmcp.FastMCP to
+mcp.server.mcpserver.MCPServer, which breaks the import below.
 
 or wire it into a client's MCP config (see README.md).
 """
