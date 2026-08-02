@@ -25,9 +25,15 @@ from pathlib import Path
 
 from .lib.config import VAULT_PATH
 
-VAULT_SCAN_DIRS = ["wiki", "Research", "Knowledge", "Projects", "Ideas"]
 MAX_BASELINE_NOTES = 8
 MAX_BASELINE_CHARS_PER_NOTE = 1500
+
+
+def _vault_scan_dirs() -> list[str]:
+    """Top-level vault folders that actually exist - never a hardcoded name (folder-map.md)."""
+    if not VAULT_PATH.exists():
+        return []
+    return [p.name for p in VAULT_PATH.iterdir() if p.is_dir() and not p.name.startswith(".")]
 
 
 def vault_scan(topic: str) -> list[dict]:
@@ -36,7 +42,7 @@ def vault_scan(topic: str) -> list[dict]:
     if not keywords:
         return []
     hits: list[dict] = []
-    for sub in VAULT_SCAN_DIRS:
+    for sub in _vault_scan_dirs():
         root = VAULT_PATH / sub
         if not root.exists():
             continue
