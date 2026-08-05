@@ -298,10 +298,11 @@ def fetch_transcript_tag(transcript_url: str) -> str | None:
 
 
 def _parse_json_transcript(body: str) -> str | None:
-    """Parse a JSON transcript body. Currently supports the Podcast Index
-    `{"segments": [{"body": "..."}]}` schema. Other schemas (Deepgram,
-    AssemblyAI, custom) are not supported and produce a stderr warning so
-    the caller knows a JSON transcript was found but unreadable.
+    """Parse a JSON transcript body. Supports the Podcast Index
+    `{"segments": [{"body": "..."}]}` schema and the Whisper-derived
+    `{"segments": [{"text": "..."}]}` schema that several hosts ship
+    (flightcast, Deepgram, AssemblyAI). Anything else produces a stderr
+    warning so the caller knows a JSON transcript was found but unreadable.
     """
     import json
     try:
@@ -311,23 +312,26 @@ def _parse_json_transcript(body: str) -> str | None:
         return None
     if isinstance(data, dict) and "segments" in data:
         segments = data["segments"]
-        joined = " ".join(s.get("body", "") for s in segments if s.get("body")).strip()
-        if joined:
-            return joined
+        # Podcast Index names the per-segment string `body`; Whisper-derived
+        # exports name it `text`. They are otherwise the same shape, so accept
+        # either rather than falling through to a show-notes-only summary.
+        for field in ("body", "text"):
+            joined = " ".join(s.get(field, "") for s in segments if s.get(field)).strip()
+            if joined:
+                return joined
         sample_keys: list[str] = []
         if isinstance(segments, list) and segments and isinstance(segments[0], dict):
             sample_keys = list(segments[0].keys())[:6]
         print(
-            f"[podcast transcript-tag JSON: `segments` present but no `body` field "
-            f"(segment keys: {sample_keys}). Likely Deepgram/AssemblyAI/custom schema. "
-            f"Only Podcast Index `segments[].body` is supported in v1.]",
+            f"[podcast transcript-tag JSON: `segments` present but no `body` or `text` field "
+            f"(segment keys: {sample_keys}). Unrecognised schema.]",
             file=sys.stderr,
         )
         return None
     keys = list(data.keys())[:5] if isinstance(data, dict) else type(data).__name__
     print(
         f"[podcast transcript-tag JSON: unsupported schema (top-level keys/type: {keys}). "
-        f"Only Podcast Index `segments[].body` is supported in v1.]",
+        f"Only `segments[].body` and `segments[].text` are supported.]",
         file=sys.stderr,
     )
     return None
