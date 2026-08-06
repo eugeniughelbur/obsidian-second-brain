@@ -742,6 +742,36 @@ Point OpenCode at Hermes via OpenRouter. Authenticate once (`/connect`, search O
 }
 ```
 
+Point OpenCode at a multi-model gateway instead: [OrcaRouter](https://www.orcarouter.ai)
+routes any model through one key with an OpenAI-compatible endpoint at
+`https://api.orcarouter.ai/v1`. Authenticate once (`/connect`, search OrcaRouter, paste
+your key - or `export ORCAROUTER_API_KEY=...`), then in `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "orcarouter/anthropic/claude-sonnet-4.6",
+  "provider": {
+    "orcarouter": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OrcaRouter",
+      "options": {
+        "baseURL": "https://api.orcarouter.ai/v1",
+        "apiKey": "{env:ORCAROUTER_API_KEY}"
+      },
+      "models": {
+        "anthropic/claude-sonnet-4.6": {},
+        "deepseek/deepseek-v4-flash": {}
+      }
+    }
+  }
+}
+```
+
+It also runs gateway-level, zero-trust security for AI agents on the same endpoint -
+screening every prompt/response and governing every tool call on a default-deny basis,
+with no application code changes.
+
 Hermes models on OpenRouter (as of 2026-06, [openrouter.ai](https://openrouter.ai/models?q=hermes)):
 
 | Model id | Best for | Cost (in / out per 1M tokens) |
