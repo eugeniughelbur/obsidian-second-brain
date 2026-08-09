@@ -1127,6 +1127,50 @@ def test_recall_hook_contract(tmp_path):
     assert any(e.get("abstained") is True for e in entries)
 
 
+def test_recall_hook_abstention_gate_is_cjk_aware(tmp_path):
+    """Regression for #192: the gate must not abstain on a CJK prompt whose top
+    hit is genuinely relevant.
+
+    #159 made search itself CJK-aware, but the hook kept a private
+    `re.split(r"\\W+", ...)` copy for its abstention gate. `\\w` is Unicode-aware,
+    so a Japanese phrase never split - it collapsed into a single token that had
+    to appear verbatim in the top hit to clear MIN_TERM_OVERLAP. It never did, so
+    the hook shipped permanently inert on CJK vaults, and silently: abstention is
+    a normal outcome, indistinguishable in the log from a weak match."""
+    hook = REPO_ROOT / "hooks/obsidian-recall.py"
+    vault = tmp_path / "vault"
+    (vault / "wiki").mkdir(parents=True)
+    (vault / "wiki" / "設定ファイルの置き場所.md").write_text(
+        "---\ntype: concept\n---\n# 設定ファイルの置き場所\n\n"
+        "設定ファイルはリポジトリ直下に置く。\n",
+        encoding="utf-8",
+    )
+
+    def run(prompt):
+        env = dict(os.environ, OBSIDIAN_VAULT_PATH=str(vault), OBSIDIAN_RECALL_ENABLED="1")
+        return subprocess.run(
+            [sys.executable, str(hook)],
+            input=json.dumps({"prompt": prompt}),
+            env=env, capture_output=True, text=True,
+        )
+
+    hit = run("設定ファイルはどこに置くのが正しいですか")
+    assert hit.returncode == 0, hit.stderr
+    assert hit.stdout, (
+        "CJK prompt with a relevant top hit still abstains - the gate is not "
+        "sharing the CJK-aware tokenizer (#192)"
+    )
+    ctx = json.loads(hit.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert "[[設定ファイルの置き場所]]" in ctx
+
+    # The gate still has teeth: an unrelated CJK prompt must abstain, otherwise
+    # the "fix" is just a gate that always passes.
+    miss = run("量子色力学の格子正則化について説明してください")
+    assert miss.returncode == 0 and miss.stdout == "", (
+        "unrelated CJK prompt injected; the gate no longer discriminates"
+    )
+
+
 def test_relative_reference_citations_are_not_silent():
     """The relative-path class (issue #171, reported by the codex-cli owner).
 

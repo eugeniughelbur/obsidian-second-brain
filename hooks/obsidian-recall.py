@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -46,8 +45,19 @@ def _log(vault: Path, entry: dict) -> None:
         pass
 
 
-def _terms(s: str) -> set:
-    return {t for t in re.split(r"\W+", s.lower()) if len(t) > 3}
+def _terms(vault_ops, s: str) -> set:
+    """Meaningful terms for the abstention gate, from the tokenizer search itself uses.
+
+    This deliberately delegates rather than keeping a private copy. The copy is
+    what made the gate abstain on every CJK prompt (issue #192): Python's `\\w`
+    is Unicode-aware, so `\\W+` never splits a Chinese/Japanese/Korean run and
+    the whole phrase collapsed into one token that could never overlap the top
+    hit. `_query_terms` has been CJK-aware since #159 - one tokenizer, one fix.
+
+    Side benefit: it drops stopwords, so the gate no longer counts an overlap
+    of "there"/"would"/"which" as a meaningful match the way `len(t) > 3` did.
+    """
+    return set(vault_ops._query_terms(s))
 
 
 def main() -> int:
@@ -90,9 +100,9 @@ def main() -> int:
     # Abstention: the top hit must share at least one meaningful term with the
     # prompt (title or snippet). Weak matches inject nothing - silence beats
     # noise, and the user can always search explicitly.
-    ptoks = _terms(prompt)
+    ptoks = _terms(vault_ops, prompt)
     top = results[0]
-    ttoks = _terms(str(top.get("title", "")) + " " + str(top.get("snippet", "")))
+    ttoks = _terms(vault_ops, str(top.get("title", "")) + " " + str(top.get("snippet", "")))
     if len(ptoks & ttoks) < MIN_TERM_OVERLAP:
         _log(vault, {"prompt_chars": len(prompt), "abstained": True, "reason": "low confidence"})
         return 0

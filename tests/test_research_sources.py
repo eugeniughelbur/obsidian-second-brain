@@ -347,7 +347,16 @@ def test_web_reader_caps_urls_and_truncates(monkeypatch, tmp_path):
     # Dedup + cap: only 3 unique http URLs sent.
     assert captured["json"]["urls"] == ["https://a.example", "https://b.example", "https://c.example"]
     assert captured["headers"]["Authorization"] == "Bearer tvly-test-key"
-    assert len(out["https://a.example"]) == web_reader.MAX_EXTRACT_CHARS
+    # Truncation is capped AND announced (#194). The payload is still cut at the
+    # cap; what is new is that the excerpt says so, because the synthesis prompt
+    # used to present it as full-page text and a silent cut reads as a complete
+    # page that simply never mentions the missing topic.
+    body = out["https://a.example"]
+    assert body.startswith("x" * web_reader.MAX_EXTRACT_CHARS)
+    assert body.count("x") == web_reader.MAX_EXTRACT_CHARS
+    assert "TRUNCATED" in body
+    assert str(web_reader.MAX_EXTRACT_CHARS) in body
+    # A page under the cap is passed through untouched - no spurious marker.
     assert out["https://b.example"] == "short"
 
     # Total failure -> {} and no exception.

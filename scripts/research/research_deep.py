@@ -294,10 +294,12 @@ def run_paid_deep(topic: str) -> int:
         extracted = web_reader.read(sources_collected)
         if extracted:
             blocks = "\n\n".join(
-                f"#### Full text: {url}\n\n{text}" for url, text in extracted.items()
+                f"#### Extracted text: {url}\n\n{text}" for url, text in extracted.items()
             )
             findings += (
-                "\n\n### Extracted source content (full-page text, use to verify and deepen the findings above)\n\n"
+                "\n\n### Extracted source content (bounded excerpt per page, use to verify "
+                "and deepen the findings above; a block marked TRUNCATED is the opening of a "
+                "longer page, so treat what is missing as unread, not as absent from the source)\n\n"
                 + blocks
             )
             print(f"[/research-deep] Extracted {len(extracted)} pages.", file=sys.stderr)

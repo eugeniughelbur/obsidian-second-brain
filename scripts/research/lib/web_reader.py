@@ -1,10 +1,15 @@
-"""Full-page reader via the Tavily Extract API. Optional deep-research upgrade.
+"""Bounded page reader via the Tavily Extract API. Optional deep-research upgrade.
 
 /research-deep's synthesis normally sees only citation snippets. When
-TAVILY_API_KEY is set, the top sources are fetched as full page text and
-injected into the synthesis prompt, so the synthesizer reads what the pages
-actually say instead of guessing from snippets. Pattern from fork-insights
-round 2 (the web-reader fork).
+TAVILY_API_KEY is set, the top sources are fetched as page text and injected
+into the synthesis prompt, so the synthesizer reads what the pages actually
+say instead of guessing from snippets. Pattern from fork-insights round 2
+(the web-reader fork).
+
+Bounded, not complete: each page is cut at MAX_EXTRACT_CHARS and the cut is
+marked inline. Do not describe the output as "full text" - a long page arrives
+as its opening section, and a reader told otherwise will treat what is missing
+as absent from the source rather than absent from the excerpt (#194).
 
 Contract: never raises. Any failure returns what was extracted so far (or {});
 deep research must proceed snippet-only when extraction is unavailable. Paid:
@@ -63,7 +68,19 @@ def read(urls: list[str]) -> dict[str, str]:
         url = item.get("url") or ""
         text = (item.get("raw_content") or "").strip()
         if url and text:
-            out[url] = text[:MAX_EXTRACT_CHARS]
+            if len(text) > MAX_EXTRACT_CHARS:
+                # Mark the cut. The truncation was silent and the caller labelled
+                # the result "full-page text", so the synthesizer had no way to
+                # know it was reading the opening of a long page and could state
+                # conclusions about sections that were never sent (#194).
+                out[url] = (
+                    text[:MAX_EXTRACT_CHARS]
+                    + f"\n\n[TRUNCATED: this is the first {MAX_EXTRACT_CHARS} characters "
+                    f"of {len(text)}. The rest of the page was not read - do not treat "
+                    f"absence of a topic below as evidence the page does not cover it.]"
+                )
+            else:
+                out[url] = text
     # Ledger: extract has no token accounting; record the batch (fail-soft).
     usage.log_call("research-deep", "tavily-extract", 0, 0, 0.0,
                    extra={"provider": "tavily", "urls_extracted": len(out)})

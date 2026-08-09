@@ -21,7 +21,7 @@ Use the obsidian-second-brain skill. Execute `/research-deep [topic]`:
    - **Phase 1** - vault scan: finds existing notes mentioning the topic (the baseline).
    - **Phase 2** - gap analysis: Perplexity sonar-pro identifies what's missing/stale and emits 3-5 targeted queries (each tagged `web` or `x`).
    - **Phase 3** - gap-fill: runs each query via Perplexity (web) or Grok x_search (X discourse).
-   - **Phase 3.5** (optional) - if `TAVILY_API_KEY` is set, the top cited sources are fetched as full-page text (Tavily Extract, capped at 3 pages) and injected into the synthesis so it reads what the pages actually say, not just snippets. Skipped silently without the key - never require it.
+   - **Phase 3.5** (optional) - if `TAVILY_API_KEY` is set, the top cited sources are fetched as page text (Tavily Extract, capped at 3 pages and 8,000 characters per page) and injected into the synthesis so it reads what the pages actually say, not just snippets. A page longer than the cap arrives as its opening section with the cut marked inline; treat what is missing as unread rather than as absent from the source. Skipped silently without the key - never require it.
    - **Phase 4** - synthesis: Perplexity produces a delta report, the script saves it to `Research/Deep/YYYY-MM-DD - <slug>.md`, then emits a JSON payload between `<<<RESEARCH_DEEP_PROPAGATION_PAYLOAD>>>` markers.
 
    Show the synthesis body verbatim, then do the propagation step (step 5).
