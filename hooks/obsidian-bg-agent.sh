@@ -231,6 +231,25 @@ log_run "starting" summary_chars "${#SUMMARY}" hints_chars "${#PROJECT_HINTS}"
   EXIT_CODE=$?
   rm -f "$PROMPT_FILE"
   log_run "completed" duration_sec "$(( $(date +%s) - START_TIME ))" exit_code "$EXIT_CODE"
-) &
+# Give the subshell its OWN stdio rather than inheriting the hook's, and detach
+# it from job control. `) &` alone leaves it holding the hook's stdout and
+# stderr for the agent's entire life - 40 to 190s for a real propagation run -
+# with two consequences:
+#
+#   1. Nothing reading the hook's output sees EOF until the AGENT exits, not
+#      until the hook exits. Measured against a 5s stub agent: a reader blocked
+#      6.00s without this redirect, 0.07s with it.
+#   2. Anything the subshell writes to stderr escapes to whoever is reading the
+#      hook - and PostCompact is documented as showing stderr to the user. That
+#      is not limited to the lines above: every future line added inside this
+#      block inherits the same exposure, which makes it a trap rather than a
+#      one-off. A failing `>> "$BG_LOG"` redirect is enough to put raw shell
+#      diagnostics in front of a user mid-compaction, about a temp file they
+#      have no way to act on.
+#
+# The agent's own output already goes to $BG_LOG, so nothing diagnostic is lost
+# here - this closes the gap around it.
+) </dev/null >/dev/null 2>&1 &
+disown 2>/dev/null || true
 
 exit 0

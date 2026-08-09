@@ -215,3 +215,64 @@ def test_launch_uses_strict_mcp_config(tmp_path):
         time.sleep(0.1)
     body = record.read_text(encoding="utf-8")
     assert "ARG=--strict-mcp-config" in body, "headless run must enforce filesystem-only MCP"
+
+
+def _spawn_env(tmp_path: Path, vault: Path, stub_body: str, extra: dict | None = None) -> tuple[dict, str]:
+    stub_dir = tmp_path / "bin"; stub_dir.mkdir(exist_ok=True)
+    stub = stub_dir / "claude"
+    stub.write_text(stub_body, encoding="utf-8")
+    stub.chmod(0o755)
+    transcript = tmp_path / "transcript.jsonl"
+    transcript.write_text(
+        json.dumps({"isCompactSummary": True, "message": {"content": "did some work"}}) + "\n",
+        encoding="utf-8",
+    )
+    env = {**os.environ, "PATH": f"{stub_dir}:{os.environ['PATH']}",
+           "OBSIDIAN_VAULT_PATH": str(vault), "OBSIDIAN_BG_AGENT_ENABLED": "1",
+           **(extra or {})}
+    return env, json.dumps({"transcript_path": str(transcript)})
+
+
+def test_spawn_does_not_hold_the_hooks_stdio_open(tmp_path):
+    """The hook must return when IT is done, not when the agent is.
+
+    A backgrounded subshell inherits the parent's stdout and stderr, so anything
+    reading the hook's output sees EOF only once the agent exits - 40 to 190s
+    for a real propagation run, against a hook that otherwise returns in a
+    fraction of a second. Pipes here on purpose: with the output going to files
+    there is nothing to hold open and the regression is invisible.
+    """
+    vault = tmp_path / "vault"; vault.mkdir()
+    env, stdin = _spawn_env(tmp_path, vault, "#!/usr/bin/env bash\ncat >/dev/null\nsleep 5\n")
+    start = time.monotonic()
+    r = subprocess.run(["bash", str(HOOK)], input=stdin, env=env,
+                       capture_output=True, text=True, timeout=60)
+    elapsed = time.monotonic() - start
+    assert r.returncode == 0
+    assert elapsed < 2.0, (
+        f"hook took {elapsed:.2f}s against a 5s agent - its stdio is still held "
+        f"open by the spawned subshell"
+    )
+
+
+def test_subshell_stderr_never_reaches_the_user(tmp_path):
+    """Nothing the spawned block writes to stderr may surface to the user.
+
+    PostCompact is documented as showing stderr to the user, and this hook fires
+    mid-compaction, so a raw shell diagnostic about a temp file is both alarming
+    and unactionable. The exposure is not limited to today's lines: every future
+    line added inside that block inherits it, which is what makes an inherited
+    stderr a trap rather than a one-off.
+
+    Triggered here by making $BG_LOG a directory, so the subshell's
+    `>> "$BG_LOG"` redirect fails and bash reports it.
+    """
+    vault = tmp_path / "vault"; vault.mkdir()
+    fake_tmp = tmp_path / "tmp"; fake_tmp.mkdir()
+    (fake_tmp / f"obsidian-bg-agent-{os.getuid()}.log").mkdir()
+    env, stdin = _spawn_env(tmp_path, vault, "#!/usr/bin/env bash\ncat >/dev/null\n",
+                            {"TMPDIR": str(fake_tmp)})
+    r = subprocess.run(["bash", str(HOOK)], input=stdin, env=env,
+                       capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, "an unusable log path must not fail the compaction"
+    assert r.stderr == "", f"the spawned block leaked to the user's stderr:\n{r.stderr}"
