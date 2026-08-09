@@ -21,6 +21,19 @@
 //   3. Merge the "hooks" block below into ~/.claude/settings.json (real JSON -
 //      strip these comments), using the absolute path to your installed script.
 //
+// OPTIONAL, but read this if you want the run log to be useful:
+// OBSIDIAN_BG_COUNT_IGNORE is an extended regex of vault-relative paths left
+// out of the files_changed count on each run's "completed" line. The headless
+// agent is a full Claude Code session that loads this same skill, so its own
+// SessionStart/SessionEnd hooks rewrite whatever your vault regenerates -
+// boards, rollups, an index, a memory mirror - during every run. Without a
+// pattern the count never reaches 0, so it cannot tell a run that propagated
+// nothing from one that wrote notes. Name your generated paths, and leave the
+// folders the agent legitimately writes to (daily notes, projects) out of it:
+//      "env": {
+//        "OBSIDIAN_BG_COUNT_IGNORE": "^(index\\.md|Boards/|Rollups/)"
+//      }
+//
 // To DISABLE again: set OBSIDIAN_BG_AGENT_ENABLED to "0" (or remove it). The
 // hard gate in the script makes clearing the flag enough to render it inert,
 // even if the PostCompact hook stays registered.

@@ -21,6 +21,11 @@
 # To disable again: clear OBSIDIAN_BG_AGENT_ENABLED (the gate below makes that enough).
 #
 # Optional:
+#   - OBSIDIAN_BG_COUNT_IGNORE is an extended regex of vault-relative paths to
+#     leave out of the completed line's files_changed count. Set it to whatever
+#     your vault regenerates on its own (boards, rollups, an index, a memory
+#     mirror), or files_changed never reaches 0 and cannot tell a no-op run
+#     apart from a productive one. Unset by default.
 #   - CLAUDE_VAULT_PROPAGATION=1 lets the origin project's CLAUDE.md steer
 #     propagation. If set, and the compacting project has a "## Vault
 #     propagation hints" section in its CLAUDE.md, that section (only) is
@@ -30,7 +35,9 @@
 # Logs:
 #   - $TMPDIR/obsidian-bg-agent-$(id -u).log - stdout/stderr, mode 0600
 #   - $VAULT/.claude-runs/YYYY-MM-DD.jsonl - one JSONL line per run outcome
-#     (early-exit reason, or starting + completed with duration and exit code)
+#     (early-exit reason, or starting + completed with duration, exit code and
+#     files_changed - see OBSIDIAN_BG_COUNT_IGNORE above, without which that
+#     count is dominated by files the vault regenerates on its own)
 
 VAULT="${OBSIDIAN_VAULT_PATH:-}"
 [[ -z "$VAULT" ]] && exit 0
@@ -53,6 +60,56 @@ mkdir -p "$RUNS_DIR" 2>/dev/null || true
 # `stat -f`; 0 if neither works so callers never divide by a missing value.
 file_mtime() {
   stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || echo 0
+}
+
+# count_changed_since <marker> - how many vault files were modified after the
+# marker file was created. Prints an integer, or returns 1 and prints nothing
+# when the count cannot be trusted, so the caller omits the field rather than
+# logging a guess.
+#
+# Why mtime and not `git status --porcelain | wc -l`: a vault under the
+# Obsidian Git plugin auto-commits on a timer, and a commit landing mid-run
+# drops the dirty count back to zero - so a status delta would report "wrote
+# nothing" for a run that wrote three notes, the precise failure this field
+# exists to prevent. A commit does not change file mtimes, so `-newer` is
+# immune to it, and it needs no git at all, which also covers vaults that are
+# not repos.
+#
+# Dot-prefixed names are pruned at every level. That drops .git, .obsidian's
+# constantly-rewritten workspace state, this hook's own .claude-runs log and
+# .claude-lock; without the prune every run reports a nonzero count and the
+# field says nothing.
+#
+# OBSIDIAN_BG_COUNT_IGNORE drops machine-generated paths from the count. It is
+# an extended regex matched against VAULT-RELATIVE paths, and it matters more
+# than it looks: the headless agent this hook spawns is a full Claude Code
+# session that loads this same plugin, so its OWN SessionStart/SessionEnd hooks
+# rebuild the task board, the rollups, the index and the memory mirror against
+# whatever OBSIDIAN_VAULT_PATH points at. Measured by pointing the hook at an
+# empty scratch vault: 3 notes written by the propagation itself, 216 files
+# written by that machinery. Without an ignore pattern a no-op run still counts
+# several files, so the field never reaches 0 and cannot mean what it says.
+# Unset by default, because the paths are a property of the vault's layout and
+# guessing them for someone else's vault would be worse than counting everything.
+count_changed_since() {
+  local marker="$1" found filtered rc
+  [[ -n "$marker" && -f "$marker" ]] || return 1
+  found=$(find "$VAULT" -name '.*' -prune -o -type f -newer "$marker" -print 2>/dev/null) || return 1
+  [[ -z "$found" ]] && { printf '0'; return 0; }
+  # Vault-relative via substr, not sed: a vault path holding regex or delimiter
+  # metacharacters cannot corrupt the match this way.
+  found=$(printf '%s\n' "$found" | awk -v n="${#VAULT}" '{ print substr($0, n + 2) }')
+  if [[ -n "${OBSIDIAN_BG_COUNT_IGNORE:-}" ]]; then
+    filtered=$(printf '%s\n' "$found" | grep -Ev "$OBSIDIAN_BG_COUNT_IGNORE"); rc=$?
+    # grep exits 1 when it filtered everything out (a real zero) and >=2 on a
+    # bad pattern. Treating those alike would turn a broken regex into a
+    # confident "wrote nothing", which is the one wrong answer this field
+    # must never give.
+    [[ $rc -ge 2 ]] && return 1
+    found="$filtered"
+  fi
+  [[ -z "$found" ]] && { printf '0'; return 0; }
+  printf '%s\n' "$found" | wc -l | tr -d ' \n'
 }
 
 # log_run <status> [key val [key val ...]]  - append one JSONL line.
@@ -203,6 +260,11 @@ INSTRUCTIONS
 
 log_run "starting" summary_chars "${#SUMMARY}" hints_chars "${#PROJECT_HINTS}"
 
+# t0 for the file-change count. Created here, immediately before the agent
+# starts, so `find -newer` against it sees exactly the run's window. mktemp
+# failing is not fatal: the count is then unavailable and the field is omitted.
+CHANGE_MARKER=$(mktemp "${TMPDIR:-/tmp}/obsidian-bg-marker-XXXXXX" 2>/dev/null || true)
+
 # Run headless agent in vault directory - async, logs to /tmp for debugging.
 # Feed the prompt via stdin, NOT as an argv element. `claude -p "$PROMPT"`
 # passes the whole prompt as one command-line argument and hits the ~32K
@@ -230,7 +292,26 @@ log_run "starting" summary_chars "${#SUMMARY}" hints_chars "${#PROJECT_HINTS}"
     -p < "$PROMPT_FILE" >> "$BG_LOG" 2>&1
   EXIT_CODE=$?
   rm -f "$PROMPT_FILE"
-  log_run "completed" duration_sec "$(( $(date +%s) - START_TIME ))" exit_code "$EXIT_CODE"
+  # files_changed answers the one question exit_code cannot: did this run
+  # propagate anything at all. Both a run that wrote three notes and a run that
+  # decided the summary held nothing new exit 0, and the prompt tells the agent
+  # to take the second path, so that is the COMMON outcome rather than an edge
+  # case - "completed, exit 0" was never evidence of a write.
+  #
+  # Read it as a direction, not an attribution: it counts every vault file
+  # touched in the window that OBSIDIAN_BG_COUNT_IGNORE did not exclude, so any
+  # other writer active at the same time still inflates it and it can never
+  # prove THIS agent wrote a given file. Zero is the trustworthy end - nothing
+  # was written, by anyone - and it only reaches zero if that ignore pattern
+  # covers what the vault regenerates on its own. Omitted entirely when
+  # unavailable, so the field is never a guess.
+  if CHANGED=$(count_changed_since "$CHANGE_MARKER"); then
+    log_run "completed" duration_sec "$(( $(date +%s) - START_TIME ))" exit_code "$EXIT_CODE" files_changed "$CHANGED"
+  else
+    log_run "completed" duration_sec "$(( $(date +%s) - START_TIME ))" exit_code "$EXIT_CODE"
+  fi
+  [[ -n "$CHANGE_MARKER" ]] && rm -f "$CHANGE_MARKER"
+  true
 ) &
 
 exit 0
