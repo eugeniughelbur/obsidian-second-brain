@@ -215,3 +215,104 @@ def test_launch_uses_strict_mcp_config(tmp_path):
         time.sleep(0.1)
     body = record.read_text(encoding="utf-8")
     assert "ARG=--strict-mcp-config" in body, "headless run must enforce filesystem-only MCP"
+
+
+def _fire_to_files(tmp_path: Path, tag: str, stdin: str, env: dict) -> tuple[int, str]:
+    """Run the hook with stdout/stderr going to FILES, not pipes.
+
+    Deliberate: the detached subshell inherits the hook's stdout and stderr, so
+    capture_output=True would keep those pipes open until the spawned agent
+    exits. subprocess.run would then block for the agent's whole lifetime, the
+    two runs below would never overlap, and the collision under test could not
+    happen - the test would pass against the bug it exists to catch.
+    """
+    out = tmp_path / f"out-{tag}.txt"
+    err = tmp_path / f"err-{tag}.txt"
+    with open(out, "w") as o, open(err, "w") as e:
+        r = subprocess.run(["bash", str(HOOK)], input=stdin, env=env, text=True,
+                           stdout=o, stderr=e, timeout=30)
+    return r.returncode, err.read_text(encoding="utf-8")
+
+
+def test_overlapping_runs_do_not_share_one_prompt_file(tmp_path):
+    """A second compaction while the first agent is still running must not
+    collide on the prompt file.
+
+    BSD mktemp substitutes the X's only when they END the template, so a
+    template carrying a suffix is a literal path on macOS and every run reuses
+    one filename. GNU mktemp accepts the suffix, so this passes on Linux and in
+    CI and fails only on a Mac, only when two runs overlap.
+
+    The burst-dedup lock does not cover this: its trap releases on hook exit,
+    under a second in, while the agent it spawned runs for minutes.
+
+    Two failures at once when they collide - stderr reaches the user, because
+    PostCompact surfaces stderr, and the second agent starts with an empty
+    prompt, so that compaction propagates nothing while its run log says
+    completed.
+    """
+    vault = tmp_path / "vault"; vault.mkdir()
+    stub_dir = tmp_path / "bin"; stub_dir.mkdir()
+    sizes = tmp_path / "prompt-sizes.txt"
+    stub = stub_dir / "claude"
+    # Record the prompt size, then stay alive so the next hook overlaps this one.
+    stub.write_text("#!/usr/bin/env bash\n"
+                    f'cat | wc -c | tr -d " " >> "{sizes}"\n'
+                    "sleep 3\n", encoding="utf-8")
+    stub.chmod(0o755)
+
+    transcript = tmp_path / "transcript.jsonl"
+    transcript.write_text(
+        json.dumps({"isCompactSummary": True,
+                    "message": {"content": "a summary worth propagating"}}) + "\n",
+        encoding="utf-8",
+    )
+    env = {**os.environ, "PATH": f"{stub_dir}:{os.environ['PATH']}",
+           "OBSIDIAN_VAULT_PATH": str(vault), "OBSIDIAN_BG_AGENT_ENABLED": "1"}
+    stdin = json.dumps({"transcript_path": str(transcript)})
+
+    for tag in ("first", "second"):
+        code, err = _fire_to_files(tmp_path, tag, stdin, env)
+        assert code == 0, f"{tag} hook exited {code}"
+        assert err == "", f"{tag} run leaked stderr to the user:\n{err}"
+
+    lines: list[str] = []
+    for _ in range(30):
+        if sizes.exists():
+            lines = [l for l in sizes.read_text(encoding="utf-8").splitlines() if l.strip()]
+        if len(lines) == 2:
+            break
+        time.sleep(0.2)
+    assert len(lines) == 2, f"both compactions must reach an agent, got {lines}"
+    assert all(int(l) > 0 for l in lines), f"an agent was launched with an empty prompt: {lines}"
+
+
+def test_unusable_tmpdir_is_a_logged_no_op_not_a_cascade(tmp_path):
+    """When the prompt file cannot be created, stop and say so.
+
+    The failure mode being fenced off is a cascade: an empty PROMPT_FILE meant
+    `cat > ""` three times over, all of it on stderr and all of it shown to the
+    user mid-compaction, followed by an agent started with no prompt.
+    """
+    vault = tmp_path / "vault"; vault.mkdir()
+    stub_dir = tmp_path / "bin"; stub_dir.mkdir()
+    marker = tmp_path / "agent-ran.txt"
+    stub = stub_dir / "claude"
+    stub.write_text(f'#!/usr/bin/env bash\ncat > "{marker}"\n', encoding="utf-8")
+    stub.chmod(0o755)
+
+    transcript = tmp_path / "transcript.jsonl"
+    transcript.write_text(
+        json.dumps({"isCompactSummary": True, "message": {"content": "did work"}}) + "\n",
+        encoding="utf-8",
+    )
+    env = {**os.environ, "PATH": f"{stub_dir}:{os.environ['PATH']}",
+           "OBSIDIAN_VAULT_PATH": str(vault), "OBSIDIAN_BG_AGENT_ENABLED": "1",
+           "TMPDIR": str(tmp_path / "does-not-exist")}
+    code, err = _fire_to_files(tmp_path, "notmp", json.dumps({"transcript_path": str(transcript)}), env)
+
+    assert code == 0, "an unusable TMPDIR must not fail the compaction"
+    assert err == "", f"nothing may reach the user's stderr:\n{err}"
+    assert not marker.exists(), "no agent may be launched without a prompt"
+    statuses = [e["status"] for e in _read_run_log(vault)]
+    assert "no_prompt_file" in statuses, f"the skip must be recorded, got {statuses}"

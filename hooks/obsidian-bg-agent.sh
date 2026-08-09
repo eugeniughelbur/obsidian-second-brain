@@ -129,7 +129,22 @@ fi
 # path as a symlink, since macOS does not enable protected_symlinks.
 BG_LOG="${TMPDIR:-/tmp}/obsidian-bg-agent-$(id -u).log"
 ( umask 077; : >> "$BG_LOG" ) 2>/dev/null || true
-PROMPT_FILE=$(mktemp "${TMPDIR:-/tmp}/obsidian-bg-XXXXXX.txt")
+# No `.txt` suffix. BSD mktemp substitutes the X's ONLY when they end the
+# template, so `obsidian-bg-XXXXXX.txt` is a literal path on macOS and every run
+# shares one filename. GNU mktemp accepts a suffix, so this is invisible on
+# Linux and in CI. The first run creates that file and removes it only after its
+# agent exits, 40-190s later, so a compaction starting inside that window gets
+# "mkstemp failed: File exists", an empty PROMPT_FILE, three `cat > ""` failures
+# on stderr - which PostCompact shows to the user - and an agent launched with
+# no prompt at all, propagating nothing while the run log still says completed.
+PROMPT_FILE=$(mktemp "${TMPDIR:-/tmp}/obsidian-bg-XXXXXX" 2>/dev/null || true)
+if [[ -z "$PROMPT_FILE" || ! -f "$PROMPT_FILE" ]]; then
+  # Fail as a recorded no-op instead of cascading into an agent with an empty
+  # prompt. Silent on stderr on purpose: this event surfaces stderr to a user
+  # who cannot act on it mid-compaction, so the run log is where it belongs.
+  log_run "no_prompt_file"
+  exit 0
+fi
 
 cat > "$PROMPT_FILE" << HEADER
 You are an autonomous Obsidian vault agent. The Claude session was just compacted.
