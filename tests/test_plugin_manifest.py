@@ -158,6 +158,11 @@ def test_plugin_hooks_reference_shipped_executable_scripts():
         for group in hooks["PostToolUse"]
         for hook in group["hooks"]
     ), "PostToolUse must wire validate-ai-first.sh - it is the write-time enforcement primitive"
+    matchers = " ".join(group.get("matcher", "") for group in hooks["PostToolUse"])
+    assert "create_file" in matchers, (
+        "PostToolUse matcher must include create_file - the VS Code Claude Code "
+        "extension writes with that tool name, not Write/Edit"
+    )
     for event, groups in hooks.items():
         for group in groups:
             for hook in group["hooks"]:

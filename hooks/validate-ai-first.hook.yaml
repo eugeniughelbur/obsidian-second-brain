@@ -1,12 +1,12 @@
 name: validate-ai-first
 description: >
-  PostToolUse hook on Write and Edit. Warns when a markdown file inside
-  OBSIDIAN_VAULT_PATH fails the AI-first vault rule (missing required
+  PostToolUse hook on Write/Edit and create_file. Warns when a markdown file
+  inside OBSIDIAN_VAULT_PATH fails the AI-first vault rule (missing required
   frontmatter fields, missing 'For future Claude' preamble, broken YAML).
-  Non-blocking: the file write still succeeds; the agent sees the warning
-  in stderr and can choose to repair.
+  Non-blocking: the file write still succeeds; warning is returned as hook
+  JSON (systemMessage / additionalContext) so the host can surface it.
 script: validate-ai-first.sh
 triggers:
   - event: after-tool-use
-    match-tool: [write, edit]
+    match-tool: [write, edit, create_file]
 exclude: []

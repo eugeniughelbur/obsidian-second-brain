@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **`validate-ai-first` still enforced nothing useful in the VS Code Claude Code extension after it was wired into `hooks.json` (follow-up to #171, found by @born-in-autumn).** Stacked gaps: (1) the extension writes with `tool_name=create_file` and `tool_input.filePath` (camelCase) while the stock matcher only listed `Write|Edit|MultiEdit|NotebookEdit` and the script only read `file_path`, so the hook exited 0 with no warning; (2) after matcher/`filePath` were fixed, the hook did warn in the extension hook log (`NonBlockingError` / later Success + JSON) but the chat UI and the model still saw nothing - plain stderr + exit 1 is log-only, and `additionalContext` alone does not surface to the user. Matcher now includes `create_file`; path extraction accepts `filePath`; warnings exit 0 with JSON that carries `systemMessage` (user-visible per Claude Code hooks docs), plus `decision`/`reason` and `hookSpecificOutput.additionalContext` for the model path (stderr still mirrored for logs). Covered by `tests/test_smoke.py::test_validate_hook_accepts_vscode_extension_payload` and a matcher assertion in `tests/test_plugin_manifest.py`.
+
 ### Changed
 
 - **Improve spanish commands triggers** Native speaker audit of all 46 command triggers. Replaced literal translations with natural phrases people actually say, e.g., "ponme al tanto de todo" instead of "carga mi mundo". Improves trigger recognition for Spanish users without breaking routing precedence. (19 commands refined)

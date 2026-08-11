@@ -1049,9 +1049,9 @@ def test_mcp_search_supersedes_reverse_edge(tmp_path, monkeypatch):
 
 
 def test_validate_hook_flags_secrets(tmp_path):
-    """Check 6: real key material in a vault note must warn and exit 1; naming
-    a key by env-var NAME stays clean. High precision - prose about passwords
-    is not a finding."""
+    """Check 6: real key material in a vault note must warn via additionalContext;
+    naming a key by env-var NAME stays clean. High precision - prose about
+    passwords is not a finding."""
     hook = REPO_ROOT / "hooks/validate-ai-first.sh"
     frontmatter = "---\ntype: note\ndate: 2026-07-18\ntags: [t]\nai-first: true\n---\n\n## For future Claude\n\n"
 
@@ -1069,16 +1069,60 @@ def test_validate_hook_flags_secrets(tmp_path):
         )
 
     r_leaky = run(leaky)
-    assert r_leaky.returncode == 1
+    assert r_leaky.returncode == 0, r_leaky.stderr
+    leaky_out = json.loads(r_leaky.stdout)
+    assert "secret material" in leaky_out["systemMessage"]
+    assert leaky_out["decision"] == "block"
+    assert "secret material" in leaky_out["reason"]
+    assert "secret material" in leaky_out["hookSpecificOutput"]["additionalContext"]
     assert "secret material" in r_leaky.stderr
     r_clean = run(clean)
     assert r_clean.returncode == 0, r_clean.stderr
+    assert not r_clean.stdout.strip()
 
     # The bg-agent prompt must carry the sensitive-content staging constraint.
     bg = (REPO_ROOT / "hooks/obsidian-bg-agent.sh").read_text(encoding="utf-8")
     assert "SENSITIVE CONTENT" in bg
     assert "NEVER" in bg and "staging" in bg.lower()
 
+
+def test_validate_hook_accepts_vscode_extension_payload(tmp_path):
+    """VS Code Claude Code writes via create_file + tool_input.filePath.
+    Without that alias the hook fires, finds no path, and exits 0 silently -
+    so the AI-first rule enforces nothing in the extension (claude-code owner).
+
+    Warnings must be exit-0 JSON: systemMessage for the user, decision/reason
+    + additionalContext for the model. Plain stderr + exit 1 only hits the
+    extension hook log as NonBlockingError and never surfaces in chat."""
+    hook = REPO_ROOT / "hooks/validate-ai-first.sh"
+    bad = tmp_path / "bad.md"
+    bad.write_text("# bad note\njust a test\n", encoding="utf-8")
+
+    def run(payload: dict):
+        return subprocess.run(
+            ["bash", str(hook)],
+            input=json.dumps(payload),
+            env=dict(os.environ, OBSIDIAN_VAULT_PATH=str(tmp_path)),
+            capture_output=True,
+            text=True,
+        )
+
+    def assert_warn(result):
+        assert result.returncode == 0, result.stderr
+        assert "AI-first warning" in result.stderr
+        assert "frontmatter" in result.stderr
+        out = json.loads(result.stdout)
+        assert "AI-first warning" in out["systemMessage"]
+        assert "frontmatter" in out["systemMessage"]
+        assert out["decision"] == "block"
+        assert "AI-first warning" in out["reason"]
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        assert out["hookSpecificOutput"]["hookEventName"] == "PostToolUse"
+        assert "AI-first warning" in ctx
+        assert "frontmatter" in ctx
+
+    assert_warn(run({"tool_name": "Write", "tool_input": {"file_path": str(bad)}}))
+    assert_warn(run({"tool_name": "create_file", "tool_input": {"filePath": str(bad)}}))
 
 def test_recall_hook_contract(tmp_path):
     """Bounded recall: inert without the double gate, injects a bounded brief
