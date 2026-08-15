@@ -112,6 +112,66 @@ def test_json_shape_and_skip_dirs(tmp_path):
     assert report["findings"][0]["file"] == "note.md"
 
 
+def test_obsidian_comments_are_invisible_not_content(tmp_path):
+    """%%...%% is Obsidian comment syntax, invisible in rendered markdown (same
+    principle as same-line HTML comments). The Kanban plugin's settings footer
+    opens with `%% kanban:settings`, which read as an unmapped typed pointer
+    and rang FRESH-3 on every freshly bootstrapped board. Content in a block
+    comment is exempt; the same claim outside one must still be flagged - and
+    a claim AFTER the footer must survive the ``` fence pair the footer wraps
+    (the fence toggle must not leak past the closing %%)."""
+    write(tmp_path, "Boards/Work.md",
+          "---\nkanban-plugin: board\n---\n\n## Backlog\n\n\n"
+          "%% kanban:settings\n```\n{\"kanban-plugin\":\"board\"}\n```\n%%\n\n"
+          "13 open deals right now.\n")
+    write(tmp_path, "note.md",
+          "# Note\n\nVisible %% crm:pipeline hidden inline %% text.\n\n"
+          "%%\nA block comment: 13 open deals right now.\n%%\n\n"
+          "Still 13 open deals right now.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert not rules(report, "FRESH-3"), report["findings"]
+    hits = {(f["file"], f["line"]) for f in rules(report, "FRESH-1")}
+    assert hits == {("Boards/Work.md", 14), ("note.md", 9)}, report["findings"]
+
+
+def test_obsidian_comment_delimiter_lines_keep_visible_text(tmp_path):
+    """Visible text sharing a line with a comment delimiter is still content:
+    a claim before an opener or after a closer must be flagged, not swallowed
+    with the delimiter (the first cut of this feature dropped whole delimiter
+    lines, silently muting every claim on them)."""
+    write(tmp_path, "note.md",
+          "# Note\n\n13 open deals right now. %% hidden\nstill hidden\n"
+          "%% 7 open tickets right now.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = sorted(f["line"] for f in rules(report, "FRESH-1"))
+    assert hits == [3, 5], report["findings"]
+
+
+def test_quoted_comment_syntax_does_not_toggle_state(tmp_path):
+    """A %% inside backticks or a code fence is quotation, not a delimiter: a
+    note DOCUMENTING the kanban footer must not have the rest of its content
+    silently exempted (the first cut of this feature muted everything after
+    such a mention). A bare %% in prose genuinely opens a comment - Obsidian
+    hides what follows - so only the visible prefix is checked there."""
+    write(tmp_path, "docs.md",
+          "# Docs\n\nBoards end with `%% kanban:settings`.\n"
+          "13 open deals right now.\n\n"
+          "```\n%% kanban:settings\n```\n\n"
+          "7 open tickets right now.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = sorted(f["line"] for f in rules(report, "FRESH-1"))
+    assert hits == [4, 10], report["findings"]
+    assert not rules(report, "FRESH-3"), report["findings"]
+    # Unclosed bare %% in prose: the prefix stays visible, the rest of the
+    # note is comment - exactly what Obsidian renders.
+    write(tmp_path, "docs.md",
+          "# Docs\n\n13 open deals right now, and %% the rest is hidden\n"
+          "9 open tickets right now.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = sorted(f["line"] for f in rules(report, "FRESH-1"))
+    assert hits == [3], report["findings"]
+
+
 def test_inline_code_spans_are_quotation_not_claims(tmp_path):
     write(tmp_path, "docs.md",
           "# Docs\n\nA bare `we have 13 open deals` cannot merge.\n"

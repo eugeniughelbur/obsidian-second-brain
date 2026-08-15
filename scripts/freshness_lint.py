@@ -78,6 +78,29 @@ CODE_SPAN = re.compile(r"`[^`]*`")
 # HTML comments are invisible in rendered markdown - never content.
 HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 
+# Obsidian %%...%% comments are equally invisible when rendered - never content.
+# The block form wraps plugin machinery: the Kanban plugin's footer opens with
+# `%% kanban:settings`, which otherwise reads as a typed pointer and rings
+# FRESH-3 on every board the bootstrapper seeds.
+
+
+def _strip_obsidian_comments(text: str, in_comment: bool) -> tuple[str, bool]:
+    """Visible portion of one line under Obsidian %% comment semantics, plus the
+    carried block-comment state. Every %% toggles; visible text on a delimiter
+    line (before an opener, after a closer) is preserved - discarding it would
+    silently swallow real claims. An unclosed comment runs to the end of the
+    note, exactly as Obsidian renders it."""
+    parts = text.split("%%")
+    if len(parts) == 1:
+        return ("" if in_comment else text), in_comment
+    visible = []
+    for i, seg in enumerate(parts):
+        if not in_comment:
+            visible.append(seg)
+        if i < len(parts) - 1:
+            in_comment = not in_comment
+    return "".join(visible), in_comment
+
 ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})(?:-(\d{2}))?\b")
 AS_OF = re.compile(r"\bas of\s+(\d{4})-(\d{2})(?:-(\d{2}))?", re.IGNORECASE)
 NUMBER = re.compile(r"(?<![\w./-])\d[\d,.]*(?![\w-])")
@@ -153,15 +176,32 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
 
     findings = []
     in_fence = False
+    in_comment = False  # inside a %%...%% Obsidian block comment
     dated_heading_level = None  # exempt region under a dated heading (FRESH-4)
 
     for lineno, line in enumerate(lines[body_start:], start=body_start + 1):
         stripped = line.strip()
-        if stripped.startswith("```"):
+        # Fences win outside comments (%% inside code is literal). Inside a
+        # comment everything is invisible, fence markers included, so the
+        # toggle is gated on in_comment - an odd number of ``` lines inside a
+        # comment must not leak in_fence past the closing delimiter.
+        if not in_comment and stripped.startswith("```"):
             in_fence = not in_fence
             continue
         if in_fence or not stripped:
             continue
+
+        # Obsidian %% comments are quotation-grade invisible. Delimiters are
+        # detected on a copy with inline code and same-line HTML comments
+        # removed, so a backticked `%%` cannot toggle state (a bare %% in
+        # prose genuinely does - Obsidian hides what follows it); visible
+        # text on a delimiter line is preserved and checked.
+        scan = HTML_COMMENT.sub("", CODE_SPAN.sub("", stripped))
+        if in_comment or "%%" in scan:
+            scan, in_comment = _strip_obsidian_comments(scan, in_comment)
+            stripped = scan.strip()
+            if not stripped:
+                continue
 
         h = HEADING.match(stripped)
         if h:

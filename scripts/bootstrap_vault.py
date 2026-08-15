@@ -266,19 +266,25 @@ def folder_map_table(folders: list) -> str:
         elif key == "Finances":
             sub = f.split("/", 1)[1] if "/" in f else ""
             desc = f"Finance notes ({sub})" if sub else "Finance notes"
+        elif key == "Side Biz":
+            sub = f.split("/", 1)[1] if "/" in f else ""
+            desc = f"Side business ({sub})" if sub else "Side business"
         else:
             desc = descriptions.get(key, "-")
         rows.append(f"| `{f}/` | {desc} |")
     return "\n".join(rows)
 
 
-def claude_md_personal(name: str, preset_key: str, preset: dict, jobs: list, vault_path: Path) -> str:
+def claude_md_personal(name: str, preset_key: str, preset: dict, jobs: list, vault_path: Path,
+                       folders: list | None = None) -> str:
     primary_job = jobs[0] if jobs else "Work"
-    folder_table = folder_map_table(preset["folders"])
+    # The map is the agent's ground truth for what is where, so build it from the
+    # folders bootstrap actually creates (which may extend the preset, e.g. the
+    # Side Biz tree) - and list no file it does not write: the default preset
+    # used to add a `Jobs/<job>.md` row per job while creating no such file, so
+    # every fresh vault's map opened with a phantom note.
+    folder_table = folder_map_table(folders if folders is not None else preset["folders"])
     if preset_key == "default":
-        jobs_table = "\n".join(f"| `Jobs/{j}.md` | Employment / contract role |" for j in jobs)
-        if jobs_table:
-            folder_table = folder_table + "\n" + jobs_table
         key_files = (
             "- **Dashboard:** `Home.md`\n"
             f"- **Work Board:** `Boards/{primary_job}.md`\n"
@@ -380,8 +386,11 @@ Done item:
 """
 
 
-def claude_md_assistant(operator: str, subject: str, preset_key: str, preset: dict, vault_path: Path) -> str:
-    folder_table = folder_map_table(preset["folders"])
+def claude_md_assistant(operator: str, subject: str, preset_key: str, preset: dict, vault_path: Path,
+                        folders: list | None = None) -> str:
+    # Same rule as claude_md_personal: the map documents the folders bootstrap
+    # actually creates, not just the preset's base list.
+    folder_table = folder_map_table(folders if folders is not None else preset["folders"])
     board_lines = [f"- **{b.name} Board:** `Boards/{b.name}.md`" for b in preset["boards"]]
     key_files = "- **Dashboard:** `Home.md`\n" + ("\n".join(board_lines) if board_lines else "")
 
@@ -1213,9 +1222,11 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
 
     # ── _CLAUDE.md ────────────────────────────────────────────────────────────
     if mode == "assistant":
-        write(vault / "_CLAUDE.md", claude_md_assistant(name, subject, preset_key, preset, vault))
+        write(vault / "_CLAUDE.md",
+              claude_md_assistant(name, subject, preset_key, preset, vault, folders=folders))
     else:
-        write(vault / "_CLAUDE.md", claude_md_personal(name, preset_key, preset, jobs, vault))
+        write(vault / "_CLAUDE.md",
+              claude_md_personal(name, preset_key, preset, jobs, vault, folders=folders))
 
     # ── Home ──────────────────────────────────────────────────────────────────
     write(vault / "Home.md", render_home(name, preset_key, preset, jobs, mode, subject))

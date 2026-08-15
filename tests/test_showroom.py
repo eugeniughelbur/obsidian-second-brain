@@ -11,6 +11,7 @@ dashes inside wikilinks (breaking the link).
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -39,6 +40,69 @@ def test_fresh_bootstrap_passes_its_own_health_check(tmp_path):
     assert health.returncode == 0, health.stderr
     payload = json.loads(health.stdout[health.stdout.find("{"):])
     assert payload["total_issues"] == 0, payload["issues"]
+
+
+def test_fresh_bootstrap_passes_freshness_lint(tmp_path):
+    """Same showroom rule, second inspector: a brand-new vault must also be
+    freshness-clean. The Kanban settings footer on every seeded board rang
+    FRESH-3 out of the box (2 errors on the default preset)."""
+    vault = tmp_path / "vault"
+    boot = _run("bootstrap_vault.py", "--path", str(vault), "--name", "Test User")
+    assert boot.returncode == 0, boot.stderr
+
+    lint = _run("freshness_lint.py", "--path", str(vault), "--json")
+    payload = json.loads(lint.stdout[lint.stdout.find("{"):])
+    assert payload["errors"] == 0 and payload["warnings"] == 0, payload["findings"]
+    assert lint.returncode == 0, lint.stderr
+
+
+def _expected_default_folders():
+    """The folder set the default preset is contracted to create, constructed
+    independently of the map-rendering code under test: the preset's base list
+    plus the runtime Side Biz extension bootstrap() appends."""
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    try:
+        from bootstrap_vault import PRESETS
+    finally:
+        sys.path.remove(str(REPO_ROOT / "scripts"))
+    return set(PRESETS["default"]["folders"]) | {
+        "Side Biz/Deals/Location1", "Side Biz/Deals/Location2",
+    }
+
+
+def _assert_map_matches_vault(vault):
+    """Both directions: every path the _CLAUDE.md folder map lists exists on
+    disk, and every folder bootstrap is contracted to create is listed. The
+    one-directional form (listed -> exists) could never catch a created-but-
+    never-listed folder - the exact Side Biz defect this guards against."""
+    claude_md = (vault / "_CLAUDE.md").read_text(encoding="utf-8")
+    listed = re.findall(r"^\|\s*`([^`]+)`\s*\|", claude_md, flags=re.MULTILINE)
+    assert listed, "folder map table not found in _CLAUDE.md"
+    missing = [p for p in listed if not (vault / p.rstrip("/")).exists()]
+    assert not missing, f"folder map lists paths bootstrap never created: {missing}"
+    unlisted = [f for f in _expected_default_folders() if f"`{f}/`" not in claude_md]
+    assert not unlisted, f"folders bootstrap created but the map omits: {unlisted}"
+
+
+def test_folder_map_matches_what_bootstrap_created(tmp_path):
+    """_CLAUDE.md's folder map is the agent's ground truth for what is where.
+    The default preset used to list a `Jobs/Work.md` that was never written
+    and omit the `Side Biz/` tree it did create."""
+    vault = tmp_path / "vault"
+    boot = _run("bootstrap_vault.py", "--path", str(vault), "--name", "Test User")
+    assert boot.returncode == 0, boot.stderr
+    _assert_map_matches_vault(vault)
+
+
+def test_folder_map_matches_in_assistant_mode(tmp_path):
+    """Assistant mode renders the map through claude_md_assistant, which had
+    the same preset-only folder source - both builders must document the
+    folders actually created."""
+    vault = tmp_path / "vault"
+    boot = _run("bootstrap_vault.py", "--path", str(vault), "--name", "Operator",
+                "--mode", "assistant", "--subject", "Subject Person")
+    assert boot.returncode == 0, boot.stderr
+    _assert_map_matches_vault(vault)
 
 
 def test_triage_apply_without_from_errors_cleanly(tmp_path):
