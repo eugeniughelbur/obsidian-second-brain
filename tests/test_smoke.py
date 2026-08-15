@@ -499,6 +499,33 @@ def test_mcp_vault_ops_save_read_search_roundtrip(tmp_path, monkeypatch):
     assert any(h["path"] == rel for h in hits)
 
 
+def test_mcp_vault_health_ignores_code_example_links(tmp_path, monkeypatch):
+    """Example wikilinks inside fenced blocks or inline code are quotation, not
+    linkage: the bootstrapped _CLAUDE.md and init-written log pointers ship
+    fenced example links, which the MCP vault_health reported as persistent
+    false-positive wanted notes (the CLI got this stripping in #82/#93;
+    vault_ops kept the raw regex). A real link to an unwritten note must
+    still be counted."""
+    vault_ops = _load_vault_ops()
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault))
+
+    (vault / "log.md").write_text(
+        "---\ntype: log-pointer\nai-first: true\n---\n\n# Log\n\nExample entry:\n\n"
+        "```\n**09:14** - create | Created [[Projects/Tide Gateway]]\n```\n\n"
+        "Use `[[wikilinks]]` for every note touched. See [[Wanted Note]].\n",
+        encoding="utf-8",
+    )
+    (vault / "Other.md").write_text("---\ntype: note\n---\n\nLinks to [[Log]].\n", encoding="utf-8")
+
+    health = vault_ops.vault_health()
+    wanted = [w["link"] for w in health["wanted_notes"]["sample"]]
+    assert "Wanted Note" in wanted, wanted
+    assert "Projects/Tide Gateway" not in wanted, wanted
+    assert "wikilinks" not in wanted, wanted
+
+
 def test_mcp_vault_ops_search_ranks_title_over_noise(tmp_path, monkeypatch):
     """Search ranking regression guard (retrieval-eval fixes): a short note with the
     term in its title must outrank a long note that merely repeats it, and stopwords

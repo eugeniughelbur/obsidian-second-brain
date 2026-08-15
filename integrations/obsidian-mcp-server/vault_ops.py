@@ -1305,11 +1305,24 @@ def _slug(text: str) -> str:
 
 
 _WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)")
+# Fenced blocks and inline code are quotation, not linkage: the bootstrapped
+# _CLAUDE.md demonstrates [[Related Project]] [[Person]] inside a fence, log
+# pointers ship their entry template in one, and doc notes demo [[wikilinks]]
+# in backticks. Counting those made them persistent false-positive wanted
+# notes in vault_health and false "unresolved wikilink" validation issues.
+# Same stripping the CLI applies (scripts/vault_health.py _strip_code, #82,
+# extended by #93); this server had the same gap. Deliberately the CLI's
+# exact scope: triple-backtick fences and single-backtick spans (tilde
+# fences and multi-backtick spans are a separate gap shared with the CLI).
+_CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
+_INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 
 
 def _wikilinks(text: str) -> List[str]:
-    """Return the raw target of each [[wikilink]] (before any | alias or # anchor)."""
-    return [m.group(1).strip() for m in _WIKILINK_RE.finditer(text)]
+    """Return the raw target of each [[wikilink]] (before any | alias or # anchor),
+    ignoring links quoted inside fenced code blocks or inline code spans."""
+    stripped = _INLINE_CODE_RE.sub("", _CODE_FENCE_RE.sub("", text))
+    return [m.group(1).strip() for m in _WIKILINK_RE.finditer(stripped)]
 
 
 def _nfc(s: str) -> str:
