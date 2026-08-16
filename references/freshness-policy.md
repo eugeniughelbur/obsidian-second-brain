@@ -50,10 +50,11 @@ This is the sentence that becomes a lie next Tuesday while still reading as trut
 
 The reference checker is [scripts/freshness_lint.py](../scripts/freshness_lint.py): `python scripts/freshness_lint.py --path /any/markdown/folder [--json] [--strict]`. On a repo written under this policy it can gate CI; on a legacy vault it is an audit report to work down (heuristics favor precision, and FRESH-1 will still surface some prose that only reads like a claim).
 
-- **FRESH-1 (error):** a quantitative present-tense claim about a volatile noun (counts, balances, totals, statuses) outside a dated container must carry an `as of` stamp or be rewritten as a pointer.
+- **FRESH-1 (error):** a quantitative present-tense claim about a volatile noun (counts, balances, totals, statuses) outside a dated container must carry an `as of` stamp or be rewritten as a pointer. A line that *quotes* the illegal form as an example - a policy doc, teaching material - carries `<!-- freshness: example -->` on that line: FRESH-1 is suppressed for that line only, invisible when rendered, greppable in source. FRESH-2 and FRESH-3 on the same line still fire - the directive says "this claim is quotation", not "skip this line". No block form: fences and blockquotes are the whole-region exemptions. Place the directive at the end of the line - a comment before a `#` stops markdown treating the line as a heading, which would break dated-heading detection.
 - **FRESH-2 (warning):** a stamp older than the freshness window (default 7 days; configurable per folder) flags the line: refresh the observation or convert it to a pointer. Nothing is deleted; stale lines fade in search and surface in health reports.
 - **FRESH-3 (error):** a pointer must have a resolvable target: a URL, or a typed id the folder's config maps to one (`linear:TICKET-123`, `crm:pipeline/main`).
 - **FRESH-4 (exempt):** dated containers are immutable history. The lint never touches a snapshot.
+- **FRESH-5 (warning):** a `freshness: example` directive that suppressed nothing is an unused suppression - remove it before it accumulates as cargo cult. Duplicate directives on one line warn the same way. The directive is recognized only where FRESH-1 could apply: backticked it is documentation, inside a code fence or `%%` comment it is invisible, in frontmatter or a FRESH-4 snapshot container it is inert - none of those suppress, and none warn.
 
 ## Frontmatter (optional, for tooling)
 

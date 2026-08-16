@@ -1,4 +1,4 @@
-"""Freshness lint fence: the four FRESH rules against a synthetic folder.
+"""Freshness lint fence: the FRESH rules against a synthetic folder.
 
 The lint enforces references/freshness-policy.md: every stored fact must be
 timeless, dated, or a pointer. All fixtures are synthetic.
@@ -200,3 +200,107 @@ def test_blockquotes_are_quotation_snapshots(tmp_path):
           "# Call\n\n> We have 13 open deals right now and 4 tickets pending.\n")
     report = lint_folder(tmp_path, today=TODAY)
     assert not rules(report, "FRESH-1")
+
+
+def test_fresh1_example_directive_suppresses_only_that_line(tmp_path):
+    write(tmp_path, "policy.md",
+          "# Policy\n\n"
+          'The illegal form: "the pipeline has 13 deals". <!-- freshness: example -->\n'
+          "The pipeline has 13 open deals.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = rules(report, "FRESH-1")
+    assert len(hits) == 1 and hits[0]["line"] == 4
+    assert not rules(report, "FRESH-5")
+
+
+def test_fresh1_example_line_fails_without_directive(tmp_path):
+    write(tmp_path, "policy.md",
+          "# Policy\n\n"
+          'The illegal form: "the pipeline has 13 deals".\n')
+    report = lint_folder(tmp_path, today=TODAY)
+    assert len(rules(report, "FRESH-1")) == 1
+
+
+def test_example_directive_does_not_mute_fresh3(tmp_path):
+    write(tmp_path, "policy.md",
+          "# Policy\n\n"
+          "Tracker crm:pipeline/main has 13 open deals. <!-- freshness: example -->\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert len(rules(report, "FRESH-3")) == 1
+    assert not rules(report, "FRESH-1")
+
+
+def test_example_directive_does_not_mute_fresh2(tmp_path):
+    write(tmp_path, "policy.md",
+          "# Policy\n\n"
+          "13 open deals (as of 2026-05-01). <!-- freshness: example -->\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert len(rules(report, "FRESH-2")) == 1
+    # The stamp already exempts FRESH-1, so the directive suppressed nothing.
+    assert len(rules(report, "FRESH-5")) == 1
+
+
+def test_unused_example_directive_warns_fresh5(tmp_path):
+    write(tmp_path, "notes.md",
+          "# Notes\n\nDeals live in the CRM. <!-- freshness: example -->\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = rules(report, "FRESH-5")
+    assert len(hits) == 1 and hits[0]["severity"] == "warning"
+    assert report["errors"] == 0
+
+
+def test_example_directive_inert_inside_code_fence(tmp_path):
+    write(tmp_path, "notes.md",
+          "# Notes\n\n```\nThe pipeline has 13 deals. <!-- freshness: example -->\n```\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert not report["findings"]
+
+
+def test_backticked_directive_is_documentation_not_suppression(tmp_path):
+    write(tmp_path, "docs.md",
+          "# Docs\n\n"
+          "The pipeline has 13 open deals; write `<!-- freshness: example -->` after quoted examples.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert len(rules(report, "FRESH-1")) == 1
+    assert not rules(report, "FRESH-5")
+
+
+def test_directive_hidden_in_obsidian_comment_is_inert(tmp_path):
+    write(tmp_path, "notes.md",
+          "# Notes\n\n13 open deals right now. %% <!-- freshness: example --> hidden %%\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert len(rules(report, "FRESH-1")) == 1
+    assert not rules(report, "FRESH-5")
+
+
+def test_directive_after_closing_comment_delimiter_counts(tmp_path):
+    write(tmp_path, "notes.md",
+          "# Notes\n\n%% hidden\n%% <!-- freshness: example -->\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = rules(report, "FRESH-5")
+    assert len(hits) == 1 and hits[0]["line"] == 4
+
+
+def test_directive_inert_inside_dated_heading_snapshot(tmp_path):
+    write(tmp_path, "notes.md",
+          "# Notes\n\n## 2026-07-13 standup\n\n"
+          "13 open deals right now. <!-- freshness: example -->\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert not report["findings"]
+
+
+def test_duplicate_directives_on_one_line_warn(tmp_path):
+    write(tmp_path, "policy.md",
+          "# Policy\n\n"
+          "The pipeline has 13 deals. <!-- freshness: example --> <!-- freshness: example -->\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert not rules(report, "FRESH-1")
+    hits = rules(report, "FRESH-5")
+    assert len(hits) == 1 and "one suppression used" in hits[0]["text"]
+
+
+def test_directive_in_frontmatter_is_inert(tmp_path):
+    write(tmp_path, "notes.md",
+          '---\nnote: "<!-- freshness: example -->"\n---\n# Notes\n\nTimeless text.\n')
+    report = lint_folder(tmp_path, today=TODAY)
+    assert not report["findings"]

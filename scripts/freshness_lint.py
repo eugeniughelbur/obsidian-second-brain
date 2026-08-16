@@ -15,6 +15,21 @@ Rules (see the spec for prose):
   FRESH-3 (error):   typed pointer id with no mapping in .freshness.json
   FRESH-4 (exempt):  dated containers (dated filenames, dated headings,
                      freshness: snapshot frontmatter) are immutable history
+  FRESH-5 (warning): a `<!-- freshness: example -->` directive that
+                     suppressed nothing (unused suppression)
+
+A line that QUOTES the illegal form as an example (policy docs, teaching
+material) carries `<!-- freshness: example -->` on that line: FRESH-1 is
+suppressed for that line only (#204). FRESH-2 and FRESH-3 on the same line
+still fire - the directive says "this claim is quotation", not "skip this
+line". There is no block form: fences and blockquotes are the whole-region
+exemptions. A directive is inert where FRESH-1 cannot apply - backticked
+(documentation), inside a code fence or %% comment (invisible, fence
+delimiter lines included), in frontmatter, or inside a FRESH-4 snapshot
+container - neither suppressing nor warned. Duplicate directives on one
+line warn (FRESH-5). Place the directive at the END of the line: markdown
+stops treating a line as a heading when a comment precedes the #, so a
+leading directive would break dated-heading (FRESH-4) detection.
 
 Usage:
   python scripts/freshness_lint.py --path /path/to/folder [--json] [--strict]
@@ -77,6 +92,18 @@ CODE_SPAN = re.compile(r"`[^`]*`")
 
 # HTML comments are invisible in rendered markdown - never content.
 HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
+
+# Line-scoped FRESH-1 suppression for lines that quote the illegal form as an
+# example (#204). An HTML comment: invisible when rendered, greppable in
+# source. Suppresses ONLY the FRESH-1 append - FRESH-2 and FRESH-3 on the
+# same line still fire. A directive is recognized only where FRESH-1 could
+# apply: backticked it is documentation, inside a code fence or %% comment it
+# is invisible, in frontmatter or a FRESH-4 snapshot container it is inert -
+# none of those suppress, none warn. Detection sentinel-protects real
+# directives through the shared visibility pass so HTML-comment stripping
+# cannot delete them before they are counted.
+EXAMPLE_DIRECTIVE = re.compile(r"<!--\s*freshness:\s*example\s*-->", re.IGNORECASE)
+DIRECTIVE_SENTINEL = "\x00"  # control char: never in markdown, invisible to every claim regex
 
 # Obsidian %%...%% comments are equally invisible when rendered - never content.
 # The block form wraps plugin machinery: the Kanban plugin's footer opens with
@@ -178,6 +205,7 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
     in_fence = False
     in_comment = False  # inside a %%...%% Obsidian block comment
     dated_heading_level = None  # exempt region under a dated heading (FRESH-4)
+    directives: dict[int, dict] = {}  # lineno -> {count, text, used} (FRESH-5)
 
     for lineno, line in enumerate(lines[body_start:], start=body_start + 1):
         stripped = line.strip()
@@ -196,12 +224,24 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
         # removed, so a backticked `%%` cannot toggle state (a bare %% in
         # prose genuinely does - Obsidian hides what follows it); visible
         # text on a delimiter line is preserved and checked.
-        scan = HTML_COMMENT.sub("", CODE_SPAN.sub("", stripped))
+        # The FRESH-1 example directive rides the same visibility pass: code
+        # spans are dropped first (a backticked directive is documentation,
+        # not a suppression), real directives are sentinel-protected so
+        # HTML-comment stripping cannot delete them, and %% processing then
+        # decides whether a directive is visible at all - one hidden inside
+        # a %% segment is inert, one after the closing %% still counts.
+        guarded = EXAMPLE_DIRECTIVE.sub(DIRECTIVE_SENTINEL, CODE_SPAN.sub("", stripped))
+        scan = HTML_COMMENT.sub("", guarded)
         if in_comment or "%%" in scan:
             scan, in_comment = _strip_obsidian_comments(scan, in_comment)
-            stripped = scan.strip()
-            if not stripped:
+            example_count = scan.count(DIRECTIVE_SENTINEL)
+            stripped = scan.replace(DIRECTIVE_SENTINEL, "").strip()
+            if not stripped and not example_count:
                 continue
+        else:
+            example_count = scan.count(DIRECTIVE_SENTINEL)
+        example_here = example_count > 0
+        d_text = (stripped or line.strip())[:120]
 
         h = HEADING.match(stripped)
         if h:
@@ -210,9 +250,15 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
                 dated_heading_level = None
             if ISO_DATE.search(stripped):
                 dated_heading_level = level
+            elif example_here and dated_heading_level is None:
+                # An undated heading is not a snapshot: a directive there can
+                # never suppress, so it is an unused suppression (FRESH-5).
+                directives[lineno] = {"count": example_count, "text": d_text, "used": False}
             continue
         if dated_heading_level is not None:
-            continue  # FRESH-4: inside a dated section
+            continue  # FRESH-4: inside a dated section - directives inert, like dated files
+        if example_here:
+            directives[lineno] = {"count": example_count, "text": d_text, "used": False}
 
         # Quoted code is never a claim: strip inline spans before any check.
         stripped = CODE_SPAN.sub("", stripped)
@@ -267,10 +313,30 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
         if URL.search(stripped):
             continue  # links out to where truth lives: pointer enough for v1
 
+        if example_here:
+            directives[lineno]["used"] = True  # suppression used
+            continue
         findings.append({
             "rule": "FRESH-1", "severity": "error", "file": rel, "line": lineno,
             "text": f"undated present-tense claim about a fast fact: {stripped[:120]}",
         })
+
+    # FRESH-5: lint the lint - a directive that suppressed nothing is cargo
+    # cult waiting to happen. Warn so it gets removed rather than copied.
+    # A used suppression consumes exactly one directive; duplicates warn too.
+    for d_lineno, d in sorted(directives.items()):
+        if d["used"] and d["count"] == 1:
+            continue
+        if d["used"]:
+            text = (f"{d['count']} 'freshness: example' directives on one line - "
+                    f"one suppression used, remove the extras: {d['text']}")
+        else:
+            text = f"unused 'freshness: example' directive - no FRESH-1 claim to suppress: {d['text']}"
+        findings.append({
+            "rule": "FRESH-5", "severity": "warning", "file": rel, "line": d_lineno,
+            "text": text,
+        })
+    findings.sort(key=lambda f: f["line"])  # merge FRESH-5 back into line order
     return findings
 
 
