@@ -60,6 +60,55 @@ def test_codex_cli_build_generates_expected_files():
     assert not (REPO_ROOT / "dist/codex-cli/.agents/skills/obsidian-calendar").exists()
 
 
+def test_minimax_adapter_must_emit_v1_package():
+    """The minimax adapter must emit a Plugin V1 layout: .minimax-plugin/plugin.json,
+    obsidian-second-brain.mcp.json, the MCP server files, the SKILL.md, icon.png, and
+    placeholder. Two-stage guard: rejects the dispatch early on unknown platforms
+    (the platform guard test), then asserts the shape of the build output."""
+    result = subprocess.run(
+        ["bash", "scripts/build.sh", "--platform", "minimax"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    assert result.returncode == 0, result.stderr
+
+    dist = REPO_ROOT / "dist" / "minimax"
+    assert (dist / ".minimax-plugin" / "plugin.json").is_file()
+    assert (dist / "obsidian-second-brain.mcp.json").is_file()
+    assert (dist / "icon.png").is_file()
+    assert (dist / "placeholder").is_file()
+    assert (dist / "integrations" / "obsidian-mcp-server" / "server.py").is_file()
+    assert (dist / "integrations" / "obsidian-mcp-server" / "vault_ops.py").is_file()
+    assert (dist / "integrations" / "obsidian-mcp-server" / "README.md").is_file()
+    assert (dist / "skills" / "obsidian-second-brain" / "SKILL.md").is_file()
+
+    # V1 spec checks
+    manifest = json.loads((dist / ".minimax-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    assert manifest["schemaVersion"] == 1
+    assert manifest["name"] == "obsidian-second-brain"
+    cfg = json.loads((dist / "obsidian-second-brain.mcp.json").read_text(encoding="utf-8"))
+    assert cfg["schemaVersion"] == 1
+    assert cfg["mcpServers"]["obsidian-second-brain"]["type"] == "stdio"
+    assert "mcp<2" in cfg["mcpServers"]["obsidian-second-brain"]["args"]
+    # icon magic bytes
+    assert (dist / "icon.png").read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+    # placeholder text
+    assert "placeholder" in (dist / "placeholder").read_text(encoding="utf-8").lower()
+    # The adapter is bash; emit the same files twice and assert byte-identical
+    import hashlib as _hl
+    h1 = _hl.sha256((dist / "integrations" / "obsidian-mcp-server" / "server.py").read_bytes()).hexdigest()
+    subprocess.run(
+        ["bash", "scripts/build.sh", "--platform", "minimax"],
+        cwd=REPO_ROOT, check=True, capture_output=True, text=True,
+    )
+    h2 = _hl.sha256((dist / "integrations" / "obsidian-mcp-server" / "server.py").read_bytes()).hexdigest()
+    assert h1 == h2, "minimax adapter build is not idempotent"
+
+
 def test_hermes_build_generates_native_skills():
     """The hermes adapter must emit one native Hermes skill per command at
     skills/<category>/<name>/SKILL.md, with the required frontmatter Hermes

@@ -1,7 +1,7 @@
 # Platform owners
 
-Seven builds are compiled from one source tree. One person maintains all seven
-and can only actually run two of them.
+Eight builds are compiled from one source tree. One person maintains all seven
+of the original and can only actually run two of them.
 
 That is not a staffing complaint, it is the root cause of a specific class of
 bug in this repo. Five separate audit findings (B3, B19, B20, S15, S23) were the
@@ -24,6 +24,7 @@ So platform ownership is open. A platform owner is the person who would notice.
 | hermes | unclaimed | [@Litash](https://github.com/Litash) |
 | opencode | unclaimed | [@Litash](https://github.com/Litash), [@MPZ-00](https://github.com/MPZ-00) |
 | pi | unclaimed | |
+| minimax | [@fcojg](https://github.com/frandev94) | |
 <!-- owners:end -->
 
 "Previously contributed" is credit for work already merged, taken from the git
