@@ -40,3 +40,4 @@ pnpm-lock.yaml
 
 # Per-vault retrieval eval cases (contain private note paths; generate locally)
 scripts/eval/retrieval_cases*.jsonl
+scripts/eval/behavior_cases.jsonl

@@ -22,9 +22,13 @@ This emits a corpus that is:
 - **Gold-labelled by construction.** The canonical note for each topic is known
   because this file created it, so no hand labelling and no judgement calls.
 
-Three query sets, because they fail for different reasons and a single number
-hides that: exact keyword, English paraphrase that avoids the title words, and
-the same paraphrase in Spanish and Russian against English notes.
+Three retrieval query sets, because they fail for different reasons and a
+single number hides that: exact keyword, English paraphrase that avoids the
+title words, and the same paraphrase in Spanish and Russian against English
+notes. A fourth set, `behavior`, is for `behavior_eval.py` rather than
+`retrieval_eval.py`: it asks fact/decision/relationship/synthesis/
+contradiction questions and carries an `answer_key` (the canonical fact text)
+so an LLM judge has ground truth without re-reading the vault.
 
     uv run python scripts/eval/corpus.py --out /tmp/bench-vault
     OBSIDIAN_VAULT_PATH=/tmp/bench-vault uv run python scripts/eval/retrieval_eval.py \\
@@ -156,6 +160,64 @@ TOPICS = [
 
 FOLDER = {"concept": "wiki/concepts", "project": "wiki/projects", "person": "wiki/entities"}
 
+# Cross-note synthesis pairs for the behavior eval: a question whose answer
+# requires combining two topics' `body` fields, not just retrieving one note.
+# Each entry names two TOPICS terms and states the fact that only emerges by
+# reading both.
+SYNTHESIS_PAIRS = [
+    {
+        "a": "tideglass", "b": "rennard",
+        "q": "who should be looped in before touching Tideglass's data model, and why",
+        "answer_key": "Tideglass moved its schema contract upstream after being blocked "
+                       "twice on schema ownership; Ilva Rennard owns schema review and "
+                       "should be asked before writing code, not after.",
+    },
+    {
+        "a": "hollowmere", "b": "tobek",
+        "q": "if the Hollowmere migration touches payments, who holds the credentials "
+             "and what is their rule about refunds",
+        "answer_key": "Hollowmere is a two-phase vendor cutover; Tobek Marsh runs the "
+                       "payments integration, holds the only sandbox credentials, and "
+                       "has a standing rule that refunds are never automated.",
+    },
+    {
+        "a": "marrowfen", "b": "calloway",
+        "q": "if Marrowfen's offline sync causes an incident, who runs that process and "
+             "what do they require in the writeup",
+        "answer_key": "Marrowfen is offline-first sync with conflict resolution deferred "
+                       "to the user; Wren Calloway is the on-call coordinator, writes "
+                       "blameless postmortems within a week, and requires timestamps in "
+                       "any incident timeline.",
+    },
+]
+
+# Contradiction pairs: one derivative note asserts a state, a later derivative
+# note asserts the opposite, and only the canonical note (or reading both)
+# reconciles them. Keyed by TOPICS term.
+CONTRADICTIONS = {
+    "tideglass": {
+        "early": "Tideglass is still blocked on schema ownership with no path forward.",
+        "late": "Tideglass is unblocked now that the schema contract moved upstream.",
+        "answer_key": "Tideglass was blocked twice on schema ownership and was unblocked "
+                       "by moving the contract upstream - both statements are true at "
+                       "different times, and the later, reconciling state is unblocked.",
+    },
+    "hollowmere": {
+        "early": "The Hollowmere shadow period found nothing unusual.",
+        "late": "The Hollowmere shadow period found a data-shape mismatch nobody had documented.",
+        "answer_key": "The Hollowmere shadow period did find a problem: an undocumented "
+                       "data-shape mismatch. An earlier report that it found nothing is "
+                       "superseded by this finding.",
+    },
+    "marrowfen": {
+        "early": "Marrowfen will resolve sync conflicts automatically.",
+        "late": "Marrowfen scoped down from automatic merge after three unresolvable test cases.",
+        "answer_key": "Marrowfen does not resolve conflicts automatically - that plan was "
+                       "scoped down after three unresolvable test cases, and conflict "
+                       "resolution is now deferred to the user.",
+    },
+}
+
 # Filler vocabulary, also invented, used to pad the corpus to a realistic size so
 # that ranking has something to rank against.
 FILLER_NOUNS = ["cadence", "rollout", "handoff", "budget", "roadmap", "retro", "onboarding",
@@ -201,15 +263,22 @@ def build(total_notes: int, seed: int) -> dict[str, str]:
         # does, which is exactly the shape that makes term-frequency ranking pick
         # the wrong note. A benchmark where the right answer is also the most
         # term-dense one would be measuring nothing.
+        contradiction = CONTRADICTIONS.get(t["term"])
         for i, day in enumerate(_dates(rng, 2)):
+            lines = [
+                f"- Spent the morning on {t['term']}; {t['term']} still blocked on review. "
+                f"Follow up on {t['term']} tomorrow. See [[{t['title']}]]."
+                for _ in range(4 + i)
+            ]
+            # First derivative asserts the early (superseded) state, second
+            # asserts the later (reconciling) one - the contradiction the
+            # behavior eval's synthesis/reconciliation cases grade against.
+            if contradiction:
+                lines.append(f"- {contradiction['early' if i == 0 else 'late']}")
             files[f"wiki/daily/{day}-{t['term']}.md"] = (
                 _fm("daily", day, ["daily"])
                 + f"## For future agent\nDaily log for {day}.\n\n"
-                + "\n".join(
-                    f"- Spent the morning on {t['term']}; {t['term']} still blocked on review. "
-                    f"Follow up on {t['term']} tomorrow. See [[{t['title']}]]."
-                    for _ in range(4 + i)
-                ) + "\n"
+                + "\n".join(lines) + "\n"
             )
         m_day = _dates(rng, 1)[0]
         files[f"wiki/meetings/{m_day} - {t['title']} sync.md"] = (
@@ -252,6 +321,55 @@ def cases() -> dict[str, list[dict]]:
     return out
 
 
+def behavior_cases() -> list[dict]:
+    """Cases for the behavior eval: fact/decision/relationship/synthesis/contradiction.
+
+    Unlike the retrieval sets above, every row carries `answer_key` - the
+    canonical fact text the judge grades an answer against - so the judge
+    does not need to re-derive ground truth from the vault itself.
+    """
+    by_term = {t["term"]: t for t in TOPICS}
+    out: list[dict] = []
+
+    for t in TOPICS:
+        gold = [f"{FOLDER[t['kind']]}/{t['title']}.md"]
+        out.append({
+            "q": f"What is {t['en']}?" if t["kind"] != "person" else f"Who is {t['en']}?",
+            "gold": gold, "title": t["title"], "category": "fact", "answer_key": t["body"],
+        })
+        if t["kind"] == "project":
+            out.append({
+                "q": f"What caused {t['title']} to change scope or direction?",
+                "gold": gold, "title": t["title"], "category": "decision",
+                "answer_key": t["body"],
+            })
+        if t["kind"] == "person":
+            out.append({
+                "q": f"What should someone know before looping in {t['title']}?",
+                "gold": gold, "title": t["title"], "category": "relationship",
+                "answer_key": t["body"],
+            })
+
+    for pair in SYNTHESIS_PAIRS:
+        a, b = by_term[pair["a"]], by_term[pair["b"]]
+        gold = [f"{FOLDER[a['kind']]}/{a['title']}.md", f"{FOLDER[b['kind']]}/{b['title']}.md"]
+        out.append({
+            "q": pair["q"], "gold": gold, "title": f"{a['title']} + {b['title']}",
+            "category": "synthesis", "answer_key": pair["answer_key"],
+        })
+
+    for term, c in CONTRADICTIONS.items():
+        t = by_term[term]
+        gold = [f"{FOLDER[t['kind']]}/{t['title']}.md"]
+        out.append({
+            "q": f"Is {t['title']} currently blocked, and what is the latest known state?",
+            "gold": gold, "title": t["title"], "category": "contradiction",
+            "answer_key": c["answer_key"],
+        })
+
+    return out
+
+
 def manifest(files: dict[str, str], sets: dict[str, list[dict]]) -> str:
     h = hashlib.sha256()
     for rel in sorted(files):
@@ -275,6 +393,7 @@ def main(argv: list[str]) -> int:
     args = ap.parse_args(argv[1:])
 
     files, sets = build(args.notes, args.seed), cases()
+    sets["behavior"] = behavior_cases()
 
     if args.manifest or not args.out:
         print(f"corpus  {len(files)} notes")

@@ -53,3 +53,46 @@ This scores ranking, not answer quality. A low score is the signal to improve
 retrieval (skip `raw/` in search, weight canonical `type:` notes, add semantic
 matching) - and then re-run to confirm the change actually helped, on the same
 cases, instead of guessing.
+
+## Behavior eval (separate from retrieval - answer quality, not ranking)
+
+`behavior_eval.py` is a second, complementary harness - it does not replace
+the retrieval eval above, and it is not part of the reproducible retrieval
+benchmark in [BENCHMARK.md](BENCHMARK.md). It asks whether having the vault
+actually makes an *answer* better, not whether search ranks the right note
+highly.
+
+For each question in a behavior case set (generated from `corpus.py`'s
+synthetic vault, so it needs no private data), it produces two answers - one
+with vault retrieval available, one from the model alone - then has an LLM
+judge grade both, blind to which condition produced which answer, against the
+question's known canonical fact (`answer_key`). It reports the overall delta
+(vault-on score minus vault-off score), a breakdown by question category
+(fact, decision, relationship, cross-note synthesis, contradiction), and a
+complete, never-truncated list of cases where the vault-on answer scored
+*worse*.
+
+```bash
+uv run python scripts/eval/corpus.py --out /tmp/bench-vault
+OBSIDIAN_VAULT_PATH=/tmp/bench-vault uv run python scripts/eval/behavior_eval.py \
+    --generate
+OBSIDIAN_VAULT_PATH=/tmp/bench-vault uv run python scripts/eval/behavior_eval.py \
+    --cases scripts/eval/behavior_cases.jsonl
+```
+
+Requires `XAI_API_KEY` - unlike the retrieval eval's question generator,
+there is no key-free fallback, since both answering and judging are LLM
+calls.
+
+**Delta** is the judge's score for the vault-on answer minus its score for
+the vault-off answer on the same question, averaged across cases (or within
+a category). Positive means the vault helped on average; zero or negative is
+a valid result, not a failure of the harness. **Regressions** are the subset
+of cases where the vault-on answer scored strictly lower than vault-off -
+where having the vault made the answer worse, e.g. by retrieving a
+noisy or superseded note instead of the reconciling one.
+
+LLM-judged evals on a small synthetic corpus are inherently noisy signal, not
+a scientific measurement - treat any single run's delta as suggestive. No
+numbers from this harness are promoted into `BASELINE.md` or `BENCHMARK.md`;
+those stay retrieval-only.
