@@ -163,11 +163,14 @@ FOLDER = {"concept": "wiki/concepts", "project": "wiki/projects", "person": "wik
 # Cross-note synthesis pairs for the behavior eval: a question whose answer
 # requires combining two topics' `body` fields, not just retrieving one note.
 # Each entry names two TOPICS terms and states the fact that only emerges by
-# reading both.
+# reading both. `q_alt` is a second phrasing of the same underlying question -
+# behavior_cases() emits both as separate rows, which is how this set grows
+# without inventing implausible new relationships between the 12 topics.
 SYNTHESIS_PAIRS = [
     {
         "a": "tideglass", "b": "rennard",
         "q": "who should be looped in before touching Tideglass's data model, and why",
+        "q_alt": "before changing anything in Tideglass's schema, whose review does it need",
         "answer_key": "Tideglass moved its schema contract upstream after being blocked "
                        "twice on schema ownership; Ilva Rennard owns schema review and "
                        "should be asked before writing code, not after.",
@@ -176,6 +179,8 @@ SYNTHESIS_PAIRS = [
         "a": "hollowmere", "b": "tobek",
         "q": "if the Hollowmere migration touches payments, who holds the credentials "
              "and what is their rule about refunds",
+        "q_alt": "who would you ask about payments during the Hollowmere cutover, and "
+                 "would they automate a refund for you",
         "answer_key": "Hollowmere is a two-phase vendor cutover; Tobek Marsh runs the "
                        "payments integration, holds the only sandbox credentials, and "
                        "has a standing rule that refunds are never automated.",
@@ -184,20 +189,93 @@ SYNTHESIS_PAIRS = [
         "a": "marrowfen", "b": "calloway",
         "q": "if Marrowfen's offline sync causes an incident, who runs that process and "
              "what do they require in the writeup",
+        "q_alt": "who coordinates on-call for a Marrowfen sync failure, and what would "
+                 "they push back on in the postmortem",
         "answer_key": "Marrowfen is offline-first sync with conflict resolution deferred "
                        "to the user; Wren Calloway is the on-call coordinator, writes "
                        "blameless postmortems within a week, and requires timestamps in "
                        "any incident timeline.",
     },
+    {
+        "a": "ashvault", "b": "rennard",
+        "q": "before scheduling Ashvault's next restore drill, who should confirm the "
+             "backup schema hasn't drifted, and why",
+        "q_alt": "who owns sign-off on Ashvault's snapshot schema, and what do they "
+                 "prefer over a meeting",
+        "answer_key": "Ashvault runs cross-region snapshots with a quarterly restore "
+                       "drill (the first took eleven hours); Ilva Rennard owns schema "
+                       "review and prefers a written contract over a meeting, so she "
+                       "should confirm the snapshot schema before a drill, not after.",
+    },
+    {
+        "a": "driftlock", "b": "quillcast",
+        "q": "if a Quillcast subscriber falls behind and has to replay past Driftlock's "
+             "moving reference, what should it expect to receive twice",
+        "q_alt": "what property of Quillcast delivery would a Driftlock-based replay "
+                 "need to tolerate",
+        "answer_key": "Driftlock buffers late arrivals against a moving reference (not "
+                       "the wall clock) specifically so replay produces the same result "
+                       "twice; Quillcast's tradeoff is duplicate delivery on retry, which "
+                       "consumers must absorb - so a replaying subscriber should expect "
+                       "duplicates.",
+    },
+    {
+        "a": "nettlecode", "b": "sparrowfold",
+        "q": "would a change to Sparrowfold's compaction logic need the same review as "
+             "any other change under Nettlecode",
+        "q_alt": "does Nettlecode's review gate make an exception for a change to how "
+                  "Sparrowfold collapses old records",
+        "answer_key": "Nettlecode requires two approvals plus a green suite with no "
+                       "exception for the author, for any change; Sparrowfold's "
+                       "compaction (collapsing superseded revisions on read) is not "
+                       "exempt, so it would need the same two approvals and green suite.",
+    },
+    {
+        "a": "gallowsprint", "b": "ashvault",
+        "q": "if Ashvault's next restore drill lands during a Gallowsprint-planned week, "
+             "what constraint from each applies",
+        "q_alt": "can a Gallowsprint week be extended to fit in an Ashvault drill",
+        "answer_key": "Ashvault's restore drill happens every quarter and the first one "
+                       "took eleven hours; Gallowsprint cuts scope rather than extending "
+                       "time and is used only when the date cannot move - so a drill "
+                       "landing in a gallowsprint week has to be absorbed within scope, "
+                       "the sprint itself cannot be extended for it.",
+    },
+    {
+        "a": "tobek", "b": "nettlecode",
+        "q": "does a change to the payment integration Tobek Marsh runs skip Nettlecode's "
+             "review gate",
+        "q_alt": "is there an author exception under Nettlecode for payment changes Tobek "
+                 "Marsh makes himself",
+        "answer_key": "Nettlecode has no exception for the author of a change - two "
+                       "approvals plus a green suite are always required; Tobek Marsh "
+                       "runs the payments integration and holds the only sandbox "
+                       "credentials, but that does not exempt his changes from the gate.",
+    },
+    {
+        "a": "calloway", "b": "gallowsprint",
+        "q": "if an incident lands during a Gallowsprint week, does Wren Calloway's "
+             "postmortem timeline requirement still apply",
+        "q_alt": "would a fixed Gallowsprint deadline excuse a postmortem from having "
+                 "timestamps",
+        "answer_key": "Gallowsprint cuts scope rather than extending time when a deadline "
+                       "is fixed, but that is about planning, not incident response; Wren "
+                       "Calloway will push back on any timeline that has no timestamps "
+                       "regardless, and postmortems are still written within a week.",
+    },
 ]
 
 # Contradiction pairs: one derivative note asserts a state, a later derivative
 # note asserts the opposite, and only the canonical note (or reading both)
-# reconciles them. Keyed by TOPICS term.
+# reconciles them. Keyed by TOPICS term. `q_alt` (present on a few entries)
+# is a second phrasing of the same reconciliation question, emitted as a
+# second row by behavior_cases().
 CONTRADICTIONS = {
     "tideglass": {
         "early": "Tideglass is still blocked on schema ownership with no path forward.",
         "late": "Tideglass is unblocked now that the schema contract moved upstream.",
+        "q_alt": "did Tideglass ever get unblocked, or is the schema-ownership problem "
+                 "still open",
         "answer_key": "Tideglass was blocked twice on schema ownership and was unblocked "
                        "by moving the contract upstream - both statements are true at "
                        "different times, and the later, reconciling state is unblocked.",
@@ -205,6 +283,7 @@ CONTRADICTIONS = {
     "hollowmere": {
         "early": "The Hollowmere shadow period found nothing unusual.",
         "late": "The Hollowmere shadow period found a data-shape mismatch nobody had documented.",
+        "q_alt": "did the Hollowmere shadow period turn up any problems or not",
         "answer_key": "The Hollowmere shadow period did find a problem: an undocumented "
                        "data-shape mismatch. An earlier report that it found nothing is "
                        "superseded by this finding.",
@@ -212,9 +291,84 @@ CONTRADICTIONS = {
     "marrowfen": {
         "early": "Marrowfen will resolve sync conflicts automatically.",
         "late": "Marrowfen scoped down from automatic merge after three unresolvable test cases.",
+        "q_alt": "does Marrowfen resolve sync conflicts automatically or does the user "
+                 "have to",
         "answer_key": "Marrowfen does not resolve conflicts automatically - that plan was "
                        "scoped down after three unresolvable test cases, and conflict "
                        "resolution is now deferred to the user.",
+    },
+    "driftlock": {
+        "early": "Driftlock uses a fixed window measured against the wall clock.",
+        "late": "Driftlock buffers late arrivals against a moving reference instead of "
+                "a wall clock.",
+        "answer_key": "Driftlock does not use a fixed window or the wall clock - it "
+                       "buffers late arrivals against a moving reference, chosen "
+                       "specifically so replay produces the same result twice; an "
+                       "earlier wall-clock/fixed-window description is wrong.",
+    },
+    "quillcast": {
+        "early": "Quillcast delivery is exactly-once, with no duplicates.",
+        "late": "Quillcast can duplicate delivery on retry, which consumers must absorb.",
+        "answer_key": "Quillcast is not exactly-once - duplicate delivery on retry is a "
+                       "known tradeoff consumers must absorb; an earlier claim of "
+                       "exactly-once delivery is wrong.",
+    },
+    "nettlecode": {
+        "early": "Nettlecode lets the author of a change self-approve in an emergency.",
+        "late": "Nettlecode requires two approvals and a green suite with no exception "
+                "for the author.",
+        "answer_key": "Nettlecode has no author exception, ever - two approvals plus a "
+                       "green suite are required always, adopted after a hotfix bypassed "
+                       "review and shipped a regression; an earlier claim of an "
+                       "emergency self-approval exception is wrong.",
+    },
+    "sparrowfold": {
+        "early": "Sparrowfold compacts old records on a fixed nightly schedule.",
+        "late": "Sparrowfold collapses superseded revisions on read rather than on a "
+                "schedule.",
+        "answer_key": "Sparrowfold compaction happens on read, not on a nightly schedule "
+                       "- that keeps write latency flat at the cost of a slower first "
+                       "read; an earlier claim of scheduled compaction is wrong.",
+    },
+    "gallowsprint": {
+        "early": "A Gallowsprint cycle can be extended if the deadline needs more time.",
+        "late": "Gallowsprint cuts scope rather than extending time, and is used only "
+                "when the date genuinely cannot move.",
+        "answer_key": "Gallowsprint never extends time - scope is cut instead, with no "
+                       "carry-over, and it is used only when the date truly cannot move; "
+                       "an earlier claim that its cycles can be extended is wrong.",
+    },
+    "ashvault": {
+        "early": "Ashvault's first restore drill went smoothly with no surprises.",
+        "late": "Ashvault's first drill took eleven hours, which is the number that "
+                "justified the work.",
+        "answer_key": "Ashvault's first restore drill was not smooth - it took eleven "
+                       "hours, and that duration is exactly what justified the project; "
+                       "an earlier report of a smooth drill is wrong.",
+    },
+    "rennard": {
+        "early": "Ilva Rennard prefers a quick meeting over a written contract for "
+                 "schema questions.",
+        "late": "Ilva Rennard prefers a written contract over a meeting, and should be "
+                "escalated to before writing code, not after.",
+        "answer_key": "Ilva Rennard's preference is the opposite of the early claim - "
+                       "she prefers a written contract over a meeting, and schema "
+                       "questions should go to her before code is written, not after.",
+    },
+    "tobek": {
+        "early": "Tobek Marsh has automated the refund process for the payment provider.",
+        "late": "Tobek Marsh's standing rule is that refunds are never automated.",
+        "answer_key": "Refunds are never automated under Tobek Marsh's standing rule - "
+                       "an earlier claim that automation exists is wrong; he also holds "
+                       "the only sandbox credentials for the payments integration.",
+    },
+    "calloway": {
+        "early": "Wren Calloway allows postmortems to skip timestamps when the timeline "
+                 "is informal.",
+        "late": "Wren Calloway will push back on any timeline that has no timestamps.",
+        "answer_key": "Wren Calloway does not allow timestamp-free timelines - she pushes "
+                       "back on any timeline missing them, and postmortems are blameless "
+                       "and written within a week regardless.",
     },
 }
 
@@ -321,12 +475,25 @@ def cases() -> dict[str, list[dict]]:
     return out
 
 
+BEHAVIOR_CATEGORIES = ("fact", "decision", "relationship", "synthesis", "contradiction")
+
+
 def behavior_cases() -> list[dict]:
     """Cases for the behavior eval: fact/decision/relationship/synthesis/contradiction.
 
     Unlike the retrieval sets above, every row carries `answer_key` - the
     canonical fact text the judge grades an answer against - so the judge
     does not need to re-derive ground truth from the vault itself.
+
+    Fact questions are the easy case for this eval: a closed-book model has no
+    prior on an invented term like "driftlock", so vault-on wins trivially and
+    the category adds little signal on its own. Every topic still gets its one
+    unconditional fact row (dropping it would understate the corpus's easiest
+    cases), but decision, relationship, synthesis and contradiction are grown
+    instead - via `q_alt` second phrasings on SYNTHESIS_PAIRS and
+    CONTRADICTIONS, and by extending decision/relationship coverage beyond a
+    single kind - so fact's *share* of the total drops without touching its
+    count. See `category_mix()`.
     """
     by_term = {t["term"]: t for t in TOPICS}
     out: list[dict] = []
@@ -343,9 +510,20 @@ def behavior_cases() -> list[dict]:
                 "gold": gold, "title": t["title"], "category": "decision",
                 "answer_key": t["body"],
             })
+        elif t["kind"] == "concept":
+            out.append({
+                "q": f"What was {t['title']} chosen over, or what prompted its adoption?",
+                "gold": gold, "title": t["title"], "category": "decision",
+                "answer_key": t["body"],
+            })
         if t["kind"] == "person":
             out.append({
                 "q": f"What should someone know before looping in {t['title']}?",
+                "gold": gold, "title": t["title"], "category": "relationship",
+                "answer_key": t["body"],
+            })
+            out.append({
+                "q": f"What standing rule does {t['title']} hold?",
                 "gold": gold, "title": t["title"], "category": "relationship",
                 "answer_key": t["body"],
             })
@@ -353,10 +531,16 @@ def behavior_cases() -> list[dict]:
     for pair in SYNTHESIS_PAIRS:
         a, b = by_term[pair["a"]], by_term[pair["b"]]
         gold = [f"{FOLDER[a['kind']]}/{a['title']}.md", f"{FOLDER[b['kind']]}/{b['title']}.md"]
+        title = f"{a['title']} + {b['title']}"
         out.append({
-            "q": pair["q"], "gold": gold, "title": f"{a['title']} + {b['title']}",
+            "q": pair["q"], "gold": gold, "title": title,
             "category": "synthesis", "answer_key": pair["answer_key"],
         })
+        if "q_alt" in pair:
+            out.append({
+                "q": pair["q_alt"], "gold": gold, "title": title,
+                "category": "synthesis", "answer_key": pair["answer_key"],
+            })
 
     for term, c in CONTRADICTIONS.items():
         t = by_term[term]
@@ -366,8 +550,29 @@ def behavior_cases() -> list[dict]:
             "gold": gold, "title": t["title"], "category": "contradiction",
             "answer_key": c["answer_key"],
         })
+        if "q_alt" in c:
+            out.append({
+                "q": c["q_alt"], "gold": gold, "title": t["title"],
+                "category": "contradiction", "answer_key": c["answer_key"],
+            })
 
     return out
+
+
+def category_mix(rows: list[dict] | None = None) -> dict[str, float]:
+    """Fraction of behavior_cases() rows in each category, rounded to 3 places.
+
+    Exists so the category balance is visible (printed by `--manifest` and
+    asserted in tests) rather than only implied by counting entries by hand -
+    the mistake that let fact questions creep up to ~48% of the set before
+    this function existed.
+    """
+    rows = behavior_cases() if rows is None else rows
+    n = len(rows)
+    counts: dict[str, int] = {}
+    for r in rows:
+        counts[r["category"]] = counts.get(r["category"], 0) + 1
+    return {cat: round(counts.get(cat, 0) / n, 3) for cat in BEHAVIOR_CATEGORIES} if n else {}
 
 
 def manifest(files: dict[str, str], sets: dict[str, list[dict]]) -> str:
@@ -398,6 +603,8 @@ def main(argv: list[str]) -> int:
     if args.manifest or not args.out:
         print(f"corpus  {len(files)} notes")
         print("cases   " + ", ".join(f"{k} {len(v)}" for k, v in sorted(sets.items())))
+        mix = category_mix(sets["behavior"])
+        print("behavior mix   " + ", ".join(f"{cat} {pct*100:.1f}%" for cat, pct in mix.items()))
         print(f"sha256  {manifest(files, sets)}")
         if not args.out:
             print("\nPass --out <dir> to write it.")

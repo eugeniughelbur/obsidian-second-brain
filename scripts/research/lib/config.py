@@ -29,6 +29,7 @@ def get_optional(name: str, default: str = "") -> str:
 XAI_API_KEY = lambda: get_required("XAI_API_KEY")
 PERPLEXITY_API_KEY = lambda: get_required("PERPLEXITY_API_KEY")
 GEMINI_API_KEY = lambda: get_required("GEMINI_API_KEY")
+OPENAI_API_KEY = lambda: get_required("OPENAI_API_KEY")
 YOUTUBE_API_KEY = lambda: get_optional("YOUTUBE_API_KEY", "")
 
 # grok-4 no longer appears in GET /v1/models (it still resolves server-side, but is
@@ -37,6 +38,10 @@ GROK_MODEL = get_optional("GROK_MODEL", "grok-4.5")
 PERPLEXITY_RESEARCH_MODEL = get_optional("PERPLEXITY_RESEARCH_MODEL", "sonar-pro")
 PERPLEXITY_DEEP_MODEL = get_optional("PERPLEXITY_DEEP_MODEL", "sonar-deep-research")
 NOTEBOOKLM_MODEL = get_optional("NOTEBOOKLM_MODEL", "gemini-2.5-flash")
+# behavior_eval.py's judge - deliberately a different provider from GROK_MODEL,
+# which generates the answers being judged, so grading a model's own answers
+# never happens by default.
+GPT_JUDGE_MODEL = get_optional("GPT_JUDGE_MODEL", "gpt-4o-mini")
 
 VAULT_PATH = Path(get_required("OBSIDIAN_VAULT_PATH")).expanduser()
 USAGE_LOG = Path.home() / ".research-toolkit" / "usage.log"
