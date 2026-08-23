@@ -145,6 +145,57 @@ def test_no_documented_command_reinstalls_the_unpinned_mcp():
     assert offenders == [], f"unpinned `--with mcp` still documented in: {offenders}"
 
 
+def test_mcp_launch_isolates_from_the_working_directory_project():
+    """`uv run` discovers a project from the working directory upward, and the
+    client starts this server with the user's working directory as cwd - their
+    repo, not ours. Without `--no-project` uv adopts that repo: it creates a
+    `.venv`, syncs the user's own dependencies into it and writes a `uv.lock`
+    beside their `pyproject.toml`, none of which the server asked for. The
+    server needs nothing from a project - its only non-stdlib import is `mcp`,
+    which `--with` already supplies - so the launch must opt out of discovery."""
+    plugin = _load(".claude-plugin/plugin.json")
+    for name, server in plugin["mcpServers"].items():
+        args = server.get("args", [])
+        assert "--no-project" in args, (
+            f"MCP server {name}: add --no-project; without it uv adopts whatever "
+            "project the user happens to be in and mutates their environment"
+        )
+
+
+# A launch that names an mcp pin but not `--no-project` - the shape that adopts
+# the user's project. Covers both the shell form (`uv run --with 'mcp<2' ...`)
+# and the JSON args form (`["run", "--with", "mcp<2", ...]`); the docs keep each
+# on a single line. Same skip set as the pin sweep, plus the manifest: its
+# args array spans lines, so a line-scoped guard reads the flag as absent,
+# and the structural test above already checks it directly.
+ADOPTS_PROJECT_RE = re.compile(r"^(?!.*--no-project).*--with[\"',\s]+\"?mcp<", re.M)
+ADOPTS_SWEEP_SKIP = UNPINNED_SWEEP_SKIP | {".claude-plugin/plugin.json"}
+
+
+def test_no_documented_command_adopts_the_users_project():
+    """Same reasoning as the pin sweep above: the flag only holds if every copy
+    of the launch command carries it. setup.sh registers the server for real and
+    the integration README is pasted into other MCP clients verbatim, so a missed
+    copy is a live path back to the behaviour, not merely a stale document."""
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout.split("\0")
+
+    offenders = []
+    for rel in tracked:
+        if not rel or not rel.endswith((".md", ".py", ".sh", ".json")):
+            continue
+        if rel in ADOPTS_SWEEP_SKIP:
+            continue
+        path = REPO_ROOT / rel
+        if not path.is_file():
+            continue
+        if ADOPTS_PROJECT_RE.search(path.read_text(encoding="utf-8", errors="ignore")):
+            offenders.append(rel)
+    assert offenders == [], f"launch without `--no-project` still documented in: {offenders}"
+
+
 def test_plugin_hooks_reference_shipped_executable_scripts():
     hooks = _load("hooks/hooks.json")["hooks"]
     # PostToolUse carries validate-ai-first.sh. It shipped in hooks/ but was

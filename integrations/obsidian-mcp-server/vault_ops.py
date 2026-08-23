@@ -281,7 +281,7 @@ _VALIDATION_EXEMPT_ROOT_FILES = {
 
 # Documented config home (architecture.md, .env.example, CONTRIBUTING.md). The
 # research toolkit loads it via python-dotenv, but this module is pure stdlib and
-# the MCP server runs under `uv run --with 'mcp<2'` (no python-dotenv installed), so
+# the MCP server runs under `uv run --no-project --with 'mcp<2'` (no python-dotenv installed), so
 # we parse the one key we need by hand. Override the path in tests via
 # OBSIDIAN_ENV_FILE. (Fixes #160 - same root cause as #124, different code path.)
 _ENV_FILE = Path.home() / ".config" / "obsidian-second-brain" / ".env"

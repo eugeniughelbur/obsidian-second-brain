@@ -770,7 +770,7 @@ What to expect (open models follow instructions less reliably than Claude, so th
 
 The 7 research commands use API keys (2 of them fall back to free sources without any).
 
-**Installed the plugin?** You have no repo checkout, so `install.sh`, `.env.example`, and `uv sync` are not on your disk. Create the env file by hand instead - the research scripts read this path regardless of how you installed, and the plugin's MCP server already runs under `uv run --with 'mcp<2'`, so there is nothing to `uv sync`:
+**Installed the plugin?** You have no repo checkout, so `install.sh`, `.env.example`, and `uv sync` are not on your disk. Create the env file by hand instead - the research scripts read this path regardless of how you installed, and the plugin's MCP server already runs under `uv run --no-project --with 'mcp<2'`, so there is nothing to `uv sync`:
 
 ```bash
 mkdir -p ~/.config/obsidian-second-brain

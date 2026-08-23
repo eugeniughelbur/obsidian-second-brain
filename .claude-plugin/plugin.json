@@ -14,6 +14,7 @@
       "command": "uv",
       "args": [
         "run",
+        "--no-project",
         "--with",
         "mcp<2",
         "python",

@@ -205,14 +205,14 @@ echo "   It is optional: in Claude Code, Claude reads/writes vault files directl
 echo "   and everything works without it. The server is mainly useful for other"
 echo "   MCP clients (Claude Desktop, Cursor, Hermes). It needs 'uv' on PATH."
 echo ""
-MCP_CMD="claude mcp add obsidian-second-brain -s user -e OBSIDIAN_VAULT_PATH=\"$VAULT\" -- uv run --with 'mcp<2' python \"$SKILL_DIR/integrations/obsidian-mcp-server/server.py\""
+MCP_CMD="claude mcp add obsidian-second-brain -s user -e OBSIDIAN_VAULT_PATH=\"$VAULT\" -- uv run --no-project --with 'mcp<2' python \"$SKILL_DIR/integrations/obsidian-mcp-server/server.py\""
 REPLY=n
 if [[ -t 0 ]]; then
   read -r -p "   Configure the bundled MCP server? [y/N] " REPLY
 fi
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
   if command -v claude &>/dev/null && command -v uv &>/dev/null; then
-    claude mcp add obsidian-second-brain -s user -e OBSIDIAN_VAULT_PATH="$VAULT" -- uv run --with 'mcp<2' python "$SKILL_DIR/integrations/obsidian-mcp-server/server.py"
+    claude mcp add obsidian-second-brain -s user -e OBSIDIAN_VAULT_PATH="$VAULT" -- uv run --no-project --with 'mcp<2' python "$SKILL_DIR/integrations/obsidian-mcp-server/server.py"
     green "   MCP server configured"
   else
     yellow "   claude and/or uv CLI not found - skipping MCP setup"
