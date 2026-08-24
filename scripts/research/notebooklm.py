@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
 import sys
 import tempfile
@@ -32,17 +31,11 @@ from google.genai import types
 
 from .lib.config import NOTEBOOKLM_MODEL, VAULT_PATH, get_required
 from .lib.gemini import GEMINI_DEFAULT_MODEL, MODEL_LADDER
+from .lib.vault import slugify
 from .lib.vault_terms import topic_terms
 
 MAX_BUNDLE_NOTES = 12
 NOTEBOOKLM_DIR = VAULT_PATH / "Research" / "NotebookLM"
-
-
-def slugify(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"[^a-z0-9\s-]", "", text)
-    text = re.sub(r"\s+", "-", text.strip())
-    return text[:80]
 
 
 def _vault_scan_dirs() -> list[str]:
@@ -192,7 +185,7 @@ def run(topic: str) -> int:
         return 1
 
     today = datetime.now().strftime("%Y-%m-%d")
-    slug = slugify(topic)
+    slug = slugify(topic) or "untitled"
 
     print(f"=== /notebooklm: {topic} ===", file=sys.stderr)
     print(f"Vault baseline: {len(hits)} notes", file=sys.stderr)
