@@ -12,7 +12,28 @@ Run:
 or wire it into a client's MCP config (see README.md).
 """
 
-from __future__ import annotations
+# DO NOT add `from __future__ import annotations` to this module.
+#
+# Symptom if you do: the server dies during startup and the client lists zero
+# vault tools, with "issubclass() arg 1 must be a class" in the logs.
+#
+# Cause: PEP 563 turns every annotation in this module into a plain string.
+# fastmcp inspects each tool's signature at registration time and calls
+# `issubclass(param.annotation, Context)` to find the context parameter.
+# `issubclass` needs a real class, so a string annotation raises TypeError on
+# the FIRST @mcp.tool() it walks, which aborts registration for all of them.
+#
+# This is a fastmcp limitation, not a defect in this file. Annotations below
+# are therefore evaluated eagerly at import time, so every name used in an
+# annotation on a decorated function must be importable at module scope
+# (no `if TYPE_CHECKING:` guarded names in those positions).
+#
+# Note that the `mcp<2` pin in .claude-plugin/plugin.json does not prevent
+# this: `mcp<2` resolves to 1.9.4, which is precisely the fastmcp that trips
+# on string annotations. The pin guards against the 2.x rewrite dropping
+# `mcp.server.fastmcp` entirely; it does not guard against this. If the pin is
+# ever lifted to 2.x, recheck whether the issubclass path was fixed there, in
+# which case this import can come back.
 
 import json
 import sys
