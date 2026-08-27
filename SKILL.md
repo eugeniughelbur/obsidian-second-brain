@@ -566,6 +566,7 @@ Steps:
 3. Spawn parallel subagents to handle each category simultaneously:
    - **Links agent**: verify broken links, attempt to resolve them
    - **Duplicates agent**: confirm duplicates are truly the same concept, not just similar names
+   - **Taxonomy agent**: only fires when `<vault>/_meta/taxonomy.md` exists (format in `references/taxonomy-format.md`) - opt-in, zero findings without it. `tag_synonym` (a tag is a known synonym of a canonical tag) offers a per-note rename to the canonical form with confirmation; `tag_not_in_taxonomy` (a tag matches neither a canonical tag nor a synonym) is informational only, never auto-fixed
    - **Frontmatter agent**: identify notes missing required fields by type
    - **Staleness agent**: check overdue tasks and unfilled template syntax
    - **Orphans agent**: check orphaned notes and empty folders
@@ -576,8 +577,8 @@ Steps:
    - **Typed-edge lint agent**: run `python scripts/link_graph.py --path <vault> --lint` - validates the `relations:` typed-edge graph (Rule 6 § Typed edges in `references/ai-first-rules.md`): contradiction cycles (critical), unknown types / dangling targets / self-edges (warning), missing inverse edges (info). Returns zero findings on vaults that use no typed edges yet
 4. Merge agent results and group by severity:
    - 🔴 Critical: broken links, unfilled template syntax, contradictions, typed-edge contradiction cycles
-   - 🟡 Warning: duplicates, stale tasks, missing frontmatter, stale claims, concept gaps, typed-edge problems (unknown type, dangling target, self-edge)
-   - ⚪ Info: orphaned notes, empty folders, missing inverse edges
+   - 🟡 Warning: duplicates, stale tasks, missing frontmatter, stale claims, concept gaps, typed-edge problems (unknown type, dangling target, self-edge), tag-synonym findings
+   - ⚪ Info: orphaned notes, empty folders, missing inverse edges, tags not in the taxonomy
 5. Present a clean summary with counts per category
 6. For safe fixes (missing frontmatter, obvious duplicates, creating pages for concept gaps), offer to fix them automatically
 7. For destructive fixes (archiving, merging, resolving contradictions), list them and ask for explicit confirmation before touching anything

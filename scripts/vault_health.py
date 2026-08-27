@@ -66,6 +66,11 @@ TEMPLATE_RE = re.compile(r"<%.*?%>")
 ALIAS_RE = re.compile(r"^aliases:\s*\n((?:\s*-\s*.+\n?)+)", re.MULTILINE)
 ALIAS_ITEM_RE = re.compile(r"^\s*-\s*(.+)$", re.MULTILINE)
 ALIAS_INLINE_RE = re.compile(r"^aliases:\s*\[(.+)\]\s*$", re.MULTILINE)
+# Same two shapes as aliases, different key - `tags:` is at least as often a
+# block list (see references/vault-schema.md's own frontmatter examples) as
+# the inline `tags: [...]` form this project's own notes use (#221).
+TAG_RE = re.compile(r"^tags:\s*\n((?:\s*-\s*.+\n?)+)", re.MULTILINE)
+TAG_INLINE_RE = re.compile(r"^tags:\s*\[(.*)\]\s*$", re.MULTILINE)
 
 
 def parse_aliases(frontmatter: str) -> list:
@@ -81,6 +86,19 @@ def parse_aliases(frontmatter: str) -> list:
     if not block:
         return []
     return [m.strip().strip('"\'').lower() for m in ALIAS_ITEM_RE.findall(block.group(1))]
+
+
+def parse_tags(frontmatter: str) -> list:
+    """Extract tags from frontmatter text - block style AND inline style, same
+    shape as parse_aliases. Feeds check_taxonomy (#221); lowercased to match
+    this project's tag convention (see CLAUDE.md Conventions)."""
+    m = TAG_INLINE_RE.search(frontmatter)
+    if m:
+        return [t.strip().strip('"\'').lower() for t in m.group(1).split(",") if t.strip()]
+    block = TAG_RE.search(frontmatter)
+    if not block:
+        return []
+    return [t.strip().strip('"\'').lower() for t in ALIAS_ITEM_RE.findall(block.group(1))]
 
 
 class VaultExcludes:
@@ -182,6 +200,38 @@ def load_vault_config(vault: Path) -> VaultExcludes:
     return VaultExcludes(dirs, paths, link_scan)
 
 
+# One `##` heading per canonical tag, its synonyms as a `-` list underneath -
+# see references/taxonomy-format.md for the full spec and rationale.
+TAXONOMY_HEADING_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+
+
+def load_taxonomy(vault: Path) -> dict:
+    """Read `<vault>/_meta/taxonomy.md` if present: {canonical_tag: [synonym, ...]}.
+
+    Empty dict (not an error) when the file is absent - the taxonomy audit is
+    opt-in per #221, so a vault that never created this file must see zero
+    findings, same contract as load_vault_config's missing-file case above."""
+    path = vault / "_meta" / "taxonomy.md"
+    if not path.is_file():
+        return {}
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return {}
+    taxonomy: dict[str, list] = {}
+    headings = list(TAXONOMY_HEADING_RE.finditer(text))
+    for i, heading in enumerate(headings):
+        canonical = _nfc(heading.group(1)).strip().lower()
+        if not canonical:
+            continue
+        end = headings[i + 1].start() if i + 1 < len(headings) else len(text)
+        block = text[heading.end():end]
+        taxonomy[canonical] = [
+            _nfc(s).strip().lower() for s in ALIAS_ITEM_RE.findall(block) if s.strip()
+        ]
+    return taxonomy
+
+
 def index_vault_files(vault: Path, excludes=None) -> set:
     """Lowercased relative paths and bare filenames of every non-excluded vault file.
 
@@ -224,6 +274,14 @@ def load_vault(vault: Path, excludes=None, only: str | None = None) -> dict:
             continue
         if any(p.lower().endswith("templates") for p in parts):
             continue
+        # _meta/ holds tool config (_meta/taxonomy.md, #221), not vault
+        # content - scanning it as a note would false-positive it into
+        # missing-frontmatter and orphan findings for every vault that adopts
+        # a taxonomy. Local to load_vault, not BASE_EXCLUDE_DIRS: the other
+        # tools sharing that base (freshness_lint, export_okf, MCP vault_ops)
+        # have no reason to know about a vault_health-only convention yet.
+        if parts and parts[0].lower() == "_meta":
+            continue
         if excludes.skip(parts, md.relative_to(vault).as_posix()):
             continue
         # rglob matches names, not files: a dangling symlink or a directory named
@@ -259,6 +317,7 @@ def load_vault(vault: Path, excludes=None, only: str | None = None) -> dict:
             "code_fence_wrapped": bool(not fm_match and CODE_FENCE_WRAP_RE.match(content)),
             "links": links,
             "aliases": parse_aliases(frontmatter),
+            "tags": parse_tags(frontmatter),
             "due": due_match.group(1) if due_match else None,
             "size": len(content),
         }
@@ -415,6 +474,53 @@ def check_duplicates(notes: dict) -> list:
             ),
             "files": files,
         })
+    return issues
+
+
+def check_taxonomy(notes: dict, taxonomy: dict) -> list:
+    """Notes whose tags disagree with `_meta/taxonomy.md` (#221's opt-in half -
+    the digit-only/syntax half of that issue is a write-time check the
+    maintainer is adding separately, unrelated to this function).
+
+    No-op when `taxonomy` is empty: an absent (or heading-less) taxonomy file
+    must produce zero findings, never flag every tag as unknown - see
+    references/taxonomy-format.md.
+
+    Two disjoint findings, matching the maintainer's spec verbatim:
+    - `tag_synonym`: the tag IS a known synonym of a canonical tag - the fix
+      is unambiguous (rename to the canonical form), so this is a warning.
+    - `tag_not_in_taxonomy`: the tag matches neither a canonical tag nor any
+      synonym - informational only, since an unlisted tag is not necessarily
+      wrong, just not (yet) in the vocabulary.
+    """
+    if not taxonomy:
+        return []
+    canonical_tags = set(taxonomy)
+    synonym_to_canonical = {syn: canon for canon, syns in taxonomy.items() for syn in syns}
+
+    issues = []
+    for rel, note in notes.items():
+        for tag in note["tags"]:
+            if tag in canonical_tags:
+                continue
+            canonical = synonym_to_canonical.get(tag)
+            if canonical:
+                issues.append({
+                    "type": "tag_synonym",
+                    "severity": "warning",
+                    "message": f"#{tag} should be folded to #{canonical}: {rel}",
+                    "files": [rel],
+                    "tag": tag,
+                    "canonical": canonical,
+                })
+            else:
+                issues.append({
+                    "type": "tag_not_in_taxonomy",
+                    "severity": "info",
+                    "message": f"#{tag} is not in the taxonomy: {rel}",
+                    "files": [rel],
+                    "tag": tag,
+                })
     return issues
 
 
@@ -826,9 +932,13 @@ def run_health_check(vault: Path) -> dict:
     # different things and get counted separately: a missing note is a gap to
     # write, a missing attachment is import cleanup.
     link_gaps = check_wanted_notes(notes, vault, excludes)
+    # Empty dict when _meta/taxonomy.md does not exist - check_taxonomy is a
+    # no-op on that input, so this stays wired unconditionally (#221).
+    taxonomy = load_taxonomy(vault)
 
     checks = [
         ("Duplicates", check_duplicates(notes)),
+        ("Tag taxonomy", check_taxonomy(notes, taxonomy)),
         ("Orphans", check_orphans(notes)),
         ("Stale tasks", check_stale_tasks(notes)),
         ("Code-fence-wrapped notes", check_code_fence_wrapped(notes)),
