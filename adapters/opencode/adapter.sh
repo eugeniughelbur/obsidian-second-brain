@@ -118,6 +118,22 @@ the model on OpenCode's side. Authenticate OpenRouter (`/connect`, or
 }
 ```
 
+OrcaRouter is an alternative OpenAI-compatible gateway with the same shape.
+Authenticate it the same way (`/connect`, search OrcaRouter, paste your key - or
+`export ORCAROUTER_API_KEY=...`), then pin a model in `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "orcarouter/openai/gpt-5.5",
+  "provider": { "orcarouter": { "models": { "openai/gpt-5.5": {} } } }
+}
+```
+
+The `orcarouter/auto` smart router is available in `opencode.json` as
+`orcarouter/orcarouter/auto`; for the deep-synthesis commands, pin a strong
+model such as `orcarouter/anthropic/claude-sonnet-5`.
+
 Use `nousresearch/hermes-4-405b` for the synthesis-heavy commands, or
 `nousresearch/hermes-3-llama-3.1-405b:free` for a zero-cost trial. For full
 privacy, run a smaller Hermes locally via Ollama / LM Studio. Core commands

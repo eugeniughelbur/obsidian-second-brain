@@ -755,6 +755,24 @@ Point OpenCode at Hermes via OpenRouter. Authenticate once (`/connect`, search O
 }
 ```
 
+[OrcaRouter](https://www.orcarouter.ai) is an alternative OpenAI-compatible gateway with the same shape, and it is already [listed in models.dev](https://models.dev/orcarouter), so OpenCode discovers its catalog automatically as `orcarouter/<model>`. Authenticate once (`/connect`, search OrcaRouter, paste your key - or `export ORCAROUTER_API_KEY=...`), then in `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "orcarouter/openai/gpt-5.5",
+  "provider": {
+    "orcarouter": {
+      "models": {
+        "openai/gpt-5.5": {}
+      }
+    }
+  }
+}
+```
+
+The `orcarouter/auto` entry is a smart router that picks an upstream per request (default `cheapest`; `balanced`, `quality`, and `adaptive` are configurable in the [console](https://www.orcarouter.ai/console/routing)). Reference it in `opencode.json` as `orcarouter/orcarouter/auto`. For the synthesis-heavy commands, pin a strong model such as `orcarouter/anthropic/claude-sonnet-5`; the routing-only `auto` entry is best for cheap, no-tools calls.
+
 Hermes models on OpenRouter (as of 2026-06, [openrouter.ai](https://openrouter.ai/models?q=hermes)):
 
 | Model id | Best for | Cost (in / out per 1M tokens) |
