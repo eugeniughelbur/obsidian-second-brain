@@ -25,7 +25,7 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
-from .lib import grok, vault, video_frames, youtube
+from .lib import config, grok, vault, video_frames, youtube
 
 # Frames the visual layer reads by default. Kept modest: each frame is an image
 # Claude reads, so cost scales with count. Override with --max-frames.
@@ -164,7 +164,10 @@ def main(argv: list[str]) -> int:
     visual = _extract_visual(video_id, title, args.max_frames) if args.visual else None
 
     if transcript:
-        TX_LIMIT = 24000  # ~6k tokens - plenty for grok-4 context
+        # ~120k tokens. Gemini 1M-context flash models take full interview
+        # transcripts (3h video ~ 400k chars) with headroom; the old 24k cap
+        # silently discarded 90%+ of long videos.
+        TX_LIMIT = int(config.get_optional("YOUTUBE_TX_LIMIT", "480000"))
         tx_truncated = transcript[:TX_LIMIT]
         tx_note = "" if len(transcript) <= TX_LIMIT else f"\n\n[Transcript truncated at {TX_LIMIT} chars from total {len(transcript)} chars]"
     else:

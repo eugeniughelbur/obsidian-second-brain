@@ -17,7 +17,7 @@ import os
 import sys
 from datetime import datetime
 
-from .lib import grok, podcast, vault
+from .lib import config, grok, podcast, vault
 
 SUMMARIZE_PROMPT = """You are summarizing a podcast episode for a knowledge vault. The note will be read by future agent (an AI), not by a human. Optimize for AI retrieval.
 
@@ -148,7 +148,9 @@ def main(argv: list[str]) -> int:
     transcript_text, transcript_source = _resolve_transcript(episode)
 
     if transcript_text:
-        TX_LIMIT = 24000  # ~6k tokens
+        # Podcasts are 1-3h conversations; the old 24k cap discarded most of
+        # the episode. Same rationale as YOUTUBE_TX_LIMIT in youtube_extract.
+        TX_LIMIT = int(config.get_optional("PODCAST_TX_LIMIT", "480000"))
         content = transcript_text[:TX_LIMIT]
         if len(transcript_text) > TX_LIMIT:
             content += f"\n\n[Transcript truncated at {TX_LIMIT} chars from total {len(transcript_text)} chars]"
