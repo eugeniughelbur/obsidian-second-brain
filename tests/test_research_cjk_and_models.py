@@ -167,7 +167,7 @@ def test_vault_writes_are_utf8_under_a_cp1252_default(tmp_path, monkeypatch, cp1
     assert text in saved.read_bytes().decode("utf-8")
 
 
-def test_append_to_daily_leaves_a_note_it_cannot_decode_alone(tmp_path, monkeypatch):
+def test_append_to_daily_leaves_a_note_it_cannot_decode_alone(tmp_path, monkeypatch, capsys):
     """A daily note an earlier Windows run rewrote in its code page is not UTF-8.
     Reading it strictly would raise where the old code silently continued, and
     reading it forgivingly would save U+FFFD over every such byte; the appender
@@ -183,9 +183,12 @@ def test_append_to_daily_leaves_a_note_it_cannot_decode_alone(tmp_path, monkeypa
     daily.write_bytes(legacy)
     assert vault.append_to_daily("more") is False
     assert daily.read_bytes() == legacy
+    # The refusal is not silent: the command's stderr names the file and the fix.
+    err = capsys.readouterr().err
+    assert "2026-09-02.md is not UTF-8" in err and "not appended" in err
 
 
-def test_append_to_log_leaves_a_log_it_cannot_decode_alone(tmp_path, monkeypatch):
+def test_append_to_log_leaves_a_log_it_cannot_decode_alone(tmp_path, monkeypatch, capsys):
     """The same rule for log.md: UTF-8 appended to a log an earlier Windows run
     wrote in its code page would leave bytes that decode as neither encoding,
     so the appender declines and the file stays exactly as it was."""
@@ -198,6 +201,8 @@ def test_append_to_log_leaves_a_log_it_cannot_decode_alone(tmp_path, monkeypatch
     (root / "log.md").write_bytes(legacy)
     assert vault.append_to_log("more") is False
     assert (root / "log.md").read_bytes() == legacy
+    err = capsys.readouterr().err
+    assert "log.md is not UTF-8" in err and "nothing appended" in err
 
 
 def test_no_stale_tokenizer_copies_left_in_command_paths():
@@ -360,3 +365,19 @@ def test_ladder_exhaustion_names_the_env_fix(gemini, monkeypatch):
     with pytest.raises(RuntimeError) as e:
         gemini.call("hi", command="test")
     assert "GEMINI_SUMMARY_MODEL" in str(e.value)
+
+
+def test_append_to_daily_says_when_there_is_no_daily_note(tmp_path, monkeypatch, capsys):
+    """The other silent skip: no daily note for today. Callers ignore the False
+    and the research note is already saved, so without a stderr line a user
+    sees a saved note and an unchanged (or absent) daily note with no hint why."""
+    from research.lib import vault
+
+    root = tmp_path / "vault"
+    root.mkdir()
+    monkeypatch.setattr(vault, "VAULT_PATH", root)
+    monkeypatch.setattr(vault, "datetime", _Noon)
+    assert vault.append_to_daily("more") is False
+    err = capsys.readouterr().err
+    assert "no daily note at" in err and "2026-09-02.md" in err
+    assert not (root / "wiki" / "daily" / "2026-09-02.md").exists()
