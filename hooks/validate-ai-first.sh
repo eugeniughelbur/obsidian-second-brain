@@ -27,7 +27,8 @@
 #
 # Scope:
 #   - Only inspects files inside OBSIDIAN_VAULT_PATH (env var)
-#   - Skips raw/, templates/, _export/, .obsidian/, boards/ (kanban exception:
+#   - Skips raw/, templates/, _export/, .obsidian/, .claude/ (slash-command
+#     copies and settings, not notes - #249), boards/ (kanban exception:
 #     an H2 preamble renders as a phantom column), vault-surface files
 #     (_CLAUDE.md, Home.md, index.md, log.md, catchup.md, per-day Logs/ -
 #     operating surfaces, not knowledge notes), and any path containing
@@ -178,7 +179,7 @@ esac
 # below keep matching the lowercased key; elsewhere the case is exact.
 case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) shopt -s nocasematch ;; esac
 case "$FILE_KEY" in
-  */raw/*|*/templates/*|*/_export/*|*/.obsidian/*|*/.git/*|*/.trash/*|*/boards/*|*/Boards/*|*/Logs/*|*/_CLAUDE.md|*/Home.md|*/index.md|*/log.md|*/catchup.md)
+  */raw/*|*/templates/*|*/_export/*|*/.obsidian/*|*/.git/*|*/.trash/*|*/.claude/*|*/boards/*|*/Boards/*|*/Logs/*|*/_CLAUDE.md|*/Home.md|*/index.md|*/log.md|*/catchup.md)
     exit 0 ;;
 esac
 shopt -u nocasematch

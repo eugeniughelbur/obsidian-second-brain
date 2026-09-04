@@ -1270,7 +1270,7 @@ A non-blocking validator that fires after every `Write` or `Edit` on a markdown 
 
 **What it skips:**
 - Files outside `OBSIDIAN_VAULT_PATH`
-- Files under `raw/`, `templates/`, `_export/`, `.obsidian/`, `.git/`, `.trash/`
+- Files under `raw/`, `templates/`, `_export/`, `.obsidian/`, `.git/`, `.trash/`, `.claude/` (slash-command copies and settings are not notes - #249)
 - Payloads with no `tool_name` (nothing fired)
 
 **What it refuses to skip silently:** a payload that names a tool but carries no path key the hook knows (`file_path`, `filePath`, `notebook_path`). The matcher fired, so a write happened and went unchecked; the hook prints one stderr line naming the tool and the payload keys and exits 1 (non-blocking, the write stands) instead of exiting 0 and looking like "not a vault file".
