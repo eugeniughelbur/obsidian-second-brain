@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **The MCP server does the vault's bookkeeping after every write (#255).** `obsidian_capture`, `obsidian_save_note`, `obsidian_update_note`, `obsidian_replace_text` and `obsidian_move_note` used to end at the file write, so a capture made from another project - where the agent may only write into `Inbox/` - sat unlogged, unindexed and unvalidated until some session in the vault happened to run. The server now validates the note, adds the `index.md` entry under the section for its folder (reported, never guessed, when the catalog has no such section), appends the operation-log line in the vault's convention (`Logs/YYYY-MM-DD.md` when that folder exists, else `log.md`), and optionally runs `OBSIDIAN_POST_WRITE_CMD <vault> <note> <action>` bounded by `OBSIDIAN_POST_WRITE_TIMEOUT` - the place for a commit-and-push, which the server itself never does. Every part is reported under its own key (`validation`, `index`, `log`, `post_write`), so `saved` alone never implies the rest; writes to the log and the catalog are never logged; `OBSIDIAN_BOOKKEEPING=0` switches the first three off. Eight tests in `tests/test_mcp_bookkeeping.py`.
+
 ## [0.15.0] - 2026-09-04 - The Port
 
 ### Added

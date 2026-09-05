@@ -16,8 +16,8 @@ Data tools (deterministic primitives):
 |---|---|
 | `obsidian_search(query, limit=6)` | Ranked keyword search across vault notes; returns snippets + paths |
 | `obsidian_read_note(path)` | Read a full note by vault-relative path (path-traversal guarded) |
-| `obsidian_save_note(title, content, type, tags)` | Save a new AI-first note to the vault `Inbox/` |
-| `obsidian_capture(text, tags)` | Quick-capture an idea as a lightweight `type: idea` note |
+| `obsidian_save_note(title, content, type, tags)` | Save a new AI-first note to the vault `Inbox/`; the result also reports validation, the index entry, the log line and the post-write command (see Bookkeeping) |
+| `obsidian_capture(text, tags)` | Quick-capture an idea as a lightweight `type: idea` note, with the same bookkeeping |
 
 Curator tools (guarded mutation + graph + health, per Issue #79):
 
@@ -38,6 +38,17 @@ Skill tools (the higher-level behaviors, per Issue #60 - "use the skills, not ju
 The skill tools expose the command playbooks (e.g. `obsidian-ingest`, `idea-discovery`, `obsidian-find`) so the connecting agent runs the real skill behavior with its own model - ingest, for instance, is multi-step (it rewrites and links existing pages), so it runs as an agent-executed skill rather than a single function. Niche / agent-only / Claude-only commands (challenge, health, the scheduled agents, and the Google Calendar commands) are excluded from the exposed set. Override the commands source with `OBSIDIAN_COMMANDS_DIR` if the server is deployed away from the repo.
 
 Saved notes follow `references/ai-first-rules.md` (frontmatter, `## For future agent` preamble, `source: mcp` marker) so connector-written notes are distinguishable from hand-authored ones.
+
+## Bookkeeping after writes
+
+Every successful write (`save_note`, `capture`, `update_note`, `replace_text`, `move_note`) is followed by the vault's own bookkeeping, done by the server so an agent that may only write to `Inbox/` (any agent working from another project) still leaves the vault consistent:
+
+- **validation** - the note is checked with the same rules as `obsidian_validate_note`; reported as `"validation": {"ok": true, "issues": []}`.
+- **index** - a new note gets `- [[note]] - summary` under `index.md`'s section for its folder (`## Inbox/` for captures). Index layouts differ per vault, so a missing section is reported (`"index.md has no '## Inbox/' section; no entry added"`), never guessed.
+- **log** - one line in the vault's operation-log convention: `**HH:MM** - capture | Title -> [[Inbox/...]] (tags: ...)` in `Logs/YYYY-MM-DD.md` when that folder exists (as `/obsidian-init` creates it, with the log frontmatter on a new day), otherwise `## [YYYY-MM-DD] capture | ...` appended to `log.md`. Reported as `"log": "Logs/2026-09-05.md"`.
+- **post_write** - optional. Set `OBSIDIAN_POST_WRITE_CMD` to a command and the server runs it after the bookkeeping as `<cmd> <vault-path> <note-path> <action>`, from the vault directory, bounded by `OBSIDIAN_POST_WRITE_TIMEOUT` (seconds, default 45). This is where a git commit-and-push belongs: the server never touches git itself. Reported as `"post_write": {"ran": true, "ok": true, "detail": "ok"}`; a failure or timeout is reported, never raised, and the note stays saved. The command string is split shell-style (`shlex`); on Windows prefer a path without spaces or a small wrapper script.
+
+Each part has its own key so `saved` alone never implies the others happened. Writes to `Logs/`, `log.md` and `index.md` themselves are never logged (no loops). `OBSIDIAN_BOOKKEEPING=0` switches validation, index and log off; the post-write command is independent of that switch.
 
 ## Run it
 
