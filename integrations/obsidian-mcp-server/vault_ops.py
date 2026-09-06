@@ -14,6 +14,8 @@ import json
 import math
 import os
 import re
+import shlex
+import subprocess
 import sys
 import unicodedata
 import urllib.request
@@ -771,6 +773,117 @@ def _prepare_note_content(content: str, summary: Optional[str] = None) -> str:
     return body
 
 
+# ---- service-side bookkeeping ---------------------------------------------------
+# A write through the MCP server used to end at _write_atomic: the note existed,
+# but the vault's own rules - one operation-log line per write, an index entry
+# for a new note, a validation pass - were left to the calling agent, which from
+# another project may only capture into Inbox/ and cannot touch anything else.
+# The service does that bookkeeping now and reports each part separately, so
+# "saved" never implies "logged", "indexed", or "validated". Anything beyond the
+# vault (a git commit, a sync) stays outside the server: set
+# OBSIDIAN_POST_WRITE_CMD to a command that receives <vault> <note> <action>.
+_BOOKKEEPING_ENV = "OBSIDIAN_BOOKKEEPING"        # "0" turns the log line, index entry and validation off
+_POST_WRITE_ENV = "OBSIDIAN_POST_WRITE_CMD"      # optional command run after every successful write
+_POST_WRITE_TIMEOUT_ENV = "OBSIDIAN_POST_WRITE_TIMEOUT"  # seconds, default 45
+
+
+def _bookkeeping_enabled() -> bool:
+    return os.environ.get(_BOOKKEEPING_ENV, "1").strip() != "0"
+
+
+def _is_bookkeeping_surface(rel: str) -> bool:
+    """The operation log and the catalog: a write to them is never logged (no loops)."""
+    r = rel.replace("\\", "/").lower()
+    return r.startswith("logs/") or r in {"log.md", "index.md"}
+
+
+def _append_log_line(vault: Path, action: str, description: str) -> str:
+    """One operation-log line, in the vault's own convention: a per-day file when
+    `Logs/` exists (as /obsidian-init creates it), else a dated section in log.md."""
+    now = datetime.now()
+    day = now.strftime("%Y-%m-%d")
+    logs = vault / "Logs"
+    if logs.is_dir():
+        f = logs / f"{day}.md"
+        if not f.exists():
+            f.write_text(f"---\ntype: log\ndate: {day}\nai-first: true\n---\n\n# {day}\n\n", encoding="utf-8")
+        with f.open("a", encoding="utf-8") as fh:
+            fh.write(f"**{now.strftime('%H:%M')}** - {action} | {description}\n")
+        return f"Logs/{day}.md"
+    with (vault / "log.md").open("a", encoding="utf-8") as fh:
+        fh.write(f"\n## [{day}] {action} | {description}\n")
+    return "log.md"
+
+
+def _add_index_entry(vault: Path, rel: str, summary: str) -> str:
+    """Append `- [[note]] - summary` under index.md's section for the note's folder
+    (`## Inbox/`, `## wiki/entities/`, ...). Reports rather than guesses when the
+    catalog has no such section - index layouts differ per vault."""
+    idx = vault / "index.md"
+    if not idx.is_file():
+        return "index.md not found; no entry added"
+    if "/" not in rel:
+        return "root note; index.md entries are per folder, none added"
+    folder = rel.rsplit("/", 1)[0]
+    text = idx.read_text(encoding="utf-8-sig")
+    m = re.search(rf"^##\s+{re.escape(folder)}/?\s*$", text, re.M)
+    if not m:
+        return f"index.md has no '## {folder}/' section; no entry added"
+    nxt = re.search(r"^## ", text[m.end():], re.M)
+    end = m.end() + (nxt.start() if nxt else len(text) - m.end())
+    section = text[m.end():end]
+    bullet = f"- [[{rel[:-3]}]] - {summary}\n"
+    bullets = list(re.finditer(r"^- \[\[.*$", section, re.M))
+    if bullets:
+        at = m.end() + bullets[-1].end() + 1
+        new = text[:at] + bullet + text[at:]
+    else:
+        new = text[:end].rstrip("\n") + "\n\n" + bullet + ("\n" if nxt else "") + text[end:]
+    _write_atomic(idx, new)
+    return f"index.md '## {folder}/' entry added"
+
+
+def _run_post_write(vault: Path, rel: str, action: str) -> Optional[Dict[str, Any]]:
+    """Run OBSIDIAN_POST_WRITE_CMD <vault> <note> <action>, bounded, never raising.
+    Absent variable: None (the key is omitted). Otherwise a small report."""
+    cmd = os.environ.get(_POST_WRITE_ENV, "").strip()
+    if not cmd:
+        return None
+    try:
+        timeout = float(os.environ.get(_POST_WRITE_TIMEOUT_ENV) or "45")
+    except ValueError:
+        timeout = 45.0
+    argv = shlex.split(cmd, posix=(os.name != "nt")) + [str(vault), rel, action]
+    try:
+        p = subprocess.run(argv, cwd=str(vault), capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        return {"ran": False, "ok": False, "detail": f"command not found: {argv[0]}"}
+    except subprocess.TimeoutExpired:
+        return {"ran": True, "ok": False, "detail": f"timed out after {timeout:.0f}s"}
+    except OSError as exc:
+        return {"ran": False, "ok": False, "detail": str(exc)}
+    err = (p.stderr or "").strip().splitlines()
+    return {"ran": True, "ok": p.returncode == 0, "detail": (err[-1] if err else "ok")[:300]}
+
+
+def _bookkeep(vault: Path, action: str, rel: str, description: str, *, summary: Optional[str] = None) -> Dict[str, Any]:
+    """Validation, index entry (when a summary is given), log line, post-write
+    command - each reported under its own key so a caller can see exactly what
+    happened after the note was written."""
+    out: Dict[str, Any] = {}
+    if _bookkeeping_enabled() and not _is_bookkeeping_surface(rel):
+        v = validate_note(rel)
+        out["validation"] = ({"ok": v.get("ok"), "issues": v.get("issues", [])}
+                             if "error" not in v else {"ok": None, "issues": [v["error"]]})
+        if summary is not None:
+            out["index"] = _add_index_entry(vault, rel, summary)
+        out["log"] = _append_log_line(vault, action, description)
+    post = _run_post_write(vault, rel, action)
+    if post is not None:
+        out["post_write"] = post
+    return out
+
+
 def save_note(
     title: str,
     content: str,
@@ -830,7 +943,14 @@ def save_note(
         }
     target.parent.mkdir(parents=True, exist_ok=True)
     _write_atomic(target, body)
-    return {"saved": target.relative_to(vault).as_posix()}
+    rel = target.relative_to(vault).as_posix()
+    action = "save" if path else "capture"
+    first = re.sub(r"\s+", " ", content.split("\n", 1)[0]).strip()[:140]
+    tag_note = f" (tags: {', '.join(tags)})" if tags else ""
+    result: Dict[str, Any] = {"saved": rel}
+    result.update(_bookkeep(vault, action, rel, f"{title[:80]} -> [[{rel[:-3]}]]{tag_note}",
+                            summary=f"`type: {note_type}`, {action}d {datetime.now().strftime('%Y-%m-%d %H:%M')} through the MCP server. {first}"))
+    return result
 
 
 def capture_idea(text: str, *, tags: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -888,6 +1008,7 @@ def update_note(
     out = "---\n" + "\n".join(fm_lines).strip("\n") + "\n---\n\n" + new_body.lstrip("\n")
     _write_atomic(target, out)
     out: Dict[str, Any] = {"updated": rel, "set": sorted(fields.keys()), "appended": bool(append)}
+    out.update(_bookkeep(vault, "update", rel, f"[[{rel[:-3]}]] " + ("appended" if append else "fields set: " + ", ".join(sorted(fields.keys())))))
     # Surface a retrieval-affecting change instead of making it silent: a status
     # in _STALE_STATUSES multiplies this note's score in every future search.
     new_status = str(fields.get("status", "")).strip().lower()
@@ -924,7 +1045,9 @@ def replace_text(rel: str, old_text: str, new_text: str) -> Dict[str, Any]:
     if count != 1:
         return {"error": f"old_text must match exactly once; found {count} matches"}
     _write_atomic(target, text.replace(old_text, new_text, 1))
-    return {"updated": rel, "replacements": 1}
+    result: Dict[str, Any] = {"updated": rel, "replacements": 1}
+    result.update(_bookkeep(vault, "edit", rel, f"[[{rel[:-3]}]] text replaced"))
+    return result
 
 
 def move_note(source: str, destination: str) -> Dict[str, Any]:
@@ -962,11 +1085,13 @@ def move_note(source: str, destination: str) -> Dict[str, Any]:
             "error": f"destination was created but source could not be removed: {exc}",
             "destination": destination,
         }
-    return {
+    result: Dict[str, Any] = {
         "moved": source,
         "destination": destination,
         "warning": "update any path-qualified wikilinks that still name the old path",
     }
+    result.update(_bookkeep(vault, "move", destination, f"{source} -> [[{destination[:-3]}]]"))
+    return result
 
 
 def validate_note(rel: str) -> Dict[str, Any]:

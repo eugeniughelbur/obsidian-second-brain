@@ -88,6 +88,11 @@ def obsidian_save_note(
     `summary` becomes the platform-neutral `## For future agent` preamble. If
     content already begins with a legacy or generic future-agent heading, the
     server normalizes it and never duplicates it.
+
+    The result reports the write and its bookkeeping separately: `saved`,
+    `validation` (ok, issues), `index` (what happened in index.md), `log` (the
+    operation-log file written), and `post_write` when OBSIDIAN_POST_WRITE_CMD
+    is set. "saved" alone never implies the rest happened.
     """
     return json.dumps(
         vault_ops.save_note(
@@ -98,7 +103,12 @@ def obsidian_save_note(
 
 @mcp.tool()
 def obsidian_capture(text: str, tags: list[str] | None = None) -> str:
-    """Quick-capture an idea or thought as a lightweight note (type: idea) in the vault."""
+    """Quick-capture an idea or thought as a lightweight note (type: idea) in the vault.
+
+    Bookkeeping is done by the server and reported alongside `saved`: validation,
+    an index.md entry when the catalog has an `## Inbox/` section, the operation-log
+    line, and the outcome of OBSIDIAN_POST_WRITE_CMD when it is configured.
+    """
     return json.dumps(vault_ops.capture_idea(text, tags=tags))
 
 
