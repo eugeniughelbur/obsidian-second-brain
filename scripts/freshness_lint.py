@@ -137,7 +137,12 @@ URL = re.compile(r"https?://\S+")
 HEADING = re.compile(r"^(#{1,6})\s")
 # Typed-pointer prefixes that are just URI schemes or common false positives.
 POINTER_IGNORE = {"http", "https", "mailto", "file", "obsidian", "tel", "ftp",
-                  "note", "example", "type", "status", "date", "source"}
+                  "note", "example", "type", "status", "date", "source",
+                  # RDF / ontology vocabulary prefixes (owl:Class, rdfs:label,
+                  # skos:broader): CURIEs name terms in a vocabulary, not a record
+                  # in a home system, so there is nothing to map or refresh.
+                  "owl", "rdf", "rdfs", "xsd", "skos", "foaf", "dc", "dcterms",
+                  "schema", "prov", "sh", "dbo", "wdt"}
 
 
 def parse_frontmatter(lines: list[str]) -> tuple[dict, int]:
@@ -265,7 +270,12 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
         stripped = HTML_COMMENT.sub("", stripped)
 
         # FRESH-3: typed pointers must be mapped (URLs are always fine).
-        for pm in TYPED_POINTER.finditer(stripped):
+        # Drop URLs before scanning: a path segment such as Medium's
+        # `/resize:fit:1400/` inside a URL matched the pointer shape and rang
+        # FRESH-3 on every image link, while the URL guard below only sees the
+        # match itself.
+        pointer_text = URL.sub(" ", stripped)
+        for pm in TYPED_POINTER.finditer(pointer_text):
             prefix = pm.group(1).lower()
             if prefix in POINTER_IGNORE or URL.search(pm.group(0)):
                 continue
