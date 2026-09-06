@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **A skipped daily-note or log append now says so on stderr (follow-up to #248, asked for in the #252 review).** `append_to_daily` and `append_to_log` already refused to touch a file that is not valid UTF-8 (a note an earlier Windows run rewrote in its code page), and `append_to_daily` returned `False` when there is no daily note for today - but every caller ignores the return value and the research note is saved by then, so the run looked like a silent success. Each refusal now prints one `[vault] ...` line naming the file and the one-time fix (re-save as UTF-8), in the style of the toolkit's other stderr notes. Nothing else changes: the file is still left exactly as it was. Tests pin all three lines.
+
 ### Fixed
 
 - **The write-time validator warned on every slash-command file inside a vault (#249).** A project-scoped or Windows install copies `commands/*.md` into `<vault>/.claude/commands/`; those files carry `description:` frontmatter and no preamble by design, and `validate-ai-first.sh` checked each one as a note - 47 warnings per refresh. Paths under `.claude/` are now skipped like `templates/` and `_export/`, SKILL.md's skip list says so, and a smoke test pins it (a frontmatter-less file under `.claude/commands/` is silent; the same content under `Knowledge/` still warns).
