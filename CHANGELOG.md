@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **The write-time validator warned on every slash-command file inside a vault (#249).** A project-scoped or Windows install copies `commands/*.md` into `<vault>/.claude/commands/`; those files carry `description:` frontmatter and no preamble by design, and `validate-ai-first.sh` checked each one as a note - 47 warnings per refresh. Paths under `.claude/` are now skipped like `templates/` and `_export/`, SKILL.md's skip list says so, and a smoke test pins it (a frontmatter-less file under `.claude/commands/` is silent; the same content under `Knowledge/` still warns).
+
 ## [0.15.0] - 2026-09-04 - The Port
 
 ### Added
@@ -47,8 +51,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Lockfile carried two dependencies with published advisories (discussion #215).** `cryptography` 47.0.0 -> 50.0.1 (GHSA-537c-gmf6-5ccf) and `urllib3` 2.6.3 -> 2.7.0 (GHSA-mf9v-mfxr-j63j, streaming decompression bypass - relevant because the research toolkit fetches arbitrary external URLs and feeds). Both are transitive via `google-api-python-client`; `uv.lock` only, no `pyproject.toml` change.
 
 ### Fixed
-
-- **The write-time validator warned on every slash-command file inside a vault (#249).** A project-scoped or Windows install copies `commands/*.md` into `<vault>/.claude/commands/`; those files carry `description:` frontmatter and no preamble by design, and `validate-ai-first.sh` checked each one as a note - 47 warnings per refresh. Paths under `.claude/` are now skipped like `templates/` and `_export/`, SKILL.md's skip list says so, and a smoke test pins it (a frontmatter-less file under `.claude/commands/` is silent; the same content under `Knowledge/` still warns).
 
 - **`/obsidian-ingest` rewrote existing notes without confirmation, and `content_hash` keyed on the raw capture (#239, raised by @konsorsiumai).** Two spec gaps. `references/ai-first-rules.md` has said since #215 that a write which modifies an existing note on the strength of an external source is a proposal the user confirms, but the rule never reached `commands/obsidian-ingest.md`: step 6 mandated rewriting existing pages and the same-hash re-read from #218 routed straight into it, so a re-ingest could rewrite a daily note, `Home.md`, entity and idea notes and `log.md` with no question asked. Step 6 now carries the rule in full (new pages proceed; rewrites of existing notes are collected as drafted proposals and confirmed once as a batch, re-reads included), step 7 runs only for pages actually written, and the report lists the proposals with their outcome. Separately, `content_hash` was defined over "the verbatim source text", and a JS-rendered page yields different bytes on every fetch (JS shell vs rendered DOM, navigation chrome, a `+` where the page had `-`), so an unchanged source hashed as "changed" and the branch table had no row for it. The hash is now computed over a canonical form (article body only, LF, list markers normalized, whitespace collapsed) while the raw note body stays verbatim, and the same-URL-different-hash branch diffs the canonical texts first: capture noise is a re-read, only a real change writes a `supersedes:` raw note. Both are prompt-level contracts; `tests/test_untrusted_source_handling.py::test_ingest_treats_rewrites_of_existing_notes_as_proposals` pins the wording so it cannot drift out again.
 
