@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **The write-time validator warned on every slash-command file inside a vault (#249).** A project-scoped or Windows install copies `commands/*.md` into `<vault>/.claude/commands/`; those files carry `description:` frontmatter and no preamble by design, and `validate-ai-first.sh` checked each one as a note - 47 warnings per refresh. Paths under `.claude/` are now skipped like `templates/` and `_export/`, SKILL.md's skip list says so, and a smoke test pins it (a frontmatter-less file under `.claude/commands/` is silent; the same content under `Knowledge/` still warns).
 
+- **`freshness_lint.py` FRESH-3 no longer fires on RDF CURIEs or on `prefix:token` segments inside URLs.** `owl:Class`, `rdfs:label`, `skos:broader` name terms in a vocabulary, not records in a home system, so `owl`, `rdf`, `rdfs`, `xsd`, `skos`, `foaf`, `dc`, `dcterms`, `schema`, `prov`, `sh`, `dbo` and `wdt` join `POINTER_IGNORE`; and URLs are dropped from the line before the pointer scan, because a path segment such as Medium's `/resize:fit:1400/` matched the pointer shape while the URL guard only inspected the match itself. On a 6,400-note research vault this removed 126 findings, all false; a real unmapped id (`linear:ABC-123`) still rings. Covered by `tests/test_freshness_lint.py`.
+
 ## [0.15.0] - 2026-09-04 - The Port
 
 ### Added

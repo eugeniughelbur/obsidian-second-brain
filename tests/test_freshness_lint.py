@@ -318,3 +318,18 @@ def test_findings_name_files_with_forward_slashes():
     assert "\\" in str(note), "sanity: this is the form the finding used to carry"
     assert _report_path(note, root) == "Boards/Work.md"
     assert _report_path(root / "note.md", root) == "note.md"
+
+
+def test_fresh3_ignores_curies_and_url_path_segments(tmp_path):
+    """RDF-style CURIEs (owl:Class, rdfs:label) name vocabulary terms, not records in a
+    home system, and `prefix:token` segments inside a URL (Medium's /resize:fit:1400/)
+    are not pointers either. Both rang FRESH-3 on a research vault (126 findings, all
+    false) before this exemption. A real unmapped id still rings."""
+    write(tmp_path, "onto.md",
+          "# Onto\n\nThe class is declared as owl:Class with rdfs:label and skos:broader links.\n"
+          "![figure](https://miro.medium.com/v2/resize:fit:1400/format:webp/abc.png)\n"
+          "Tracked in linear:ABC-123 as well.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = rules(report, "FRESH-3")
+    assert [h["text"] for h in hits] == [
+        "typed pointer 'linear:ABC-123' has no mapping in .freshness.json"]
