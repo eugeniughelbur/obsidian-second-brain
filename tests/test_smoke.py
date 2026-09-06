@@ -1514,3 +1514,33 @@ def test_validate_hook_flags_tags_obsidian_renders_broken(tmp_path):
     r = run(good)
     assert r.returncode == 0, r.stderr
     assert r.stdout.strip() == "", r.stdout
+
+
+def test_validate_hook_skips_claude_dir(tmp_path):
+    """#249: slash-command files copied into a vault's .claude/commands/ (the
+    Windows and project-scoped install layout) carry `description:` frontmatter
+    and no AI-first preamble by design. The hook used to warn on each of them -
+    47 warnings per refresh. Anything under .claude/ is skipped like templates/."""
+    hook = REPO_ROOT / "hooks/validate-ai-first.sh"
+    cmd = tmp_path / ".claude" / "commands" / "obsidian-ingest.md"
+    cmd.parent.mkdir(parents=True)
+    cmd.write_text("---\ndescription: a command\n---\n\nNo preamble here.\n", encoding="utf-8")
+    note = tmp_path / "Knowledge" / "Note.md"
+    note.parent.mkdir()
+    note.write_text("---\ndescription: not a note schema\n---\n\nNo preamble here.\n", encoding="utf-8")
+
+    def run(f):
+        return subprocess.run(
+            ["bash", str(hook)],
+            input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(f)}}),
+            env=dict(os.environ, OBSIDIAN_VAULT_PATH=str(tmp_path)),
+            capture_output=True, text=True,
+        )
+
+    skipped = run(cmd)
+    assert skipped.returncode == 0, skipped.stderr
+    assert not skipped.stdout.strip(), skipped.stdout
+    # The same content outside .claude/ still warns: the skip is by path, not by shape.
+    checked = run(note)
+    assert checked.returncode == 0, checked.stderr
+    assert "AI-first" in checked.stdout or "warning" in checked.stdout.lower(), checked.stdout
