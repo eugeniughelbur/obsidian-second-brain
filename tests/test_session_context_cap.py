@@ -107,6 +107,50 @@ def test_a_session_outside_the_vault_gets_no_manual_either_way(vault, tmp_path):
     assert "**Skill root**" in context
 
 
+# ── #285: the vault configured only in the marketplace-install config file ──
+
+def run_hook_via_env_file(vault: Path, env_file: Path | None) -> str:
+    """Same as run_hook(), except OBSIDIAN_VAULT_PATH is never a real process
+    env var - only OBSIDIAN_ENV_FILE points at where the config lives, exactly
+    what a marketplace install leaves behind (#285)."""
+    env = dict(os.environ)
+    env.pop("OBSIDIAN_VAULT_PATH", None)
+    if env_file is not None:
+        env["OBSIDIAN_ENV_FILE"] = str(env_file)
+    else:
+        env.pop("OBSIDIAN_ENV_FILE", None)
+    result = subprocess.run(
+        [sys.executable, str(HOOK)],
+        input=json.dumps({"cwd": str(vault)}),
+        env=env, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+
+
+def test_a_vault_configured_only_in_the_env_file_still_gets_its_manual(vault, tmp_path):
+    """The bug itself: a marketplace install writes OBSIDIAN_VAULT_PATH into the
+    config .env and never exports it, so an env-only check finds nothing - on
+    every session, including one whose cwd IS the vault. #124, #160, #269 were
+    the same root cause in three other callers; this is the fourth, in the
+    SessionStart hook itself."""
+    write_manual(vault, "one rule per line.\n" * 50)
+    env_file = tmp_path / ".env"
+    env_file.write_text(f"OBSIDIAN_VAULT_PATH={vault}\n", encoding="utf-8")
+
+    context = run_hook_via_env_file(vault, env_file)
+    assert MARKER in context, "the manual must load from the config file alone"
+    assert "already loaded" in context
+
+
+def test_no_config_file_at_all_is_silent_not_an_exception(vault, tmp_path):
+    """The fallback must not turn a fresh machine, with no config written yet,
+    into a hook that raises instead of a hook that says nothing."""
+    context = run_hook_via_env_file(vault, tmp_path / "nope" / ".env")
+    assert "**Skill root**" in context
+    assert MARKER not in context and "NOT loaded" not in context
+
+
 def test_skill_md_does_not_tell_a_session_to_skip_on_the_hook_alone():
     """SKILL.md sent the session past `_CLAUDE.md` whenever the hook was
     configured, which is what turned a capped payload into a silent failure."""

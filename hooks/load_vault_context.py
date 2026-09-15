@@ -37,6 +37,9 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import osb_env  # noqa: E402  (depends on the sys.path insert above)
+
 # Claude Code caps a hook's output strings, additionalContext included, at
 # 10,000 characters and replaces anything larger with a 2 KB preview. The margin
 # covers the skill-root block that shares the payload and any wording change to
@@ -71,7 +74,7 @@ def skill_root_block() -> str:
 
 def vault_manual_path() -> Path | None:
     """The vault's _CLAUDE.md when this session is inside that vault, else None."""
-    vault = os.environ.get("OBSIDIAN_VAULT_PATH", "")
+    vault = osb_env.vault_path()
     if not vault:
         return None
     try:
