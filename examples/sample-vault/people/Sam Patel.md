@@ -4,7 +4,7 @@ updated: 2026-04-27
 type: person
 tags: [person, tide, technical]
 role: technical lead
-company: "[[Companies/Currentscale Labs]]"
+company: "[[Currentscale Labs]]"
 relationship: strong
 last-interaction: 2026-04-27
 related-projects: ["[[Projects/Tide]]"]
@@ -19,7 +19,7 @@ Sam Patel is the fictional technical lead and second engineer on [[Projects/Tide
 
 ## Profile
 
-- **Role:** Technical lead at the fictional [[Companies/Currentscale Labs]]
+- **Role:** Technical lead at the fictional [[Currentscale Labs]]
 - **Joined:** 2025-09-20 (stated)
 - **Strengths:** Postgres, distributed cron, the kind of edge cases nobody else catches
 

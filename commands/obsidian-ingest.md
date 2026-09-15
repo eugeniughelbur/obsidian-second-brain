@@ -88,7 +88,7 @@ The argument is a URL, file path, or pasted text. If no argument, ask what to in
    Read `index.md` first to understand what already exists in the vault. Then spawn parallel subagents. Each returns its work on existing pages as a drafted rewrite (path, what changes, why) for the confirmation above; only new pages are written directly:
 
    - **Entities agent**: for each person/company/tool mentioned:
-     - Search the entities folder (resolved per `references/folder-map.md` - wiki-style `wiki/entities/`, Obsidian-style `People/`) for existing page
+     - Search the entities folder for that kind (resolved per `references/folder-map.md` - wiki-style `wiki/entities/` for every kind; Obsidian-style `People/`, `Companies/` or `Tools/`) for existing page
      - If found: REWRITE the page - merge new info with old, update role/context/interactions, add new links. Don't just append - integrate.
      - If not found: create new entity page with full context
    

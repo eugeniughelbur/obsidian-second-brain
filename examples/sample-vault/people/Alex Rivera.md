@@ -4,7 +4,7 @@ updated: 2026-04-27
 type: person
 tags: [person, owner]
 role: indie hacker, founder
-company: "[[Companies/Currentscale Labs]]"
+company: "[[Currentscale Labs]]"
 relationship: strong
 last-interaction: 2026-04-27
 related-projects: ["[[Projects/Tide]]"]
@@ -19,7 +19,7 @@ Alex Rivera is the owner of this vault. Founder and sole owner of the fictional 
 
 ## Profile
 
-- **Role:** Indie hacker, founder, sole engineer at the fictional [[Companies/Currentscale Labs]]
+- **Role:** Indie hacker, founder, sole engineer at the fictional [[Currentscale Labs]]
 - **Based in:** Lisbon, Portugal
 - **Background:** 8 years backend engineering before going independent in 2025-09 (stated)
 - **Public handles:** fictional, do not link

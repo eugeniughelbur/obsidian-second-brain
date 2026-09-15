@@ -164,9 +164,36 @@ updated: YYYY-MM-DD
 type: person
 tags: [person, ...]
 role: ""
-company: "[[Companies/...]]"
+company: "[[Acme Corp]]"      # bare link: resolves wherever the company note sits
 relationship: weak | medium | strong
 last-interaction: YYYY-MM-DD
+related-projects: ["[[Projects/...]]", ...]
+ai-first: true
+```
+
+### `type: company`
+```yaml
+date: YYYY-MM-DD              # first captured
+updated: YYYY-MM-DD
+type: company
+tags: [company, ...]
+industry: ""
+website: ""
+related-people: ["[[Person Name]]", ...]
+related-projects: ["[[Projects/...]]", ...]
+ai-first: true
+```
+
+### `type: tool`
+```yaml
+date: YYYY-MM-DD              # first captured
+updated: YYYY-MM-DD
+type: tool
+tags: [tool, ...]
+category: ""                  # e.g. editor, database, CRM
+url: ""
+repo: ""                      # optional - source repository, for open-source tools
+status: active                # active | evaluating | retired
 related-projects: ["[[Projects/...]]", ...]
 ai-first: true
 ```

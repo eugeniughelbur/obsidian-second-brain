@@ -13,7 +13,9 @@ How every command decides **which folder** a note belongs in. Never hardcode a f
 
 | Note type | Wiki-style default | Obsidian-style alias |
 |-----------|--------------------|----------------------|
-| Person / company / tool (entity) | `wiki/entities/` | `People/` |
+| Person (entity) | `wiki/entities/` | `People/` |
+| Company (entity) | `wiki/entities/` | `Companies/` |
+| Tool (entity) | `wiki/entities/` | `Tools/` |
 | Idea / concept / framework / synthesis | `wiki/concepts/` | `Ideas/` (ideas), `Knowledge/` (reference) |
 | Project | `wiki/projects/` | `Projects/` |
 | Daily note | `wiki/daily/` | `Daily/` |
@@ -31,5 +33,6 @@ How every command decides **which folder** a note belongs in. Never hardcode a f
 ## Notes
 
 - **Ideas vs concepts:** in a wiki-style vault there is no separate `Ideas/` folder - ideas, concepts, frameworks, and synthesis notes all live in `wiki/concepts/`. Only use `Ideas/` if the vault actually has that folder (Obsidian-style). A note tagged `#idea` is found by tag/status, not by folder.
+- **Entities:** wiki-style keeps every entity kind in the one `wiki/entities/` folder, told apart by `type:`. Obsidian-style gives companies and tools their own `Companies/` and `Tools/` folders, because `People/` names what it holds. `Companies/` is for companies the vault tracks (employers of people in the vault, clients, vendors); `Businesses/`, where a preset creates it, is for companies the vault owner owns.
 - **ADRs:** wiki-style keeps decision records in `wiki/decisions/`; Obsidian-style keeps them in `Knowledge/` with an `ADR-` filename prefix. Resolve per `_CLAUDE.md`.
 - **Searching across types:** when a command greps "everywhere" (e.g. synthesis, find), enumerate whatever top-level note folders actually exist in the vault rather than a fixed list - read the vault root once and match the folders present.

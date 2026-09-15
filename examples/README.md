@@ -14,10 +14,11 @@ sample-vault/
 ├── people/Sam Patel.md                              # type: person (collaborator)
 ├── Projects/Tide.md                                 # type: project
 ├── Ideas/2026-04-27 — Streak insurance feature.md   # type: idea
+├── wiki/entities/Currentscale Labs.md               # type: company
 └── wiki/logs/2026-04-27 — Tide retention rebuild.md # type: devlog
 ```
 
-A real vault would also have `Companies/`, `Decisions/`, `Knowledge/`, `Research/`, `Boards/`, and `social-media/` folders. Those are referenced in wikilinks here but not included as files — a 7-file sample is enough to show the AI-first pattern without bloating the repo.
+A real vault would also have `Decisions/`, `Knowledge/`, `Research/`, `Boards/`, and `social-media/` folders. Those are referenced in wikilinks here but not included as files — a 7-file sample is enough to show the AI-first pattern without bloating the repo.
 
 ## What to look for
 
