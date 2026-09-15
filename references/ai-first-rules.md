@@ -192,6 +192,7 @@ type: tool
 tags: [tool, ...]
 category: ""                  # e.g. editor, database, CRM
 url: ""
+repo: ""                      # optional - source repository, for open-source tools
 status: active                # active | evaluating | retired
 related-projects: ["[[Projects/...]]", ...]
 ai-first: true
