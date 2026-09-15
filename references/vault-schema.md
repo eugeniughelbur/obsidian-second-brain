@@ -146,9 +146,8 @@ due: 2026-03-28
 ```yaml
 ---
 date: 2026-03-24
-tags:
-  - entity
-  - person       # or: company, tool
+type: person                    # or: company, tool (schemas in references/ai-first-rules.md)
+tags: [person]
 role: "Senior Engineer"        # current role
 company: "[[Acme Corp]]"       # current company
 last_interaction: 2026-03-24
@@ -164,6 +163,8 @@ timeline:                       # bi-temporal facts - never delete, only append
     source: "[[2026-04-07]]"    # where the vault learned it from
 ---
 ```
+
+`type` tells people, companies and tools apart, as it does for every other note kind, and each has its schema in `references/ai-first-rules.md`. `role:` and `company:` are person fields; `timeline:` applies to all three.
 
 **Bi-temporal facts rule:** never overwrite a role, company, status, or location. Add a new entry to `timeline:` with:
 - `from` / `until` - **event time**: when the fact was true in reality
@@ -278,7 +279,7 @@ LIMIT 7
 ### All entities (people, companies, tools)
 ```dataview
 TABLE role, company, last_interaction FROM "wiki/entities"
-WHERE contains(tags, "entity")
+WHERE contains(list("person", "company", "tool"), type)
 SORT last_interaction DESC
 ```
 

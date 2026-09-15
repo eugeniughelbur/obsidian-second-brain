@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Company and tool entity notes have schemas, and the fence that should have caught their absence now does (#274).** `/obsidian-ingest` creates a page for each person, company and tool a source mentions, but `references/ai-first-rules.md` only defined `type: person`, so company and tool pages were written with whatever frontmatter the run improvised. `tests/test_schema_coverage.py` could not see the gap: it matches types spelled `` `type: x` ``, and the ingest command names its entity kinds in prose. `type: company` and `type: tool` are now defined in the shape of the person schema, and the Entity Note in `references/vault-schema.md` tells the three apart by `type`, like every other note kind, instead of by tag (its Dataview example filters on `type` too). The person schema's `company:` link is now a bare `[[Acme Corp]]`, which resolves wherever the company note sits; the old `[[Companies/...]]` pointed at a folder nothing creates, and both person notes in the sample vault reported it as a wanted note. The sample vault gains a `type: company` example at `wiki/entities/Currentscale Labs.md`. A new test reads the entity kinds from `references/folder-map.md` and from any command that lists them in prose, and requires a schema for each; it fails on the previous `main` for `company` and `tool`.
+
 ## [0.16.0] - 2026-09-15 - The Silent Failure
 
 ### Added
