@@ -80,6 +80,9 @@ python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset 
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset creator
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset researcher
 
+# Wiki-style layout (wiki/daily/, wiki/entities/, ...) instead of the default Obsidian-style one:
+python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --style wiki
+
 # With assistant mode (maintaining vault for someone else):
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --mode assistant --subject "Boss Name"
 ```
