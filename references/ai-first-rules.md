@@ -171,6 +171,32 @@ related-projects: ["[[Projects/...]]", ...]
 ai-first: true
 ```
 
+### `type: company`
+```yaml
+date: YYYY-MM-DD              # first interaction/encounter logged
+updated: YYYY-MM-DD
+type: company
+tags: [company, ...]
+industry: ""
+website: ""
+contacts: ["[[People/...]]", ...]
+related-projects: ["[[Projects/...]]", ...]
+ai-first: true
+```
+
+### `type: tool`
+```yaml
+date: YYYY-MM-DD
+updated: YYYY-MM-DD
+type: tool
+tags: [tool, ...]
+category: ""                  # development | communication | productivity | infrastructure
+website: ""
+repo: ""                      # optional git/source repository
+related-projects: ["[[Projects/...]]", ...]
+ai-first: true
+```
+
 ### `type: idea`
 ```yaml
 date: YYYY-MM-DD

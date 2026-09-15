@@ -13,7 +13,9 @@ How every command decides **which folder** a note belongs in. Never hardcode a f
 
 | Note type | Wiki-style default | Obsidian-style alias |
 |-----------|--------------------|----------------------|
-| Person / company / tool (entity) | `wiki/entities/` | `People/` |
+| Person (entity) | `wiki/entities/` | `People/` |
+| Company (entity) | `wiki/entities/` | `Companies/` |
+| Tool (entity) | `wiki/entities/` | `Tools/` |
 | Idea / concept / framework / synthesis | `wiki/concepts/` | `Ideas/` (ideas), `Knowledge/` (reference) |
 | Project | `wiki/projects/` | `Projects/` |
 | Daily note | `wiki/daily/` | `Daily/` |
