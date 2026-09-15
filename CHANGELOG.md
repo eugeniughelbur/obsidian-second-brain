@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **The setup script builds both documented vault layouts: `--style wiki|obsidian` (#283).** The README and `references/vault-schema.md` describe a wiki-style layout, but `bootstrap_vault.py` could only build the Obsidian-style one: every preset created `Daily/`, `People/` and the rest, and its only call to `write_bases` hardcoded `style="obsidian"`, so a wiki-style vault had to be laid out by hand. `--style` defaults to `obsidian`, which builds what the script built before. `--style wiki` creates each preset folder at its wiki-style path from `references/folder-map.md` (`wiki/daily/`, `wiki/entities/`, `wiki/concepts/`, `boards/`, `templates/`), and the generated `_CLAUDE.md`, `Home.md`, board paths, template queries and Bases point at those paths. Preset folders with no wiki-style home - `Goals/`, `Mentions/`, `Health/` and the other topic folders, which appear only in the Obsidian-style tree and which no command writes to - are not created in a wiki-style vault, and neither are the seed notes that live in them. Both styles now record `Vault style:` in `_CLAUDE.md`, which `references/folder-map.md` consults when a folder does not exist yet. The builder and creator presets also create `People/`, since their own `_CLAUDE.md` routes new people there. The README and `vault-schema.md` no longer call the wiki layout the default. Tests in `tests/test_bootstrap_style.py`.
+
 ## [0.16.0] - 2026-09-15 - The Silent Failure
 
 ### Added

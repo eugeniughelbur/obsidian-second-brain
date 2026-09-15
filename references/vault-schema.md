@@ -1,6 +1,8 @@
 # Vault Schema Reference
 
-## Default: Wiki-Style (LLM-First)
+Two layouts are supported. `scripts/bootstrap_vault.py` builds the Obsidian-style layout by default and the wiki-style one with `--style wiki`.
+
+## Wiki-Style (LLM-First)
 
 Optimized for vaults where Claude does most or all of the writing. The primary reader is the LLM, not the human. Obsidian is the storage engine; Claude is the interface.
 
@@ -41,7 +43,7 @@ Your Vault/
 
 ---
 
-## Alternative: Obsidian-Style (Human-First)
+## Obsidian-Style (Human-First)
 
 For users who browse their vault daily in Obsidian. Folders are organized for human spatial memory.
 
