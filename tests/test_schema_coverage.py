@@ -15,8 +15,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 TYPE_RE = re.compile(r"`type: ([a-z][a-z0-9-]*)`")
 # Frontmatter *values* that look like types but are field values, not note types.
 NOT_TYPES = {"board"}
-# The folder map's entity row ("Person / company / tool (entity)") lists the kinds
-# that live in the entities folder.
+# The folder map's entity rows ("Person (entity)", "Company (entity)", ...) list the
+# kinds that live in an entities folder.
 ENTITY_ROW_RE = re.compile(r"^\|\s*([^|(]+?)\s*\(entity\)\s*\|", re.MULTILINE)
 # A command naming kinds in prose, e.g. "for each person/company/tool mentioned".
 KIND_LIST_RE = re.compile(r"\bfor each ([a-z]+(?:/[a-z]+)+)")
@@ -36,9 +36,9 @@ def test_every_commanded_type_has_a_schema():
 
 def _entity_kinds() -> set[str]:
     folder_map = (REPO_ROOT / "references" / "folder-map.md").read_text(encoding="utf-8")
-    m = ENTITY_ROW_RE.search(folder_map)
-    assert m, "references/folder-map.md has no `(entity)` row; update this test if it was renamed"
-    return {k.strip().lower() for k in m.group(1).split("/") if k.strip()}
+    rows = ENTITY_ROW_RE.findall(folder_map)
+    assert rows, "references/folder-map.md has no `(entity)` row; update this test if it was renamed"
+    return {k.strip().lower() for row in rows for k in row.split("/") if k.strip()}
 
 
 def test_every_entity_kind_has_a_schema():

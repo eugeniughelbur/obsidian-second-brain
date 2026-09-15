@@ -16,7 +16,7 @@ The optional argument is a topic or entity to focus on. If not provided, scan th
 
 3. Spawn parallel subagents to find contradictions:
    - **Claims agent**: scan the concepts and projects folders (resolved per `references/folder-map.md`) for factual claims - find pairs that contradict each other
-   - **Entity agent**: scan the entities folder (resolved per `references/folder-map.md`) for outdated roles, companies, or descriptions that conflict with newer sources
+   - **Entity agent**: scan the entities folders (resolved per `references/folder-map.md`, which gives Obsidian-style vaults a separate folder for some entity kinds) for outdated roles, companies, or descriptions that conflict with newer sources
    - **Decisions agent**: scan the decisions folder (resolved per `references/folder-map.md`) and project Key Decisions for reversed or superseded decisions that were never updated
    - **Source freshness agent**: compare `raw/` source dates against `wiki/` page dates - flag wiki pages that reference old sources when newer ones exist on the same topic
 

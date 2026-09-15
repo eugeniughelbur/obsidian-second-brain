@@ -83,7 +83,7 @@ Your Vault/
 | Wiki-style | Obsidian-style | What lives here |
 |---|---|---|
 | `raw/articles/` | `Knowledge/` | Original source material |
-| `wiki/entities/` | `People/` + `Jobs/` + `Businesses/` | People, companies, tools |
+| `wiki/entities/` | `People/` + `Companies/` + `Tools/` | People, companies, tools |
 | `wiki/concepts/` | `Ideas/` + `Learning/` | Ideas, frameworks, methodologies |
 | `wiki/projects/` | `Projects/` | Active and archived projects |
 | `wiki/daily/` | `Daily/` | Daily notes |
