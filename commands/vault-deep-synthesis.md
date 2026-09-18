@@ -2,6 +2,7 @@
 description: Deep cross-reference of everything the vault knows about one topic - agreements, contradictions, stale claims, and coverage gaps. Pure vault, no network
 category: thinking
 triggers_en: ["synthesize what I know about", "deep synthesis on", "cross-reference my notes on", "what does my vault say about"]
+triggers_de: ["synthesiere, was ich über ... weiß", "tiefe Synthese zu", "meine Notizen zu ... abgleichen", "was sagt mein Vault über"]
 triggers_es: ["sintetiza lo que sé sobre", "síntesis profunda sobre", "cruza mis notas sobre", "qué dice mi vault sobre"]
 triggers_pt: ["sintetize o que eu sei sobre", "síntese profunda sobre", "cruze minhas notas sobre", "o que meu vault diz sobre"]
 triggers_zh: ["综合知识库里关于这个主题的一切", "深度梳理我对这个主题的笔记", "交叉核对这个主题的所有记录", "我的知识库对这个主题怎么说"]

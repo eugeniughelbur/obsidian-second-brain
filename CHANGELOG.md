@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **German (`de`) trigger phrases for all commands.** Each command now recognizes natural German requests alongside the existing English, Spanish, Portuguese, and Simplified Chinese phrases.
+
 ### Fixed
 
 - **`/obsidian-health` orphan-checked the daily notes and the operations log in a wiki-style vault, one finding per day, forever (#292, reported by @JamBeatss).** `check_orphans()` exempted dated-series folders through a hardcoded list of Obsidian-style names, compared against the note's top folder and spelled with capitals. It therefore knew one of the two documented layouts. Wiki-style daily notes live at `wiki/daily/YYYY-MM-DD.md`, whose top folder is `wiki`, so every one of them rang, while `Daily/YYYY-MM-DD.md` in a vault next door did not: the same note was noise or not depending only on which documented layout its owner picked. `Logs/`, the operations log `/obsidian-init` writes and nothing is meant to link, was in neither layout's list. The exemption now reads the folder that decides it, which is the second path component under `wiki/` and the first everywhere else, casefolds it, and reads a slugged name (`wiki/life-chapters/`, which bootstrap writes for a preset folder with no explicit mapping since #287) as its spaced form. Six tests in `tests/test_vault_health_precision.py`, four of which fail on the previous `main`.

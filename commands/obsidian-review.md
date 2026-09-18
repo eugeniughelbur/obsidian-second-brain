@@ -2,6 +2,7 @@
 description: Generate a structured weekly or monthly review note from vault history
 category: thinking
 triggers_en: ["weekly review", "monthly review", "review my week", "review my month"]
+triggers_de: ["Wochenrückblick", "Monatsrückblick", "meine Woche durchgehen", "meinen Monat durchgehen"]
 triggers_es: ["revisión semanal", "revisión mensual", "revisa mi semana", "revisa mi mes"]
 triggers_pt: ["revisão semanal", "revisão mensal", "revise minha semana", "revise meu mês"]
 triggers_zh: ["做每周复盘", "做月度复盘", "回顾我这一周的表现", "生成本月复盘"]

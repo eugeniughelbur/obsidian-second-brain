@@ -2,6 +2,7 @@
 description: Summarize a time period from the vault - today, week, or month
 category: vault
 triggers_en: ["recap today", "recap the week", "summarize the week", "month recap"]
+triggers_de: ["heute zusammenfassen", "Wochenrückblick", "die Woche zusammenfassen", "Monatsrückblick"]
 triggers_es: ["resumen de hoy", "resumen de la semana", "resume la semana", "resumen del mes"]
 triggers_pt: ["recapitule hoje", "recapitule a semana", "resuma a semana", "recap do mês"]
 triggers_zh: ["总结今天发生的事", "汇总本周记录", "总结这一周发生了什么", "生成本月摘要"]

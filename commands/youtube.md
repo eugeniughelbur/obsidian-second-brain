@@ -2,6 +2,7 @@
 description: Extract transcript, metadata, and top comments from a YouTube video - summarized via Gemini (free tier) or Grok and saved to vault. Add --visual to also read the video's frames (scene detection)
 category: research
 triggers_en: ["summarize youtube", "youtube transcript", "extract video", "youtube to vault", "watch this video", "what's on screen in this video"]
+triggers_de: ["YouTube zusammenfassen", "YouTube-Transkript", "Video auswerten", "YouTube in den Vault", "dieses Video ansehen", "was ist in diesem Video auf dem Bildschirm"]
 triggers_es: ["resume este vídeo de youtube", "transcripción de youtube", "extrae este vídeo", "youtube al vault", "mira este vídeo", "qué se ve en este vídeo"]
 triggers_pt: ["resuma este vídeo do youtube", "transcrição do youtube", "extraia este vídeo", "youtube para o vault", "assista a este vídeo", "o que aparece neste vídeo"]
 triggers_zh: ["总结这个 YouTube 视频", "提取视频字幕", "把这个视频整理进知识库", "这个视频讲了什么", "看看视频画面里有什么"]

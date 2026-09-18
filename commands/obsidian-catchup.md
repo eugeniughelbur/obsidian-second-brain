@@ -2,6 +2,7 @@
 description: Review and process everything captured on the go from the Telegram journal bot - voice, text, images, PDFs, links - waiting in the catchup queue. You pull it when you are back at the laptop; nothing is processed autonomously.
 category: vault
 triggers_en: ["catch up", "catchup", "what did I dump from telegram", "process my captures", "go through my telegram dumps", "anything new from the phone", "process my catchup", "review what I captured", "what did I capture on the go"]
+triggers_de: ["Rückstand aufarbeiten", "kurz auf den neuesten Stand bringen", "was habe ich aus Telegram gespeichert", "meine Notizen verarbeiten", "meine Telegram-Ablage durchgehen", "gibt es etwas Neues vom Handy", "meinen Rückstand verarbeiten", "durchsehen, was ich festgehalten habe", "was habe ich unterwegs festgehalten"]
 triggers_es: ["ponme al día", "qué mandé por telegram", "procesa mis capturas", "revisa lo que capturé desde el móvil", "hay algo nuevo del móvil", "repasa mi cola de capturas"]
 triggers_pt: ["coloque em dia", "catchup", "o que eu despejei do telegram", "processe minhas capturas", "passe pelas minhas capturas do telegram", "tem algo novo do telefone", "processe meu catchup", "revise o que capturei", "o que capturei na correria"]
 triggers_zh: ["看看我从手机记了什么", "处理 Telegram 收集箱", "整理我路上记的东西", "整理待处理的随手记录", "把最近随手记的内容过一遍"]

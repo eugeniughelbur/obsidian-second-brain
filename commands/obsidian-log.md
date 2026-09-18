@@ -3,6 +3,7 @@ description: Log this work or dev session to the vault - infers project from con
 category: vault
 trigger-mode: proactive
 triggers_en: ["log this work", "log this session", "log this dev session", "obsidian log"]
+triggers_de: ["diese Arbeit protokollieren", "diese Sitzung festhalten", "diese Entwicklungssitzung protokollieren", "Obsidian-Log"]
 triggers_es: ["registra este trabajo", "registra esta sesión", "registra esta sesión de desarrollo", "obsidian log"]
 triggers_pt: ["registre este trabalho", "registre esta sessão", "registre esta sessão de desenvolvimento", "obsidian log"]
 triggers_zh: ["记录这次工作", "把这次开发过程写进知识库", "记录当前工作会话", "保存这次开发日志"]
