@@ -234,7 +234,7 @@ esac
 # below keep matching the lowercased key; elsewhere the case is exact.
 case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) shopt -s nocasematch ;; esac
 case "$FILE_KEY" in
-  */raw/*|*/templates/*|*/_export/*|*/.obsidian/*|*/.git/*|*/.trash/*|*/.claude/*|*/boards/*|*/Boards/*|*/Logs/*|*/_CLAUDE.md|*/Home.md|*/index.md|*/log.md|*/catchup.md)
+  */raw/*|*/templates/*|*/_export/*|"$VAULT_KEY"/.obsidian/*|*/.git/*|*/.trash/*|*/.claude/*|*/boards/*|*/Boards/*|*/Logs/*|*/_CLAUDE.md|*/Home.md|*/index.md|*/log.md|*/catchup.md)
     exit 0 ;;
 esac
 shopt -u nocasematch
