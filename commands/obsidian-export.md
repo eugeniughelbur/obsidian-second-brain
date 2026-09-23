@@ -2,6 +2,7 @@
 description: Export a clean structured snapshot of the vault that any agent or tool can consume - flat JSON, markdown index, or an OKF (Open Knowledge Format) bundle
 category: meta
 triggers_en: ["export vault", "snapshot vault", "dump vault", "vault export"]
+triggers_de: ["Vault exportieren", "eine Vault-Momentaufnahme erstellen", "Vault ausgeben", "Vault-Export"]
 triggers_es: ["exporta el vault", "haz una foto del vault", "vuelca el vault", "exportación del vault"]
 triggers_pt: ["exporte o vault", "gere um snapshot do vault", "despeje o vault", "exportação do vault"]
 triggers_zh: ["导出知识库", "给知识库做个快照", "把笔记导成 JSON", "生成 OKF 知识包", "导出一份可移植的数据"]

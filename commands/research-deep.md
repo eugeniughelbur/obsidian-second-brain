@@ -2,6 +2,7 @@
 description: Vault-first deep research - scans the vault, fills gaps (Perplexity + Grok when keyed, free key-less sources otherwise), synthesizes a delta, then propagates updates across people/projects/ideas via /obsidian-save
 category: research
 triggers_en: ["deep research", "thorough research", "vault-first research", "research gaps"]
+triggers_de: ["gründliche Recherche", "umfassende Recherche", "Recherche mit dem Vault zuerst", "Recherchelücken"]
 triggers_es: ["investigación profunda", "investiga a fondo", "investigación basada en mi vault", "rellena los huecos de información"]
 triggers_pt: ["pesquisa profunda", "pesquisa completa", "pesquisa com base no vault", "lacunas de pesquisa"]
 triggers_zh: ["做一次深度研究", "基于我的知识库深入研究", "补齐这个主题的研究空白", "全面调查这个问题"]

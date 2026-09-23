@@ -3,6 +3,7 @@ description: Quick idea capture - zero friction, saves to your ideas folder and 
 category: vault
 trigger-mode: proactive
 triggers_en: ["capture this idea", "save this idea", "quick note", "drop a thought"]
+triggers_de: ["diese Idee festhalten", "diese Idee speichern", "kurze Notiz", "einen Gedanken notieren"]
 triggers_es: ["captura esta idea", "guarda esta idea", "nota rápida", "apunta esto"]
 triggers_pt: ["capture esta ideia", "salve esta ideia", "anotação rápida", "registre um pensamento"]
 triggers_zh: ["记下这个想法", "帮我快速记一笔", "先把这个灵感存下来", "随手记一下"]

@@ -2,6 +2,7 @@
 description: Find and resolve contradictions in the vault - the vault maintains its own truth
 category: thinking
 triggers_en: ["find contradictions", "reconcile vault", "fix conflicts", "vault contradictions"]
+triggers_de: ["Widersprüche finden", "Vault abgleichen", "Konflikte lösen", "Widersprüche im Vault"]
 triggers_es: ["busca contradicciones", "concilia el vault", "resuelve los conflictos", "contradicciones en el vault"]
 triggers_pt: ["encontre contradições", "reconcilie o vault", "corrija conflitos", "contradições do vault"]
 triggers_zh: ["找出知识库里的矛盾", "解决笔记之间的冲突", "核对相互矛盾的说法", "让知识库里的事实保持一致"]

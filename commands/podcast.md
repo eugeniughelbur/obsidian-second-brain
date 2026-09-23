@@ -2,6 +2,7 @@
 description: Extract metadata, transcript, and summary from a podcast episode, saved as an AI-first note in the vault
 category: research
 triggers_en: ["summarize this podcast", "podcast episode summary", "extract podcast", "what's in this episode"]
+triggers_de: ["diesen Podcast zusammenfassen", "Zusammenfassung der Podcastfolge", "Podcast auswerten", "was steckt in dieser Folge"]
 triggers_es: ["resume este pódcast", "resumen del episodio", "extrae este pódcast", "qué dice este episodio"]
 triggers_pt: ["resuma este podcast", "resumo de episódio de podcast", "extraia este podcast", "o que há neste episódio"]
 triggers_zh: ["总结这期播客", "提取播客文字稿", "这期节目讲了什么", "把这期播客整理进知识库"]

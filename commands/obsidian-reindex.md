@@ -2,6 +2,7 @@
 description: Refresh the vault's semantic search index and report coverage before and after
 category: meta
 triggers_en: ["reindex vault", "rebuild semantic index", "refresh semantic search", "update vault embeddings"]
+triggers_de: ["Vault neu indexieren", "semantischen Index neu erstellen", "semantische Suche aktualisieren", "Vault-Einbettungen aktualisieren"]
 triggers_es: ["reindexa el vault", "reconstruye el índice semántico", "actualiza la búsqueda semántica", "actualiza los embeddings del vault"]
 triggers_pt: ["reindexe o vault", "reconstrua o índice semântico", "atualize a busca semântica", "atualize os embeddings do vault"]
 triggers_zh: ["重建知识库索引", "刷新语义搜索", "更新笔记向量", "重新索引我的知识库"]

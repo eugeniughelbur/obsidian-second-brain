@@ -1,9 +1,9 @@
 """Generate the GitHub Pages site from commands/, which is the only source of truth.
 
 GitHub Pages has been live and building for this repo for some time, serving the
-README from the repo root. Meanwhile `commands/` holds 46 files that each carry a
-one-line `description`, a `category`, and `triggers_en` / `triggers_es` /
-`triggers_pt` / `triggers_zh` arrays. Those trigger arrays are, literally, the
+README from the repo root. Meanwhile `commands/` holds 47 files that each carry a
+one-line `description`, a `category`, and `triggers_en` / `triggers_de` /
+`triggers_es` / `triggers_pt` / `triggers_zh` arrays. Those trigger arrays are, literally, the
 sentences a person would type when they want the thing - written by hand, in four
 languages, and until now visible only to the dispatcher adapters.
 
@@ -44,6 +44,7 @@ CATEGORIES = [
 
 LANGS = [
     ("en", "English"),
+    ("de", "Deutsch"),
     ("es", "Espanol"),
     ("pt", "Portugues"),
     ("zh", "简体中文"),
@@ -155,7 +156,7 @@ def render_index(cmds: list[dict]) -> str:
         f'<p class="lede">Your AI agent starts every session knowing nothing about '
         f"you. These {len(cmds)} commands give Claude, Grok Bot, and other agents long-term memory across "
         "sessions, kept as plain markdown in your Obsidian vault. Every one works "
-        "by plain language, in English, Spanish, Portuguese or Simplified Chinese.</p>",
+        "by plain language, in English, German, Spanish, Portuguese or Simplified Chinese.</p>",
         '<input type="search" id="q" placeholder="Filter commands..." '
         'aria-label="Filter commands">',
     ]

@@ -2,6 +2,7 @@
 description: Merge two near-duplicate notes found by /obsidian-health into one - dry run by default, redirects the retired note rather than deleting it
 category: meta
 triggers_en: ["merge these notes", "merge duplicate notes", "merge near-duplicates", "combine these two notes"]
+triggers_de: ["diese Notizen zusammenführen", "doppelte Notizen zusammenführen", "ähnliche Notizen zusammenführen", "diese beiden Notizen kombinieren"]
 triggers_es: ["fusiona estas notas", "combina estas notas duplicadas", "une estas dos notas"]
 triggers_pt: ["mescle estas notas", "combine estas notas duplicadas", "una estas duas notas"]
 triggers_zh: ["合并这两篇笔记", "合并重复笔记", "把这些近似重复的笔记合并"]
