@@ -30,4 +30,4 @@ This is the sibling to `/meeting-prep-trigger` the same way `/direct-report` is 
 
 ---
 
-This command does not create or update any vault note, so the usual AI-first write rule does not apply to its own output. Its inputs still must be read faithfully: sources preserved verbatim, recency respected, nothing invented beyond what `references/ai-first-rules.md`'s sourcing standard would require of a written note.
+This command does not create or update any vault note, so the usual AI-first write rule does not apply to its own output. Its inputs still must be read faithfully: sources preserved verbatim, recency respected, nothing invented beyond what `references/ai-first-rules.md`'s sourcing standard would require of a written note. If that path does not resolve from your working directory, search upward for it; if you still cannot read it, say so before writing the checklist rather than silently skipping the sourcing standard.

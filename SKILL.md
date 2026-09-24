@@ -341,7 +341,7 @@ These slash commands can be used in any Claude surface. Each one is smart - it r
 
 **Command selection: the longest matching trigger wins.** Several triggers are prefixes of longer, more specific ones, so a shorter match is not evidence that the shorter command is the right one. Always check whether a longer trigger also matches before choosing.
 
-The five collisions that exist today, with the correct routing:
+The six collisions that exist today, with the correct routing:
 
 | The user says | Route to | Not to | Why it matters |
 |---|---|---|---|
@@ -350,10 +350,24 @@ The five collisions that exist today, with the correct routing:
 | "save this person", "remember this person" | `/obsidian-person` | `/obsidian-save` | A person note, not a full conversation sweep |
 | "synthesize what I know about X" | `/vault-deep-synthesis` | `/obsidian-synthesize` | One topic cross-referenced, not a whole-vault pattern scan |
 | "find unnamed patterns" | `/obsidian-emerge` | `/obsidian-synthesize` | Surfaces patterns for the user, does not write synthesis pages unasked |
+| "capture this recording / workshop / session" | `/knowledge-capture` | `/obsidian-capture` | A full recording-to-knowledge-note pipeline (transcript, screenshots, optional Confluence page), not a one-line idea note |
 
 When two commands still look equally plausible after applying the rule, ask which one rather than guessing - the blast radii differ enormously, and `/obsidian-save` in particular writes across many files.
 
 ---
+
+### Engineering-manager commands (Claude Code only)
+
+These fork-specific commands depend on MCP connectors (Google Calendar, Google Drive, Slack, Atlassian) and are excluded from the non-Claude builds. Each one's full instructions live in its `commands/<name>.md`.
+
+- `/direct-report [name]`: diffs a direct report's latest 1-on-1 transcript against their Profile Card and Skills Matrix and writes a checkbox review note; nothing is applied until confirmed.
+- `/direct-report-apply-review [name] [date]`: applies exactly the checked items from a `/direct-report` review note.
+- `/direct-report-trigger [name]`: on-demand run of the direct-report transcript poll for one person.
+- `/meeting-prep [name]`: live, chat-only meeting-prep checklist from the last 4 1-on-1 transcripts; compiles picks into talking points.
+- `/meeting-prep-trigger [name]`: writes the same checklist to the vault for later review.
+- `/meeting-prep-apply [name] [date]`: compiles a checked-off meeting-prep note into talking points and moves it to `Done/`.
+- `/task-briefing-trigger`: on-demand daily task briefing from the owner's Kanban board.
+- `/knowledge-capture [recording]`: turns a knowledge-sharing recording into an AI-first vault note (timestamped sections, screenshots, local Whisper transcript), then publishes it to a user-provided Confluence page. Prerequisites and the recording brief: `references/knowledge-capture-playbook.md`; note shape: `references/knowledge-capture-template.md`.
 
 ### `/obsidian-save`
 

@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/eugeniughelbur/obsidian-second-brain">
-    <img src="media/banner.png" alt="obsidian-second-brain: one brain, eight platforms, 54 commands. A cross-platform skill for Obsidian that runs on Claude Code, Codex, Gemini, OpenCode, Antigravity, Hermes, Pi, and Grok Bot." width="100%" />
+    <img src="media/banner.png" alt="obsidian-second-brain: one brain, eight platforms, 55 commands. A cross-platform skill for Obsidian that runs on Claude Code, Codex, Gemini, OpenCode, Antigravity, Hermes, Pi, and Grok Bot." width="100%" />
   </a>
 </p>
 
@@ -264,7 +264,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
   +------------------------------------------+
 ```
 
-54 commands total. The calendar command (`/obsidian-calendar`), the direct-report trio (`/direct-report`, `/direct-report-apply-review`, `/direct-report-trigger`), the meeting-prep trio (`/meeting-prep`, `/meeting-prep-trigger`, `/meeting-prep-apply`), and `/task-briefing-trigger` are Claude Code only (they need the Google Calendar MCP, the Google Drive + Slack MCPs, or the Slack MCP, respectively), so the Codex / Gemini / OpenCode / Hermes / Pi / Agent Skills builds ship 46.
+55 commands total. The calendar command (`/obsidian-calendar`), the direct-report trio (`/direct-report`, `/direct-report-apply-review`, `/direct-report-trigger`), the meeting-prep trio (`/meeting-prep`, `/meeting-prep-trigger`, `/meeting-prep-apply`), `/task-briefing-trigger`, and `/knowledge-capture` are Claude Code only (they need the Google Calendar MCP, the Google Drive + Slack MCPs, the Slack MCP, or the Google Drive + Atlassian MCPs plus local ffmpeg/Whisper, respectively), so the Codex / Gemini / OpenCode / Hermes / Pi / Agent Skills builds ship 46.
 
 **Layer 1** saves, organizes, ingests, reconciles, exports, schedules your calendar, and maintains your vault.
 **Layer 2** challenges your ideas, surfaces hidden patterns, bridges unrelated domains, and graduates ideas into projects.
@@ -274,7 +274,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 
 ---
 
-## 54 Commands
+## 55 Commands
 
 ### Operations -- Claude remembers
 
@@ -351,6 +351,7 @@ Powered by xAI Grok (live X access) + Perplexity Sonar (web research) + YouTube.
 | `/notebooklm [topic]` | Vault-grounded synthesis via Gemini File Search. Uploads top 12 vault notes, returns a grounded answer with citations. No browser, one HTTP call. Pairs with `/research-deep` for dual-track research. |
 | `/youtube [url] [--visual]` | Extract transcript + metadata + top comments → AI-first summary. `--visual` adds scene-change frame extraction Claude reads with its own vision |
 | `/podcast [url]` | Apple Podcasts or RSS → transcript (RSS tag / Whisper / show-notes) + AI-first summary |
+| `/knowledge-capture [recording]` | Internal knowledge-sharing recording (talk, workshop, demo) → AI-first vault note with timestamped sections, screenshots, and a local Whisper transcript; then, given a page URL, publishes it to Confluence. Claude Code only; needs the Google Drive connector and the Atlassian MCP with a Personal Access Token. See [Scaling team knowledge](#scaling-team-knowledge-knowledge-capture) |
 
 **Setup:** copy `.env.example` to `~/.config/obsidian-second-brain/.env`, add your keys (xAI, Perplexity, YouTube optional, OpenAI optional for podcast Whisper). Run `install.sh` and answer "y" to the research prompt to do this automatically.
 
@@ -579,6 +580,28 @@ PostCompact -> obsidian-bg-agent.sh -> claude -p (headless) -> vault updated
 
 **Custom scheduled tasks (example):** the built-in agents above are fixed; `/direct-report` and `/direct-report-apply-review` ship a worked example of wiring up your own. [`references/direct-report-transcript-poll.md`](references/direct-report-transcript-poll.md) and [`references/direct-report-apply-review-poll.md`](references/direct-report-apply-review-poll.md) are full, fill-in-the-placeholders task prompts plus trigger setup instructions (cron schedule, required MCP access) for turning a live command into an unattended, recurring check via a local task scheduler. `/direct-report-trigger` is the on-demand escape hatch for the same pattern - run the scan-and-notify half right now, for one person, instead of waiting for the scheduled run. The meeting-prep trio follows the same shape one day earlier in the cycle: [`references/meeting-prep-daily-trigger.md`](references/meeting-prep-daily-trigger.md) documents a calendar-driven scheduled task that scans today's 1-on-1s and writes a prioritized checklist per person (sourced from their last 4 1-on-1 transcripts, weighted by recency) to review before the meeting; `/meeting-prep-trigger` is its on-demand, single-person escape hatch, `/meeting-prep` is a fully live, chat-only version of the same pull, and `/meeting-prep-apply` compiles whichever checked items - from either path - into the actual talking-points list.
 
+
+### Scaling team knowledge (knowledge capture)
+
+Knowledge-sharing sessions are cheap to run and expensive to lose: the recording ends up in one person's Drive, the auto-generated notes summarize without the exact commands, and the next person with the same problem books another hour with the expert. The habit worth promoting as an engineering manager is **every knowledge-sharing session becomes a searchable, reusable asset within a day**.
+
+`/knowledge-capture` does the heavy lifting. Give it a recording (plus any Gemini notes, slides, Jira tickets or Confluence pages shown on screen) and it:
+
+1. transcribes the audio **locally** with Whisper (nothing leaves your machine), maps the video with contact sheets, and picks 12 to 20 screenshots of the code, config and UI steps;
+2. writes an AI-first vault note (timestamped sections, exact commands, gotchas, follow-ups) plus a transcript note into a topic folder that later sessions on the same subject join;
+3. only when you hand it a Confluence page URL, publishes the same knowledge as a reader-friendly team page with the screenshots attached, leaving vault-only and personal context out.
+
+Why it scales: presenters get visible credit for sharing, new joiners read a page and jump to the right minute instead of booking the expert, knowledge survives people changing teams, and development goals (for example moving from manual QA to automation) get a concrete reading list. The human effort shrinks to a quick accuracy review, ideally by the presenter.
+
+**Prerequisites (each person sets these up on their own machine; nothing personal is stored in this repo):**
+
+- Claude Code with this skill and `OBSIDIAN_VAULT_PATH` set.
+- The **Google Drive** connector, to read notes, slides and recording metadata. Large videos can't be downloaded through the connector, so the command asks you to download them to your Downloads folder.
+- The **Atlassian MCP (`mcp-atlassian`)** configured with your own **Personal Access Token(s)** for Jira and Confluence, in your local Claude config only. It's required for publishing to Confluence and for reading tickets. Never commit the token or paste it into notes or pages.
+- `ffmpeg` and `mlx-whisper` (Apple Silicon; the model downloads once, about 1.5 GB).
+
+Full setup (including the MCP config snippet with placeholder tokens), a recording brief to hand presenters, and the known pitfalls are in [`references/knowledge-capture-playbook.md`](references/knowledge-capture-playbook.md). The note shape is [`references/knowledge-capture-template.md`](references/knowledge-capture-template.md).
+
 ---
 
 ## Vault Architecture
@@ -646,7 +669,7 @@ Rather than ask you to take that on faith, here is what each build currently pas
 
 <img src="media/plugin-install.gif" alt="Installing obsidian-second-brain through the Claude Code plugin marketplace: marketplace add, plugin install, status enabled." width="100%" />
 
-That ships all 54 commands, the skill manual, the session-context hook, the opt-in background agent (inert until you arm it - see [hooks/postcompact.hook.example.json](hooks/postcompact.hook.example.json)), and the vault MCP server. Then tell Claude where your vault lives by adding to the `env` section of `~/.claude/settings.json`:
+That ships all 55 commands, the skill manual, the session-context hook, the opt-in background agent (inert until you arm it - see [hooks/postcompact.hook.example.json](hooks/postcompact.hook.example.json)), and the vault MCP server. Then tell Claude where your vault lives by adding to the `env` section of `~/.claude/settings.json`:
 
 ```json
 "env": { "OBSIDIAN_VAULT_PATH": "/path/to/your/vault" }
