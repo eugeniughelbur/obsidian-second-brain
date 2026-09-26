@@ -108,6 +108,11 @@ def parse_iso_date(value: Any) -> date | None:
         return None
 
 
+# Entity kinds per references/ai-first-rules.md. `entity` is the legacy
+# catch-all some vaults use in place of `person`.
+ENTITY_KINDS = ("person", "company", "tool", "entity")
+
+
 def compute(notes: list[tuple[Path, dict[str, Any]]], skipped_unreadable: int = 0) -> dict[str, Any]:
     by_type: Counter[str] = Counter()
     project_status: Counter[str] = Counter()
@@ -161,6 +166,12 @@ def compute(notes: list[tuple[Path, dict[str, Any]]], skipped_unreadable: int = 
             "by_strength": dict(person_strength),
             "most_recent_interaction": max(interaction_dates).isoformat() if interaction_dates else None,
         },
+        # Every entity kind in one block (#302). `people` above stays for the
+        # consumers that already read it.
+        "entities": {
+            "total": sum(by_type.get(k, 0) for k in ENTITY_KINDS),
+            "by_kind": {k: by_type[k] for k in ENTITY_KINDS if by_type.get(k)},
+        },
         "ideas": {
             "total": by_type.get("idea", 0),
             "by_status": dict(idea_status),
@@ -190,6 +201,7 @@ def render_block(stats: dict[str, Any]) -> str:
 
     p = stats["projects"]
     pe = stats["people"]
+    en = stats["entities"]
     i = stats["ideas"]
     t = stats["tasks"]
     r = stats["research"]
@@ -204,6 +216,7 @@ def render_block(stats: dict[str, Any]) -> str:
         f"- **Projects**: {p['total']} ({fmt_counter(p['by_status'])})",
         f"- **People**: {pe['total']} ({fmt_counter(pe['by_strength'])})"
         + (f" - last interaction {pe['most_recent_interaction']}" if pe["most_recent_interaction"] else ""),
+        f"- **Entities**: {en['total']} ({fmt_counter(en['by_kind'])})",
         f"- **Ideas**: {i['total']} ({fmt_counter(i['by_status'])})",
         f"- **Tasks**: {t['total']} ({fmt_counter(t['by_status'])})",
         f"- **Research**: {r['total']} ({fmt_counter(r['by_subtype'])})",

@@ -109,11 +109,12 @@ _SEARCH_DEWEIGHT_FACTOR = float(os.environ.get("OBSIDIAN_SEARCH_DEWEIGHT") or "0
 # Type-aware volume (stress-test fix 13/24): term-dense operational logs took #1
 # on 7 of 12 audit queries, burying canonical notes. Log-ish notes fade to 0.5 -
 # a moderator, not a mute: they lose ties against canon but still win when they
-# are genuinely the best match. Person/entity dossiers get a modest boost.
+# are genuinely the best match. Entity dossiers (person, company, tool) get a
+# modest boost (#302).
 _SEARCH_LOG_WEIGHT = float(os.environ.get("OBSIDIAN_SEARCH_LOG_WEIGHT") or "0.5")
 _SEARCH_ENTITY_BOOST = float(os.environ.get("OBSIDIAN_SEARCH_ENTITY_BOOST") or "1.5")
 _LOG_TYPES = {"log", "dev-log", "daily", "worklog"}
-_ENTITY_TYPES = {"person", "entity"}
+_ENTITY_TYPES = {"person", "company", "tool", "entity"}
 _LOG_FOLDERS = {"logs", "daily", "dev logs"}
 # Freshness (stress-test fix 15/24): a "what is CURRENT" query ranked a
 # superseded/declined note above the one that still holds. Two levers, lexical arm only (the
