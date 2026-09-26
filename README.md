@@ -330,7 +330,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 | `/meeting-prep [name]` | Pulls a person's last 4 1-on-1 transcripts and builds a live, chat-only meeting-prep checklist - compiles your picks into talking points right here, writes nothing to the vault |
 | `/meeting-prep-trigger [name]` | On-demand version of the `meeting-prep-daily-trigger` scheduled task for one person - writes the same checklist to an Obsidian file to review later, instead of presenting in chat |
 | `/meeting-prep-apply [name] [date]` | Reads back a checked-off meeting-prep note, compiles the checked items into a talking-points-and-questions list, and moves the note to `Done/` |
-| `/task-briefing-trigger` | On-demand version of the `daily-task-briefing` scheduled task - reads your own Kanban board and reports what's due today, this week, and overdue, right now instead of waiting for the scheduled morning run |
+| `/task-briefing-trigger` | On-demand version of the `daily-task-briefing` scheduled task - runs that task's own instructions (`~/.claude/scheduled-tasks/daily-task-briefing/SKILL.md`) right now instead of waiting for the scheduled morning run: reports what's due today, this week, and overdue, and does the same board/file reconciliation. Falls back to a read-only report if the scheduled task isn't set up |
 
 ### Context -- Claude knows you
 
