@@ -253,15 +253,22 @@ fi
 
 # A note saved with CRLF line endings (a Windows editor, git autocrlf) would fail
 # every delimiter check below, because each line carries a trailing carriage
-# return; the checks read a CR-free copy instead. BASENAME and the warnings
-# still name the real file.
+# return; the checks read a CR-free copy instead. A leading UTF-8 BOM (some
+# Windows editors write one) breaks the first-line check the same way, so the
+# copy drops it too (#295). BASENAME and the warnings still name the real file.
 READ_FILE="$FILE"
-if grep -q $'\r' "$FILE" 2>/dev/null; then
+HAS_BOM=0
+[[ "$(head -c 3 "$FILE" 2>/dev/null | od -An -tx1 | tr -d ' \n')" == "efbbbf" ]] && HAS_BOM=1
+if [[ "$HAS_BOM" == 1 ]] || grep -q $'\r' "$FILE" 2>/dev/null; then
   CR_FREE=$(mktemp "${TMPDIR:-/tmp}/ai-first.XXXXXX" 2>/dev/null) || exit 0
   trap 'rm -f "$CR_FREE"' EXIT
   # A copy that failed halfway is not worth validating: silence beats a false
   # warning raised against the original.
-  tr -d '\r' < "$FILE" > "$CR_FREE" || exit 0
+  if [[ "$HAS_BOM" == 1 ]]; then
+    tail -c +4 "$FILE" | tr -d '\r' > "$CR_FREE" || exit 0
+  else
+    tr -d '\r' < "$FILE" > "$CR_FREE" || exit 0
+  fi
   READ_FILE="$CR_FREE"
 fi
 
@@ -339,14 +346,16 @@ ASCII_CONTEXT = {
     '‘': ('U+2018 left single quote',  "'"),
     '’': ('U+2019 right single quote', "'"),
     '…': ('U+2026 ellipsis',           '...'),
-}
-
-# Substitutions in every language: no script writes >= as U+2265, and a
-# non-breaking space is invisible damage wherever it lands.
-ALWAYS = {
+    # The math signs are ordinary running text in CJK prose, where `>=` would
+    # be the worse rewrite (#296). In English prose they are still substitutions.
     '≥': ('U+2265 >=',                 '>='),
     '≤': ('U+2264 <=',                 '<='),
     '≠': ('U+2260 !=',                 '!='),
+}
+
+# Substitutions in every language: a non-breaking space is invisible damage
+# wherever it lands.
+ALWAYS = {
     ' ': ('U+00A0 non-breaking space', ' '),
 }
 
