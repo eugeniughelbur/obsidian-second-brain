@@ -115,3 +115,18 @@ def test_path_flag_matches_sibling_scripts(tmp_path):
         result = _run(flag, str(vault), "--json")
         assert result.returncode == 0, (flag, result.stderr)
         assert _json_of(result)["total_notes"] == 1
+
+
+def test_entities_block_counts_every_entity_kind(tmp_path):
+    """#302: companies and tools have schemas since #286, but the stats only
+    counted people. `entities` counts every kind with a by-kind split, and
+    `people` keeps its old meaning for the consumers that read it."""
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    for name, ntype in [("Ana", "person"), ("Bo", "person"), ("Acme", "company"),
+                        ("Hammer", "tool"), ("Plan", "project")]:
+        (vault / f"{name}.md").write_text(f"---\ntype: {ntype}\n---\nbody\n", encoding="utf-8")
+
+    stats = _json_of(_run("--path", str(vault), "--json"))
+    assert stats["entities"] == {"total": 4, "by_kind": {"person": 2, "company": 1, "tool": 1}}
+    assert stats["people"]["total"] == 2

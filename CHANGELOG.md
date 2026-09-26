@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **Search and vault stats treat company and tool notes as entities, like people (#302, raised by @etcook).** #286 gave companies and tools their own schemas, but search only boosted `type: person` notes and the stats only counted people. `vault_ops.search()` now gives `company` and `tool` notes the same 1.5 boost. Measured on a real vault with 11 such notes, searched by title: 2 moved up to #1 (from #2 and #5), none moved down, and the three retrieval case sets scored the same before and after. `vault_stats.py` adds an `entities` block with a total and a by-kind split, shown as an `Entities` line in the `index.md` stats. The `people` block is unchanged, so anything reading it keeps working.
+
 ## [0.17.0] - 2026-09-26 - The Neighbors
 
 ### Added
