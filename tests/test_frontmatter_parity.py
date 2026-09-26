@@ -16,12 +16,15 @@
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 
 # --- S9 --------------------------------------------------------------------
@@ -114,7 +117,7 @@ def test_the_canonical_parser_handles_the_awkward_cases():
 
 def _build(cwd=None):
     return subprocess.run(
-        ["bash", str(REPO_ROOT / "scripts" / "build.sh"), "--platform", "hermes"],
+        [BASH, str(REPO_ROOT / "scripts" / "build.sh"), "--platform", "hermes"],
         cwd=cwd or REPO_ROOT, capture_output=True, text=True, check=False,
     )
 

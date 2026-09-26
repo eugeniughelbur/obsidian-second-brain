@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -18,6 +19,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 
 def test_validate_hook_matches_windows_backslash_paths(tmp_path):
@@ -40,7 +43,7 @@ def test_validate_hook_matches_windows_backslash_paths(tmp_path):
 
     def run(file_path, vault):
         return subprocess.run(
-            ["bash", str(hook)],
+            [BASH, str(hook)],
             input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": file_path}}),
             env=dict(os.environ, OBSIDIAN_VAULT_PATH=vault),
             capture_output=True,
@@ -143,7 +146,7 @@ def test_validate_hook_env_fallback_uses_the_platform_home(tmp_path):
         env["HOME"] = str(platform_home)
         env.pop("USERPROFILE", None)
     r = subprocess.run(
-        ["bash", str(hook)],
+        [BASH, str(hook)],
         input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(bad)}}),
         env=env,
         capture_output=True,
@@ -163,7 +166,7 @@ def test_validate_hook_env_fallback_uses_the_platform_home(tmp_path):
         (broken / "cygpath").write_text("#!/usr/bin/env bash\nexit 1\n", encoding="utf-8")
         env["PATH"] = f"{broken}{os.pathsep}{env['PATH']}"
         r = subprocess.run(
-            ["bash", str(hook)],
+            [BASH, str(hook)],
             input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(bad)}}),
             env=env,
             capture_output=True,
@@ -181,7 +184,7 @@ def test_validate_hook_env_fallback_uses_the_platform_home(tmp_path):
     elsewhere.write_bytes(f"OBSIDIAN_VAULT_PATH={vault}\r\n".encode("utf-8"))
     env["OBSIDIAN_ENV_FILE"] = str(elsewhere)
     r = subprocess.run(
-        ["bash", str(hook)],
+        [BASH, str(hook)],
         input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(bad)}}),
         env=env,
         capture_output=True,
@@ -212,7 +215,7 @@ def test_validate_hook_accepts_crlf_notes(tmp_path):
 
     def run(f):
         return subprocess.run(
-            ["bash", str(hook)],
+            [BASH, str(hook)],
             input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(f)}}),
             env=dict(os.environ, OBSIDIAN_VAULT_PATH=str(vault)),
             capture_output=True,
@@ -255,7 +258,7 @@ def test_validate_hook_leaves_posix_backslash_paths_alone(tmp_path):
     bad = odd / "bad.md"
     bad.write_text("# no frontmatter\n", encoding="utf-8")
     r = subprocess.run(
-        ["bash", str(hook)],
+        [BASH, str(hook)],
         input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(bad)}}),
         env=dict(os.environ, OBSIDIAN_VAULT_PATH=str(vault)),
         capture_output=True,
@@ -263,6 +266,24 @@ def test_validate_hook_leaves_posix_backslash_paths_alone(tmp_path):
     )
     assert r.returncode == 0, r.stderr
     assert "frontmatter" in json.loads(r.stdout)["systemMessage"]
+
+
+def test_bash_constant_never_resolves_to_wsl():
+    """On Windows, CreateProcess's search order checks System32 before PATH, so a
+    bare "bash" silently becomes WSL's launcher when WSL is installed, even though
+    shutil.which("bash") still finds Git Bash (#308). Every subprocess call in
+    this suite uses the resolved BASH constant instead of the bare name because of
+    that: this pins the resolution itself, via `uname`, which reports "Linux ...
+    microsoft-standard-WSL2" from WSL's bash and "MINGW64_NT ... Msys" from Git
+    Bash."""
+    if os.name != "nt":
+        pytest.skip("the bare-bash/WSL collision only exists on Windows")
+    r = subprocess.run([BASH, "-c", "uname -s"], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    assert "MINGW" in r.stdout or "MSYS" in r.stdout, (
+        f"BASH resolved to something other than Git Bash: {r.stdout!r} - "
+        "did the resolution fall through to WSL's bash.exe?"
+    )
 
 
 def test_research_config_honors_env_file_override(tmp_path):

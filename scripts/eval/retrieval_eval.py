@@ -269,6 +269,7 @@ def _searcher(mode: str):
         # the shipped search without being imported or vendored (pattern from
         # the structured-rag eval fork, fork-insights round 2).
         import os
+        import shutil
         import subprocess
         cmd = os.environ.get("RETRIEVAL_EVAL_EXTERNAL_CMD", "").strip()
         if not cmd:
@@ -281,6 +282,16 @@ def _searcher(mode: str):
             )
 
         parts = _split_external_cmd(cmd)
+        # An engine command of the form "bash <script>" hits the same collision
+        # as every other bare "bash" in this repo (#308): on Windows, CreateProcess
+        # checks System32 before PATH, so a bare "bash" resolves to WSL's launcher
+        # when WSL is installed, even though shutil.which("bash") still finds Git
+        # Bash. WSL then reads the Windows script path's backslashes as escape
+        # characters and reports "No such file or directory". Resolved here, not
+        # inside _split_external_cmd, which only parses argv and must not assume
+        # the first token is bash.
+        if parts and parts[0] == "bash":
+            parts[0] = shutil.which("bash") or "/bin/bash"
 
         def _external(q: str) -> list[dict[str, Any]]:
             proc = subprocess.run(

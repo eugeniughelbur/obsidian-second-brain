@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -17,6 +18,8 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HOOK = REPO_ROOT / "hooks/validate-ai-first.sh"
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 FRONTMATTER = (
     "---\ndate: 2026-09-14\ntype: concept\ntags:\n  - concept\nai-first: true\n---\n\n"
@@ -36,7 +39,7 @@ KOREAN = "\uacfc\uc801\ud569 \uc774\uc57c\uae30"  # Hangul
 
 def run(vault: Path, note: Path, **env):
     return subprocess.run(
-        ["bash", str(HOOK)],
+        [BASH, str(HOOK)],
         input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(note)}}),
         env=dict(os.environ, OBSIDIAN_VAULT_PATH=str(vault), **env),
         capture_output=True, text=True,
@@ -128,7 +131,7 @@ def test_skip_checks_is_read_from_the_config_env_file(vault, tmp_path):
 
     env_file.write_text(f"OBSIDIAN_VAULT_PATH={vault}\n", encoding="utf-8")
     control = subprocess.run(
-        ["bash", str(HOOK)],
+        [BASH, str(HOOK)],
         input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(note)}}),
         env={k: v for k, v in os.environ.items() if k != "OBSIDIAN_VAULT_PATH"}
         | {"OBSIDIAN_ENV_FILE": str(env_file)},
@@ -140,7 +143,7 @@ def test_skip_checks_is_read_from_the_config_env_file(vault, tmp_path):
         f'OBSIDIAN_VAULT_PATH={vault}\nAI_FIRST_SKIP_CHECKS="5"\n', encoding="utf-8"
     )
     quiet = subprocess.run(
-        ["bash", str(HOOK)],
+        [BASH, str(HOOK)],
         input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(note)}}),
         env={k: v for k, v in os.environ.items() if k != "OBSIDIAN_VAULT_PATH"}
         | {"OBSIDIAN_ENV_FILE": str(env_file)},

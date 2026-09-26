@@ -21,6 +21,7 @@ covered the day it lands rather than the day someone remembers to add a test.
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -28,6 +29,8 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DIST = REPO_ROOT / "dist"
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 # Discovered rather than hardcoded: a new adapter is covered automatically.
 PLATFORMS = sorted(p.name for p in (REPO_ROOT / "adapters").iterdir() if (p / "adapter.sh").is_file())
@@ -52,7 +55,7 @@ def _tree_relative(cited: str) -> str:
 def built() -> Path:
     """Build every platform once, the way a release actually does it."""
     result = subprocess.run(
-        ["bash", "scripts/build.sh"],
+        [BASH, "scripts/build.sh"],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,

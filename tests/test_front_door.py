@@ -9,11 +9,14 @@ and cross-referenced.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 
 def _bootstrap(vault: Path, *extra: str) -> subprocess.CompletedProcess:
@@ -50,7 +53,7 @@ def test_bootstrap_force_overwrites_when_asked(tmp_path):
 
 def test_installer_scripts_parse_and_crossreference():
     for script in ("install.sh", "scripts/setup.sh", "scripts/quick-install.sh"):
-        r = subprocess.run(["bash", "-n", str(REPO_ROOT / script)],
+        r = subprocess.run([BASH, "-n", str(REPO_ROOT / script)],
                            capture_output=True, text=True)
         assert r.returncode == 0, f"{script}: {r.stderr}"
     # The README's one-liner must point at a file that exists.
@@ -64,7 +67,7 @@ def test_dists_ship_a_runnable_python_project():
     documented `uv run -m scripts.research.<name>` hit ModuleNotFoundError.
     Every platform now ships pyproject.toml next to its scripts copy, and the
     Codex install doc states the working, cd-aware invocation."""
-    build = subprocess.run(["bash", "scripts/build.sh", "--platform", "codex-cli"],
+    build = subprocess.run([BASH, "scripts/build.sh", "--platform", "codex-cli"],
                            cwd=REPO_ROOT, capture_output=True, text=True)
     assert build.returncode == 0, build.stderr
     assert (REPO_ROOT / "dist/codex-cli/.codex/pyproject.toml").is_file()

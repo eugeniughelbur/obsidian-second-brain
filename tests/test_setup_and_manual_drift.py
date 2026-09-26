@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import stat
 import subprocess
 from pathlib import Path
@@ -27,6 +28,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL = REPO_ROOT / "SKILL.md"
 COMMANDS = REPO_ROOT / "commands"
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 
 # --- the credential file ---------------------------------------------------
@@ -48,7 +51,7 @@ def test_setup_preserves_the_env_file_mode(tmp_path):
     assert 'chmod 600 "$ENV_FILE"' in script, "no explicit chmod backstop after the mv"
 
     subprocess.run(
-        ["bash", "-c",
+        [BASH, "-c",
          '( umask 077; VAULT=/tmp/x awk \'{print}\' "$1" > "$1.tmp" ) '
          '&& mv "$1.tmp" "$1" && chmod 600 "$1"', "_", str(env)],
         check=True, capture_output=True,

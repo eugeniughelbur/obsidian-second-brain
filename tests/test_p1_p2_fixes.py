@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -24,6 +25,8 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "integrations" / "obsidian-mcp-server"))
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 
 # --- B31 -------------------------------------------------------------------
@@ -75,7 +78,7 @@ def test_bytecode_cleanup_is_anchored_to_the_repo_not_the_cwd():
 
 def test_a_build_from_a_foreign_cwd_ships_no_bytecode(tmp_path):
     subprocess.run(
-        ["bash", str(REPO_ROOT / "scripts" / "build.sh"), "--platform", "hermes"],
+        [BASH, str(REPO_ROOT / "scripts" / "build.sh"), "--platform", "hermes"],
         cwd=tmp_path, capture_output=True, text=True, check=True,
     )
     stray = list((REPO_ROOT / "dist" / "hermes").rglob("*.pyc"))

@@ -11,12 +11,15 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HOOK = REPO_ROOT / "hooks" / "obsidian-bg-agent.sh"
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 
 
 def _run_hook(stdin: str, env_extra: dict, tmp_path: Path) -> subprocess.CompletedProcess:
@@ -37,7 +40,7 @@ def _run_hook(stdin: str, env_extra: dict, tmp_path: Path) -> subprocess.Complet
     env.pop("OBSIDIAN_VAULT_PATH", None)
     env.pop("OBSIDIAN_BG_AGENT_ENABLED", None)
     env.update(env_extra)
-    return subprocess.run(["bash", str(HOOK)], input=stdin, env=env,
+    return subprocess.run([BASH, str(HOOK)], input=stdin, env=env,
                           capture_output=True, text=True, timeout=30)
 
 

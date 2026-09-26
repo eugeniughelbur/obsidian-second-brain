@@ -9,11 +9,14 @@ the failure mode the tokenizer copies (#159/#188/#192) already demonstrated.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HELPER = REPO_ROOT / "scripts" / "platform-home.sh"
+# Resolved by path: on Windows a bare "bash" can resolve to WSL's launcher in System32.
+BASH = shutil.which("bash") or "/bin/bash"
 INLINE_COPIES = ("hooks/validate-ai-first.sh", "scripts/quick-install.sh")
 SOURCING = (
     "install.sh",
@@ -60,7 +63,7 @@ def test_the_helper_resolves_home_on_this_platform(tmp_path):
     env = dict(os.environ, HOME=str(tmp_path))
     env.pop("USERPROFILE", None)
     r = subprocess.run(
-        ["bash", "-c", f'. "{HELPER}"; osb_platform_home; printf "%s|%s" "$OSB_WIN" "$OSB_HOME"'],
+        [BASH, "-c", f'. "{HELPER}"; osb_platform_home; printf "%s|%s" "$OSB_WIN" "$OSB_HOME"'],
         env=env, capture_output=True, text=True, check=True,
     )
     win, home = r.stdout.split("|")
@@ -72,5 +75,5 @@ def test_the_helper_resolves_home_on_this_platform(tmp_path):
 
 def test_every_sourcing_script_still_parses():
     for rel in SOURCING:
-        r = subprocess.run(["bash", "-n", str(REPO_ROOT / rel)], capture_output=True, text=True)
+        r = subprocess.run([BASH, "-n", str(REPO_ROOT / rel)], capture_output=True, text=True)
         assert r.returncode == 0, f"{rel}: {r.stderr}"
