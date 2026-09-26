@@ -746,6 +746,8 @@ bash scripts/build.sh --platform hermes
 # then follow dist/hermes/INSTALL.md (copy into ~/.hermes/skills/ or add as a tap)
 ```
 
+Do not run `hermes plugins install` on this repo's URL. The repo root is not a Hermes plugin (it has no `plugin.yaml`), and Hermes reports success anyway while registering nothing ([#298](https://github.com/eugeniughelbur/obsidian-second-brain/issues/298)). Use the skills build above.
+
 This is the skill/playbook half of the Hermes work; the bounded vault-data half is the [MCP connector](integrations/obsidian-mcp-server/). Native cron and lifecycle-hook integration are tracked in [Issue #79](https://github.com/eugeniughelbur/obsidian-second-brain/issues/79).
 
 Point OpenCode at Hermes via OpenRouter. Authenticate once (`/connect`, search OpenRouter, paste your key - or `export OPENROUTER_API_KEY=...`), then in `opencode.json`:

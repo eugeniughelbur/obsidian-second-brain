@@ -327,6 +327,10 @@ _hermes_emit_install_hint() {
 The obsidian-second-brain commands are emitted here as native Hermes skills
 under `skills/<category>/<name>/SKILL.md` (agentskills.io-compatible).
 
+`hermes plugins install <repo-url>` does not work for this repo: its root is
+not a Hermes plugin (no `plugin.yaml`), and Hermes reports success while
+registering nothing (#298). Use one of the options below instead.
+
 ## Option A - install from this built tree
 
 ```bash
