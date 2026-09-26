@@ -1,7 +1,7 @@
 {
   "name": "obsidian-second-brain",
   "description": "Stop re-explaining your notes to Claude. Turns your Obsidian vault into memory Claude can actually search, and keeps it true: new sources rewrite existing pages, contradictions reconcile, and stale facts get flagged. AI note-taking and PKM for Claude Code.",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "author": {
     "name": "Eugeniu Ghelbur",
     "email": "e.ghelbur@gmail.com"
