@@ -673,6 +673,8 @@ In short: three formats - flat JSON (default, `_export/vault-snapshot.json`), a 
 
 **Bootstraps the vault's operating surfaces: `_CLAUDE.md`, `index.md`, the log setup, and Bases.** Full steps in `commands/obsidian-init.md` (the source of truth).
 
+For an existing human note collection, this command offers the optional First-Brain wiki-style variant documented in `references/vault-schema.md`. The agent ensures `First-Brain/` exists using filesystem tools, configures wiki output routes and recursive source-protection instructions, and leaves personal notes in place without ingesting them. Protection is instruction-based, not a filesystem sandbox. Read `commands/obsidian-init.md` before initializing; it defines the procedure for this variant as well as the existing layouts.
+
 In short: maps the vault (parallel subagents over the dashboard, templates, boards, and sample notes), generates `_CLAUDE.md` from `references/claude-md-template.md` with real values, writes `index.md` (the catalog) and the operation-log setup (per-day `Logs/` with a `log.md` pointer, or monolithic `log.md`), and stamps the `Bases/` live views from `references/bases/*.template` with the vault's folder names. Files are written with your file tools (or `obsidian_save_note` on MCP clients). Tell the user to restart the session afterwards.
 
 If `_CLAUDE.md` already exists: show a diff of what would change and ask before overwriting.
@@ -708,6 +710,8 @@ A guided conversation (intent, name, category, trigger phrases, behavior steps, 
 ### `/obsidian-ingest`
 
 **Ingests a source into the vault - one source touches many pages.** Full steps in `commands/obsidian-ingest.md` (the source of truth). Read that file before running an ingest; the summary here is an orientation, not the procedure.
+
+In the First-Brain variant, read the selected local source in place, preserve its bytes and path, and record its vault-relative `source_path` in the raw capture. Derived and ancillary writes follow the manual's routes; conflicts involving human originals are recorded in the derived layer. Sensitive-content rules and the current rewrite policy still apply.
 
 Steps:
 1. Accept a URL, file path, or pasted text as the source

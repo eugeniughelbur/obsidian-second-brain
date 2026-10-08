@@ -11,6 +11,10 @@ triggers_zh: ["初始化知识库", "为这个知识库生成初始配置", "扫
 Use the obsidian-second-brain skill. Execute `/obsidian-init`:
 
 1. Glob the vault (`<vault>/**/*.md`) to map the full vault structure
+   - Before reading note bodies, honor any existing sensitive-content rules in `_CLAUDE.md`. Discovery of a path does not authorize reading private content.
+   - **Optional First-Brain wiki-style variant:** if `First-Brain/` exists, offer this variant; otherwise offer it as an explicit layout choice when setting up wiki-style. An existing `First-Brain/` triggers an offer, never an automatic layout switch. Preserve the current layout when the variant is declined. See `references/vault-schema.md` under "First-Brain wiki-style variant".
+   - When selected, ensure `First-Brain/` exists, creating it if absent with filesystem tools. Before creating directories, check that planned paths remain inside the vault and existing paths are directories; stop on a file named `First-Brain` or an unsafe linked path. Do not move, rename, edit, or ingest existing notes during initialization.
+   - Resolve output destinations through `references/folder-map.md`, using wiki-style defaults for this variant even if `wiki/` was absent before this run. Create missing destination directories with filesystem tools. Include raw-source subfolders (articles, transcripts, pdfs, videos), research, operation logs, and Bases in their established locations. Keep existing custom output routes unless the user approves replacing them; never route generated outputs under the source folder.
 2. Spawn parallel subagents to discover vault context simultaneously:
    - **Dashboard agent**: read `Home.md` or equivalent dashboard
    - **Templates agent**: read all files in `Templates/`
@@ -18,11 +22,13 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - **Samples agent**: read one existing note per major folder to capture naming conventions and frontmatter patterns
 3. Merge all agent results into a complete picture of the vault
 4. Generate a complete `_CLAUDE.md` using the template bundled with the skill at `SKILL_ROOT/references/claude-md-template.md` (its absolute path was given at session start as **Skill root**), filled with real values from the vault
+   - For the selected variant, include the template's **First Brain Protection** section and a `First-Brain/` source-layer row, plus explicit note-type destinations resolved through `references/folder-map.md`. Cover entities, concepts/synthesis, projects, meetings, decisions/conflicts, tasks/recurring obligations, daily notes, work logs, reviews, agenda, and boards; keep raw captures, research, operation logs, and Bases in their established locations. Update auto-save rules, propagation rules, and key-file references to those resolved destinations rather than copying human-first defaults. Human originals are not candidates for AI-first conversion. Carry these ownership rules into any subagent instructions.
 5. Generate `index.md` at the vault root - a catalog of all pages organized by category:
    - List every note in the vault grouped by folder (Projects, People, Ideas, etc.)
    - Include a one-line description for each note (from frontmatter or first paragraph)
    - Claude reads this file FIRST when navigating the vault - cheaper and faster than searching
    - Format: `- [[Note Name]] - brief description`
+   - For protected sources, catalog only permitted metadata; do not read private note bodies merely to generate descriptions. First Brain catalog entries are source pointers, not permission to rewrite those files.
 6. Initialize the vault operations log:
    - Create `Logs/` directory at the vault root
    - Write `log.md` at the vault root as a thin pointer file: explains the per-day structure, points at `Logs/`, and ships the entry template (do NOT put log entries in `log.md` itself)
@@ -37,7 +43,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    | `tasks.base.template` | `Bases/Tasks.base` | `Tasks` | `wiki/tasks` |
    | `daily.base.template` | `Bases/Daily.base` | `Daily` | `wiki/daily` |
 
-   Detect vault style from the folder structure discovered in step 1: if `wiki/` exists at the root, use wiki-style folder names; otherwise use obsidian-style. For each template, replace its named placeholder (`{{DAILY_FOLDER}}`, `{{PEOPLE_FOLDER}}`, `{{PROJECTS_FOLDER}}`, `{{TASKS_FOLDER}}`) with the correct folder name, then write to `Bases/`.
+   Use the selected First-Brain variant's wiki-style routes when applicable; otherwise detect vault style from the folder structure discovered in step 1: if `wiki/` exists at the root, use wiki-style folder names; otherwise use obsidian-style. Honor approved custom Folder Map destinations. For each template, replace its named placeholder (`{{DAILY_FOLDER}}`, `{{PEOPLE_FOLDER}}`, `{{PROJECTS_FOLDER}}`, `{{TASKS_FOLDER}}`) with the correct folder name, then write to `Bases/`.
 
    Skip any base file that already exists in `Bases/` - never overwrite.
 

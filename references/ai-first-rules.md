@@ -284,6 +284,7 @@ date: YYYY-MM-DD
 type: source
 tags: [source, <article|transcript|pdf|video>]
 source_url: ""                # verbatim
+source_path: ""               # optional: local source's vault-relative POSIX path
 source_type: article
 content_hash: ""
 capture_scope: full-local     # full-local | bounded-local | url-only

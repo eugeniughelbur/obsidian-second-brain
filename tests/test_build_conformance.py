@@ -71,6 +71,20 @@ def test_every_adapter_is_discovered():
     assert len(PLATFORMS) >= 7, f"expected 7+ adapters, found {PLATFORMS}"
 
 
+@pytest.mark.parametrize("platform", ["agent-skills", "codex-cli"])
+def test_first_brain_variant_ships_agent_initialization_and_ownership_rules(built, platform):
+    """Verify the installed instructions; this does not execute an agent."""
+    tree = built / platform
+    init = next(p for p in tree.rglob("SKILL.md") if p.parent.name == "obsidian-init")
+    ingest = next(p for p in tree.rglob("SKILL.md") if p.parent.name == "obsidian-ingest")
+    init_text = init.read_text(encoding="utf-8")
+    ingest_text = ingest.read_text(encoding="utf-8")
+    for marker in ("First-Brain/", "First Brain Protection", "filesystem tools"):
+        assert marker in init_text
+    for marker in ("First-Brain/", "source_path"):
+        assert marker in ingest_text
+
+
 @pytest.mark.parametrize("platform", PLATFORMS)
 def test_build_emits_a_non_empty_tree(built: Path, platform: str) -> None:
     """A build that exits 0 with an empty output tree is the failure mode CI

@@ -580,6 +580,8 @@ PostCompact -> obsidian-bg-agent.sh -> claude -p (headless) -> vault updated
 
 ## Vault Architecture
 
+**Starting with personal notes?** `/obsidian-init` offers an optional [First-Brain wiki-style variant](references/vault-schema.md#first-brain-wiki-style-variant) for an existing, evolving collection of human notes. Human notes live in the `First-Brain/` folder, immutable ingestion captures in `raw/`, and AI-maintained knowledge in `wiki/`. Initialization ensures the `First-Brain/` source folder exists and configures ownership and routing; it does not move or ingest notes. Then use `/obsidian-ingest` on an individual First Brain file. Original notes stay in place under instruction-based protection, not a filesystem sandbox. See [the initialization command](commands/obsidian-init.md) for the full procedure.
+
 Two layouts are supported. `scripts/bootstrap_vault.py` builds the Obsidian-style layout by default: `Daily/`, `People/`, `Projects/` and the preset's topic folders such as `Goals/` and `Mentions/`, as laid out in [references/vault-schema.md](references/vault-schema.md). Pass `--style wiki` for the wiki-style layout below. A preset folder the wiki layout renames moves to that name (`People/` to `wiki/entities/`, `Ideas/` and `Knowledge/` to `wiki/concepts/`); one it does not rename keeps its own name under `wiki/` (`Goals/` to `wiki/goals/`, `Sources/` to `wiki/sources/`), so a preset builds the same vault in either layout.
 
 ### Wiki-style -- LLM-first

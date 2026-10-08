@@ -20,6 +20,21 @@ When a user asks Claude to create their `_CLAUDE.md`, Claude should:
 
 ## The Template
 
+For the optional First-Brain wiki-style variant selected through `/obsidian-init`, insert the following section into the generated manual. Replace the human-first Folder Map, auto-save destinations, propagation destinations, and key-file paths with the selected wiki routes. Scope Section 0 and Frontmatter Requirements to agent-generated notes; replace the claim that the owner rarely reads notes with the distinction between human sources and derived knowledge. Keep the user's sensitive-content rules. This section is conditional; do not add it to other layouts.
+
+```markdown
+## First Brain Protection
+
+- **Vault style:** wiki
+- **Vault variant:** first-brain-wiki
+- `First-Brain/` and all current and future descendants are human-maintained sources. Read eligible sources only; never edit, format, convert, rename, move, delete, or add agent-generated files there. Source references are provenance, not write destinations.
+- Respect sensitive-content permissions before reading, copying into raw captures, or deriving knowledge. A selected source does not authorize reading other private notes.
+- The AI-first write rule applies to agent-generated knowledge; human originals need not follow it. Raw captures retain the existing verbatim-body exception.
+- Create immutable ingestion captures under the resolved raw-source folder; consolidate knowledge under the resolved wiki destinations. Record conflicts involving human sources in the derived decisions/conflicts folder, without proposing edits to the originals.
+- Every vault-writing command must honor this First Brain Protection section, including reconciliation, synthesis, health fixes, and background agents. These rules take precedence over auto-save and propagation defaults. Pass them to every subagent. Retain the existing rewrite approval policy for derived and structural files.
+- Protection is instruction-based, not a filesystem sandbox. Search remains vault-wide; initialization does not ingest sources or monitor changes.
+```
+
 Copy this, fill in the bracketed values, and save as `_CLAUDE.md` in the vault root.
 
 ```markdown

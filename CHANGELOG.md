@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Optional First-Brain wiki-style variant (#330, by @2Obe).** `/obsidian-init` configures a human-maintained source layer and wiki destinations through its existing agent-driven workflow. Individual ingestion preserves originals, records local provenance, and keeps source conflicts in the derived layer. Protection is instruction-based; no bulk ingestion or background synchronization is introduced.
+
 - **German (`de`) trigger phrases for all commands (#299, by @2Obe).** Each command now recognizes natural German requests alongside the existing English, Spanish, Portuguese, and Simplified Chinese phrases.
 
 ### Changed
