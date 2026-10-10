@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Sources carry a `source_quality` label, and `/obsidian-health` warns when knowledge cites only `speculation` sources (#258, by @konsone).** A new `source_quality: high | medium | speculation` field on raw sources reuses Rule 7's vocabulary and says whether a source's provenance was worth building on. It sits beside `capture_scope` (#194) and is orthogonal to it: one says how much was kept, this says whether it was worth keeping. `raw/` stays unfiltered and the field never blocks a capture. `references/source-quality-check.md` is the one shared reference and lists the exact signals, so a label can be checked by reading the note. A new `Source quality` health check warns for any note whose every cited source is `speculation`; a source with no field is unjudged and never reported, so a vault written before the field stays silent. `"source_quality_policy": "warn" | "silent"` in `.vault-config.json` follows the never-inferred contract of `rewrite_policy` (#250), with no value that refuses a capture. The `/obsidian-ingest` step 6 and `/obsidian-synthesize` behaviour, and writing the field from the capture commands, follow separately once the field exists. Shared link indexing moved into one helper used by both the payload and quality checks.
+
 - **German (`de`) trigger phrases for all commands (#299, by @2Obe).** Each command now recognizes natural German requests alongside the existing English, Spanish, Portuguese, and Simplified Chinese phrases.
 
 ### Changed
