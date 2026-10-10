@@ -287,6 +287,7 @@ source_url: ""                # verbatim
 source_type: article
 content_hash: ""
 capture_scope: full-local     # full-local | bounded-local | url-only
+source_quality: medium        # high | medium | speculation
 ai-first: true
 ```
 
@@ -299,6 +300,14 @@ ai-first: true
 Never resolve a durability worry by copying a complete copyrighted work. `bounded-local` plus an honest boundary is the right answer where reuse rights do not cover the full text; `url-only` is the right answer where they cover none of it.
 
 A vault that has decided a locator is not a source sets `"source_policy": "strict-local"` in `.vault-config.json`, which raises those health findings by one severity. It quarantines nothing and deletes nothing - an incomplete source is still a record.
+
+**`source_quality` says whether the source's provenance is worth building on (#258).** It is orthogonal to `capture_scope`: that field says how much was kept, this one says whether it was worth keeping. It reuses Rule 7's vocabulary and is a label, never a gate on `raw/`:
+
+- `high` - an institutional primary document with an owner and a stable identifier, or a scoped local primary record. Out of reach without a check that ran.
+- `medium` - provenance is traceable from signals capture already had: a named author or channel, a publication date, a stable URL, a repository owner.
+- `speculation` - the floor. Provenance unknown, derived (a summary of a summary) or conflicting. An uninvestigated source is `speculation`, which is the honest default and not an error state.
+
+The exact signals, and the rule that makes a label checkable by reading the note, are in `references/source-quality-check.md`. The field says nothing about whether the claims are true. `/obsidian-health` warns when a note cites only `speculation` sources; `"source_quality_policy": "silent"` in `.vault-config.json` mutes that, and no value blocks a capture.
 
 ## Documented exceptions
 

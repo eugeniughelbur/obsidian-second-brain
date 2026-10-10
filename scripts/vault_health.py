@@ -21,11 +21,14 @@ exclude list (additive, never overrides the hardcoded EXCLUDE_DIRS):
     {
       "exclude-dirs":  ["_card-pool", "_candidates"],  # dir names anywhere in the tree
       "exclude-paths": ["Archive/Backup"],             # vault-relative path prefixes
-      "rewrite_policy": "unattended"                   # opt out of the /obsidian-ingest
+      "rewrite_policy": "unattended",                  # opt out of the /obsidian-ingest
                                                        # confirm-before-rewrite gate (#250)
+      "source_quality_policy": "silent"                # mute the speculation-only-sources
+                                                       # warning (#258); default is warn
     }
 A missing or malformed file is ignored silently. See VaultExcludes, and
-load_rewrite_policy for the one key that is not about exclusions.
+load_rewrite_policy and load_source_quality_policy for the keys that are not about
+exclusions.
 """
 
 import argparse
@@ -1160,6 +1163,34 @@ def load_source_policy(vault: Path) -> str:
     return "default"
 
 
+def _dependents_of(notes: dict, targets: set, skip: set) -> dict:
+    """{target: {notes in `notes` that link it}}, never counting a note in `skip`.
+
+    Same link indexing as check_orphans: match on the stem and its
+    path-qualified and hyphenated spellings. Shared by the payload and
+    source-quality checks so the two cannot drift apart."""
+    by_key: dict = defaultdict(set)
+    for rel in targets:
+        stem = _nfc(Path(rel).stem).lower()
+        for key in {stem, stem.replace(" ", "-"), rel[:-3].lower()}:
+            by_key[key].add(rel)
+    supported: dict = defaultdict(set)
+    for src_rel, note in notes.items():
+        if src_rel in skip:
+            continue
+        for link in note["links"]:
+            lk = _nfc(link).lower()
+            # Both forms, as in check_orphans: `... _CLAUDE.md.md` keeps its `.md`.
+            forms = {lk, lk[:-3]} if lk.endswith(".md") else {lk}
+            keys = set()
+            for f in forms:
+                keys |= {f, f.replace(" ", "-"), f.rsplit("/", 1)[-1]}
+            for key in keys:
+                for target in by_key.get(key, ()):
+                    supported[target].add(src_rel)
+    return supported
+
+
 def check_source_payload(notes: dict, vault: Path) -> list:
     """Sources whose retained evidence does not match what they claim (#194).
 
@@ -1206,28 +1237,7 @@ def check_source_payload(notes: dict, vault: Path) -> list:
 
     url_only = {rel for rel, scope in sources.items() if scope == "url-only"}
     if url_only:
-        # Who leans on these. Same link indexing as check_orphans: match on the
-        # stem and its path-qualified and hyphenated spellings, and never count
-        # a source's link to itself or to another source as active knowledge.
-        by_key: dict = defaultdict(set)
-        for rel in url_only:
-            stem = _nfc(Path(rel).stem).lower()
-            for key in {stem, stem.replace(" ", "-"), rel[:-3].lower()}:
-                by_key[key].add(rel)
-        supported: dict = defaultdict(set)
-        for src_rel, note in notes.items():
-            if src_rel in sources:
-                continue  # a raw source citing another raw source is not derived knowledge
-            for link in note["links"]:
-                lk = _nfc(link).lower()
-                # Both forms, as in check_orphans: `... _CLAUDE.md.md` keeps its `.md`.
-                forms = {lk, lk[:-3]} if lk.endswith(".md") else {lk}
-                keys = set()
-                for f in forms:
-                    keys |= {f, f.replace(" ", "-"), f.rsplit("/", 1)[-1]}
-                for key in keys:
-                    for target in by_key.get(key, ()):
-                        supported[target].add(src_rel)
+        supported = _dependents_of(notes, url_only, skip=set(sources))
         for rel in sorted(supported):
             dependents = sorted(supported[rel])
             shown = ", ".join(dependents[:5]) + ("..." if len(dependents) > 5 else "")
@@ -1251,6 +1261,93 @@ def check_source_payload(notes: dict, vault: Path) -> list:
                           "set full-local, bounded-local or url-only as you touch them"),
             "files": sorted(unscoped),
         })
+    return issues
+
+
+# --- source quality (#258) ---------------------------------------------------
+# `source_quality` says whether a source's provenance was worth building on.
+# It is orthogonal to `capture_scope` (how much was kept) and never a verdict on
+# truth. Spec: references/source-quality-check.md.
+SOURCE_QUALITY_VALUES = ("high", "medium", "speculation")
+SOURCE_QUALITY_POLICIES = ("warn", "silent")
+# Notes that record activity or navigate, rather than hold claims. A daily note
+# that says "captured [[x]] today" is not knowledge resting on x; reporting it
+# would be the nag that gets a check policy-toggled to silent within a week.
+_ACTIVITY_NOTE_TYPES = frozenset({
+    "daily", "log", "devlog", "index", "review", "learnings-review",
+    "agenda-snapshot", "task", "recurring-task",
+})
+_ACTIVITY_NOTE_FILES = frozenset({"index.md", "log.md", "catchup.md", "home.md"})
+
+
+def load_source_quality_policy(vault: Path) -> str:
+    """`source_quality_policy` from `<vault>/.vault-config.json`: "warn" or "silent".
+
+    Same never-inferred contract as load_rewrite_policy (#250): a missing file,
+    a missing key, a malformed file, a non-string or any other value all mean
+    "warn". There is deliberately no value that blocks a capture."""
+    cfg_path = vault / ".vault-config.json"
+    if not cfg_path.is_file():
+        return "warn"
+    try:
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "warn"
+    if not isinstance(data, dict):
+        return "warn"
+    value = data.get("source_quality_policy")
+    if isinstance(value, str) and value.strip().lower() == "silent":
+        return "silent"
+    return "warn"
+
+
+def check_source_quality(notes: dict, vault: Path) -> list:
+    """Active knowledge whose every cited source is `speculation` grade (#258).
+
+    A note is reported only when it links at least one source AND every source
+    it links carries a recognised `source_quality` of `speculation`. A source
+    with no field is unjudged, not speculative, so one unlabelled source in the
+    mix keeps the note quiet: this check never turns "not yet labelled" into a
+    finding, which is what makes it safe on a vault written before the field.
+    Daily, log, index and other activity notes are skipped: they record that a
+    source was captured, they do not rest on it.
+    A warning, because a speculative source is a legitimate thing to have read.
+    """
+    if load_source_quality_policy(vault) == "silent":
+        return []
+    graded = {}
+    for rel, note in notes.items():
+        if _fm_field(note["frontmatter"], "type") != "source":
+            continue
+        # A template line copied with its trailing `# high | medium | ...` comment.
+        grade = _fm_field(note["frontmatter"], "source_quality").split("#", 1)[0].strip()
+        if grade in SOURCE_QUALITY_VALUES:
+            graded[rel] = grade
+    speculative = {rel for rel, grade in graded.items() if grade == "speculation"}
+    if not speculative:
+        return []
+    all_sources = {rel for rel, n in notes.items() if _fm_field(n["frontmatter"], "type") == "source"}
+    by_note: dict = defaultdict(set)
+    for source, dependents in _dependents_of(notes, all_sources, skip=all_sources).items():
+        for dep in dependents:
+            by_note[dep].add(source)
+    issues = []
+    for dep in sorted(by_note):
+        if (_fm_field(notes[dep]["frontmatter"], "type") in _ACTIVITY_NOTE_TYPES
+                or Path(dep).name.lower() in _ACTIVITY_NOTE_FILES):
+            continue
+        cited = by_note[dep]
+        if cited and all(src in speculative for src in cited):
+            shown = ", ".join(sorted(cited)[:3]) + ("..." if len(cited) > 3 else "")
+            issues.append({
+                "type": "source_quality",
+                "severity": "warning",
+                "message": (f"{dep} cites only speculation-grade sources ({shown}). Their "
+                            "provenance is unknown, derived or conflicting: corroborate the "
+                            "claims with a better source, or say plainly in the note that "
+                            "they are unverified"),
+                "files": [dep] + sorted(cited),
+            })
     return issues
 
 
@@ -1301,6 +1398,7 @@ def run_health_check(vault: Path) -> dict:
          [i for i in link_gaps if i["type"] == "missing_attachment"]),
         ("Template leftovers", check_template_leftovers(notes)),
         ("Source payload", check_source_payload(notes, vault)),
+        ("Source quality", check_source_quality(notes, vault)),
         ("Semantic index coverage", check_semantic_index(vault, notes)),
         ("Rewrite policy", check_rewrite_policy(vault)),
     ]
