@@ -212,16 +212,21 @@ def extract_scene_change(
 
     select_expr = f"eq(n\\,0)+gt(scene\\,{scene_threshold})"
     vf = f"select='{select_expr}',metadata=mode=print:file=-,scale={resolution}:-2"
-    cmd = [
-        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-        "-i", str(Path(video_path).resolve()),
-        "-vf", vf,
-        "-vsync", "vfr",
-        "-frames:v", str(max_frames),
-        "-q:v", "4",
-        str(out_dir / "frame_%04d.jpg"),
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    # Recent ffmpeg no longer accepts `-vsync`; `-fps_mode` replaces it but only
+    # exists since 5.1, so fall back to `-vsync` on older builds.
+    for sync_flag in ("-fps_mode", "-vsync"):
+        cmd = [
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-i", str(Path(video_path).resolve()),
+            "-vf", vf,
+            sync_flag, "vfr",
+            "-frames:v", str(max_frames),
+            "-q:v", "4",
+            str(out_dir / "frame_%04d.jpg"),
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        if result.returncode == 0 or "Unrecognized option" not in result.stderr:
+            break
     if result.returncode != 0:
         raise FrameError(f"ffmpeg scene-change extraction failed: {result.stderr.strip()}")
 
