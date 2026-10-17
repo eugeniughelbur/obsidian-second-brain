@@ -372,14 +372,23 @@ CJK_RE = re.compile(
     '|[\U00020000-\U0002fa1f]'
 )
 
+# A wikilink target is a filename, so rewriting its dash breaks the link. Only
+# a link that closes with ]] counts; its alias stays prose, and NBSP is flagged.
+WIKILINK_TARGET_RE = re.compile(
+    r'\[\[(?:(?!\[\[|\]\])[^|\n])*(?=(?:\|(?:(?!\[\[|\]\]).)*)?\]\])'
+)
+
 path = sys.argv[1]
 seen = set()
 try:
     with open(path, encoding='utf-8', errors='replace') as fh:
         for lineno, line in enumerate(fh, 1):
+            prose = WIKILINK_TARGET_RE.sub('[[', line)
             banned = ALWAYS if CJK_RE.search(line) else {**ALWAYS, **ASCII_CONTEXT}
             for ch in line:
                 if ch not in banned:
+                    continue
+                if ch not in ALWAYS and ch not in prose:
                     continue
                 key = (lineno, ch)
                 if key in seen:
