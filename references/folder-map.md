@@ -32,6 +32,8 @@ How every command decides **which folder** a note belongs in. Never hardcode a f
 
 ## Notes
 
+- **First-Brain wiki-style variant:** `/obsidian-init` can configure a human source layer under `First-Brain/` with derived knowledge using the wiki-style defaults above. The source layer is never a note-type write destination, including for ancillary daily, board, and propagation writes. Conflicts involving human sources are recorded in the resolved decisions folder. Approved custom destinations remain authoritative. See `references/vault-schema.md` for ownership rules and instruction-based protection limits.
+
 - **Ideas vs concepts:** in a wiki-style vault there is no separate `Ideas/` folder - ideas, concepts, frameworks, and synthesis notes all live in `wiki/concepts/`. Only use `Ideas/` if the vault actually has that folder (Obsidian-style). A note tagged `#idea` is found by tag/status, not by folder.
 - **Entities:** wiki-style keeps every entity kind in the one `wiki/entities/` folder, told apart by `type:`. Obsidian-style gives companies and tools their own `Companies/` and `Tools/` folders, because `People/` names what it holds. `Companies/` is for companies the vault tracks (employers of people in the vault, clients, vendors); `Businesses/`, where a preset creates it, is for companies the vault owner owns.
 - **ADRs:** wiki-style keeps decision records in `wiki/decisions/`; Obsidian-style keeps them in `Knowledge/` with an `ADR-` filename prefix. Resolve per `_CLAUDE.md`.

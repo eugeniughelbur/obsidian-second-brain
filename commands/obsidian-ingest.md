@@ -13,6 +13,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-ingest $ARGUMENTS`:
 The argument is a URL, file path, or pasted text. If no argument, ask what to ingest.
 
 1. Read `_CLAUDE.md` first if it exists in the vault root
+   - In the First-Brain wiki-style variant, treat `First-Brain/` and every descendant as human source material, never as a rewrite or propagation destination. Preserve original bytes and paths; do not add AI-first frontmatter to them. Honor sensitive-content permissions before reading or capturing sources. Pass these restrictions to every subagent.
 
 2. Classify the source type before reading the full content:
    - **Article/blog post** - extract key claims, people, tools, concepts
@@ -60,6 +61,7 @@ The argument is a URL, file path, or pasted text. If no argument, ask what to in
 
    **For articles** - use the WebFetch tool to pull the page content
    **For PDFs** - read the file directly
+   **For local Markdown/text files** - read the original in place; classify by content, not by its folder name. Ingestion creates a separate raw capture, never moves or edits the input file.
    **For pasted text** - use as-is
 
 4. Extract and organize:
@@ -76,6 +78,7 @@ The argument is a URL, file path, or pasted text. If no argument, ask what to in
      - Neither found: this is the first ingest. Proceed.
    - Create `raw/articles/YYYY-MM-DD - Source Title.md` (or transcripts/, pdfs/, videos/)
    - Frontmatter: `type: source`, `date`, `tags: [source, <type>]`, `source_url`, `source_type`, `content_hash`, `capture_scope`, `ai-first: true` (the raw-source schema in `references/ai-first-rules.md`; the body stays verbatim - preamble not required)
+   - For a local First Brain source, also set `source_path` to its exact vault-relative POSIX path, including `First-Brain/`. Do not invent a URL for a local file. Use this path as the source identity when checking an earlier capture: same hash follows the existing re-read rule; same path with changed content follows the existing changed-source rule and leaves the earlier capture immutable. Keep canonical hashing and approval behavior unchanged. Link derived claims to the raw capture so the evidence version remains identifiable.
    - **Set `capture_scope` from what you actually saved, never from what you hoped to save (#194).** `full-local` when the source's content is in the body. `bounded-local` when only part of it is - an extractor's character cap, a paywall, one segment of a transcript - and then mark the boundary in the body and carry it into every claim derived from it in step 6. `url-only` when no content was retained, which is the honest answer when reuse rights do not cover copying the work; a URL is provenance, not evidence. Do not resolve a durability worry by copying a complete copyrighted work. `/obsidian-health` reports a source that declares it retained content and did not, and a concept or synthesis note resting on a `url-only` record.
 
 6. **REWRITE the vault** - this is the critical step. Creating new pages is not enough. Rewrite existing ones - as proposals the user confirms, per the second rule below, unless the vault has opted out with `rewrite_policy` (third rule).
@@ -105,6 +108,7 @@ The argument is a URL, file path, or pasted text. If no argument, ask what to in
    
    - **Contradictions agent**: for each claim in the new source:
      - Search the vault for CONFLICTING claims in existing pages
+     - In the First-Brain variant, a conflict found in human sources is recorded as a new `type: conflict` note in the decisions folder resolved per `references/folder-map.md`, with links to both sources and the evidence. Do not propose or apply a rewrite to `First-Brain/`. Existing derived conflict/knowledge pages remain subject to the normal rewrite approval policy.
      - If contradiction found: UPDATE the existing page to note the conflict, add the new evidence, and mark which claim is more recent/authoritative
      - If the new source SUPERSEDES old info: rewrite the old page with updated info and note what changed and why in the page's history section
 
