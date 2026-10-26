@@ -952,7 +952,12 @@ def save_note(
                 "use obsidian_update_note to append to it, or save under a different title"
             )
         }
-    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        # Same shapes as move_note (#368): a parent that is an existing file
+        # raises FileExistsError, an ancestor that is one NotADirectoryError.
+        return {"error": f"could not create the note folder: {exc}"}
     _write_atomic(target, body)
     rel = target.relative_to(vault).as_posix()
     action = "save" if path else "capture"

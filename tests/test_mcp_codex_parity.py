@@ -390,3 +390,18 @@ def test_move_note_returns_an_error_when_a_destination_parent_is_a_file(vault, d
     assert "could not create the destination folder" in result.get("error", ""), result
     assert src.read_text(encoding="utf-8") == "keep me\n"
     assert (root / "wiki" / "Contact.md").read_text(encoding="utf-8") == "a note, not a folder\n"
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["wiki/Contact.md/note.md", "wiki/Contact.md/sub/note.md"],
+    ids=["parent-is-a-file", "ancestor-is-a-file"],
+)
+def test_save_note_returns_an_error_when_a_target_parent_is_a_file(vault, path):
+    root, ops = vault
+    (root / "wiki").mkdir()
+    (root / "wiki" / "Contact.md").write_text("a note, not a folder\n", encoding="utf-8")
+    result = ops.save_note("x", "valid summary", path=path)
+    assert "could not create the note folder" in result.get("error", ""), result
+    assert (root / "wiki" / "Contact.md").read_text(encoding="utf-8") == "a note, not a folder\n"
+    assert sorted(p.name for p in (root / "wiki").iterdir()) == ["Contact.md"], "nothing else was written"
