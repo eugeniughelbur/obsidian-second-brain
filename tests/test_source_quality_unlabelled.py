@@ -53,15 +53,31 @@ def test_unlabelled_source_that_calls_itself_unverified_warns(vault):
     assert "Unverified" in found[0]["message"]
 
 
-@pytest.mark.parametrize("phrase", ["not verified", "unconfirmed", "speculative", "Provenance unknown"])
+@pytest.mark.parametrize("phrase", [
+    "not verified", "unconfirmed", "speculative", "Provenance unknown",
+    "Provenance: unknown", "provenance is unknown",
+])
 def test_each_marker_is_recognised(vault, phrase):
     _source(vault, "thread", f"Note: {phrase}.\n\ncaptured text")
-    assert len(_findings(vault)) == 1
+    found = _findings(vault)
+    assert [f["type"] for f in found] == ["source_quality_unlabelled"]
+    assert f'"{phrase}"' in found[0]["message"]
+
+
+def test_untitled_and_unknown_alone_are_not_markers(vault):
+    _source(vault, "plain", "Untitled draft. Author unknown. Undated.\n\ntext")
+    assert _findings(vault) == []
 
 
 def test_a_labelled_source_is_silent(vault):
     _source(vault, "thread", "Unverified, no byline.", quality="speculation")
     _source(vault, "other", "Unverified, no byline.", quality="medium")
+    assert _findings(vault) == []
+
+
+@pytest.mark.parametrize("value", ["typo", '""', "[speculation]"])
+def test_a_present_but_unrecognised_label_is_not_reported_as_missing(vault, value):
+    _source(vault, "thread", "Unverified, no byline.", quality=value)
     assert _findings(vault) == []
 
 
@@ -78,6 +94,17 @@ def test_summary_and_not_verbatim_are_not_markers(vault):
 
 def test_the_word_inside_a_code_block_is_silent(vault):
     _source(vault, "code", "```\nstatus = 'unverified'\n```\n\ntext")
+    assert _findings(vault) == []
+
+
+def test_a_long_code_block_on_top_uses_up_the_window(vault):
+    code = "\n".join(f"x{i} = {i}" for i in range(30))
+    _source(vault, "code_top", f"```\n{code}\n```\nthis claim is unverified")
+    assert _findings(vault) == []
+
+
+def test_inline_code_is_silent(vault):
+    _source(vault, "inline", "The badge reads `unverified` on the platform.\n\ntext")
     assert _findings(vault) == []
 
 
@@ -102,3 +129,5 @@ def test_registered_in_the_health_report(vault):
     _source(vault, "thread", "Unverified, no byline.")
     report = vh.run_health_check(vault)
     assert report["counts"]["Source quality (unlabelled)"] == 1
+    assert [i["type"] for i in report["issues"] if i["type"].startswith("source_quality")] == [
+        "source_quality_unlabelled"]

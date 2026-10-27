@@ -1361,23 +1361,29 @@ def check_source_quality(notes: dict, vault: Path) -> list:
 # those do not by themselves lower the grade.
 _SPECULATIVE_PROSE_RE = re.compile(
     r"\b(unverified|not verified|unconfirmed|speculative|speculation|"
-    r"provenance (?:is )?unknown)\b",
+    r"provenance(?::|\s+is)?\s+unknown)\b",
     re.IGNORECASE,
 )
 _PREAMBLE_LINES = 12
 
 
 def _preamble(content: str) -> str:
-    """The first non-empty body lines after the frontmatter, code removed."""
-    body = _strip_code(FRONTMATTER_RE.sub("", content, count=1))
-    lines = [ln for ln in body.splitlines() if ln.strip()]
-    return "\n".join(lines[:_PREAMBLE_LINES])
+    """The first non-empty body lines after the frontmatter, then code removed.
+
+    The window is cut before code is stripped, so a long code block at the top
+    uses up the window instead of pulling deeper prose into it. A fence the cut
+    leaves open is closed, so its tail is treated as code too."""
+    body = FRONTMATTER_RE.sub("", content, count=1)
+    head = "\n".join([ln for ln in body.splitlines() if ln.strip()][:_PREAMBLE_LINES])
+    if head.count("```") % 2:
+        head += "\n```"
+    return _strip_code(head)
 
 
 def check_source_quality_unlabelled(notes: dict, vault: Path) -> list:
     """A `type: source` note whose preamble calls itself unverified, with no label (#258).
 
-    Only notes without a recognised `source_quality` are read, so a labelled
+    Only notes with no `source_quality` key at all are read, so a labelled
     vault and a vault that never uses the words stay silent. The finding names
     the phrase it matched, so a reviewer can check it by reading the note.
     Muted by `source_quality_policy: "silent"`, like check_source_quality.
@@ -1389,8 +1395,9 @@ def check_source_quality_unlabelled(notes: dict, vault: Path) -> list:
         note = notes[rel]
         if _fm_field(note["frontmatter"], "type") != "source":
             continue
-        grade = _fm_field(note["frontmatter"], "source_quality").split("#", 1)[0].strip()
-        if grade in SOURCE_QUALITY_VALUES:
+        # Any value, recognised or not, means someone already wrote a label;
+        # a malformed one is a different problem with a different fix.
+        if re.search(r"^source_quality:", note["frontmatter"], re.MULTILINE):
             continue
         m = _SPECULATIVE_PROSE_RE.search(_preamble(note["content"]))
         if not m:
