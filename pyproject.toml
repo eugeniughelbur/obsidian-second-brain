@@ -4,7 +4,7 @@ version = "0.20.0"
 description = "Research toolkit for obsidian-second-brain - Grok, Perplexity, Gemini, and YouTube research that saves to your vault"
 requires-python = ">=3.10"
 dependencies = [
-    "openai>=1.40.0,<3",
+    "openai>=1.40.0,<4",
     "requests>=2.32.0",
     "python-dotenv>=1.0.0",
     "youtube-transcript-api>=0.6.2",
