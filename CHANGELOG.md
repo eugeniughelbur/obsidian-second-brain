@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`/obsidian-health` flags a source that calls itself unverified in prose but carries no `source_quality` (#258).** A correction that lives only in the body is invisible to every check that reads fields, `Source quality` included, because a source with no label is unjudged. The new `Source quality (unlabelled)` warning reads the first 12 non-empty body lines of each `type: source` note without a recognised grade, code removed, and fires on a short fixed list: `unverified`, `not verified`, `unconfirmed`, `speculative`, `speculation`, `provenance unknown`. `summary` and `not verbatim` are deliberately not on it, since they do not by themselves lower the grade. The finding quotes the phrase it matched. Labelled sources and vaults that never use the words stay silent, and `"source_quality_policy": "silent"` mutes it. Thirteen tests; removing the label check or the preamble bound turns them red.
+
 ### Fixed
 
 - **`save_note` raised instead of returning an error when a target parent was a file (follow-up to #368, by @tonydzi).** The same `target.parent.mkdir(...)` call as in `move_note` raised `FileExistsError` for `path="wiki/Contact.md/note.md"` when `wiki/Contact.md` is a note, and `NotADirectoryError` when a file sat further up. It now returns `could not create the note folder: ...` and writes nothing. A parametrized test in `tests/test_mcp_codex_parity.py` covers both shapes and fails on the previous `main`.

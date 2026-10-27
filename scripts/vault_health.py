@@ -1353,6 +1353,59 @@ def check_source_quality(notes: dict, vault: Path) -> list:
     return issues
 
 
+# A source that says in its own preamble that it is unverified, while its
+# frontmatter carries no `source_quality`, is a correction that lives only in
+# prose: every check that reads fields, including check_source_quality above,
+# treats it as unjudged. The markers are deliberately few and explicit; a
+# "summary" or "not verbatim" note is not on the list, because the spec says
+# those do not by themselves lower the grade.
+_SPECULATIVE_PROSE_RE = re.compile(
+    r"\b(unverified|not verified|unconfirmed|speculative|speculation|"
+    r"provenance (?:is )?unknown)\b",
+    re.IGNORECASE,
+)
+_PREAMBLE_LINES = 12
+
+
+def _preamble(content: str) -> str:
+    """The first non-empty body lines after the frontmatter, code removed."""
+    body = _strip_code(FRONTMATTER_RE.sub("", content, count=1))
+    lines = [ln for ln in body.splitlines() if ln.strip()]
+    return "\n".join(lines[:_PREAMBLE_LINES])
+
+
+def check_source_quality_unlabelled(notes: dict, vault: Path) -> list:
+    """A `type: source` note whose preamble calls itself unverified, with no label (#258).
+
+    Only notes without a recognised `source_quality` are read, so a labelled
+    vault and a vault that never uses the words stay silent. The finding names
+    the phrase it matched, so a reviewer can check it by reading the note.
+    Muted by `source_quality_policy: "silent"`, like check_source_quality.
+    """
+    if load_source_quality_policy(vault) == "silent":
+        return []
+    issues = []
+    for rel in sorted(notes):
+        note = notes[rel]
+        if _fm_field(note["frontmatter"], "type") != "source":
+            continue
+        grade = _fm_field(note["frontmatter"], "source_quality").split("#", 1)[0].strip()
+        if grade in SOURCE_QUALITY_VALUES:
+            continue
+        m = _SPECULATIVE_PROSE_RE.search(_preamble(note["content"]))
+        if not m:
+            continue
+        issues.append({
+            "type": "source_quality_unlabelled",
+            "severity": "warning",
+            "message": (f"{rel} says \"{m.group(0)}\" near the top but has no source_quality. "
+                        "Checks read the field, not the prose: add `source_quality: speculation`, "
+                        "or a higher grade if capture saw the provenance"),
+            "files": [rel],
+        })
+    return issues
+
+
 def check_template_leftovers(notes: dict) -> list:
     issues = []
     for rel, note in notes.items():
@@ -1401,6 +1454,7 @@ def run_health_check(vault: Path) -> dict:
         ("Template leftovers", check_template_leftovers(notes)),
         ("Source payload", check_source_payload(notes, vault)),
         ("Source quality", check_source_quality(notes, vault)),
+        ("Source quality (unlabelled)", check_source_quality_unlabelled(notes, vault)),
         ("Semantic index coverage", check_semantic_index(vault, notes)),
         ("Rewrite policy", check_rewrite_policy(vault)),
     ]

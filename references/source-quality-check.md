@@ -54,6 +54,7 @@ When the result is `speculation` because of a clear red flag (no byline and no c
 ## Consumers
 
 - `/obsidian-health` (`scripts/vault_health.py`, `Source quality`): a warning for any knowledge note whose every cited source is `speculation`. Daily, log, index and other activity notes are skipped. A source with no `source_quality` is unjudged, not speculative, so a vault written before the field stays silent.
+- `/obsidian-health` (`scripts/vault_health.py`, `Source quality (unlabelled)`): a warning for a `type: source` note with no `source_quality` whose preamble calls it unverified, unconfirmed or speculative. The field is the only thing other checks read; this finds the notes where the judgement was written down in prose instead.
 - Later, separately: `/obsidian-ingest` step 6 and `/obsidian-synthesize` treating a `speculation` source as a proposal rather than a direct rewrite of an existing page.
 
 ## Optional: lateral read
