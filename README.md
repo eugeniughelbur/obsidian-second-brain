@@ -785,7 +785,13 @@ bash scripts/build.sh --platform grok-bot
 # Review dist/grok-bot/INSTALL.md for platform-specific instructions
 ```
 
+What you need: a plan that includes Grok Bot. Premium, Super and Ultra on The X Subscription include it, with one weekly usage pool shared with Grok and Cursor. Older paid Cursor plans and linked SuperGrok or X Premium+ accounts work too (https://cursor.com/help/grok-bot/plans).
+
 The **Grok Bot build emits workflow SKILL.md files** that Grok Bot and Sand agents invoke with `/` or `@`. Each skill is a self-contained playbook (name, description, operating instructions). The `user-obsidian-second-brain` MCP server (already connected in Grok Bot) provides the vault I/O layer via `obsidian_*` tools (`obsidian_search`, `obsidian_read_note`, `obsidian_save_note`, `obsidian_update_note`, `obsidian_validate_note`, etc.). Skills tell the agent which MCP tool to call and how to structure the data. Set `$OBSIDIAN_VAULT_PATH` to your vault root. No hooks, no scheduled agents - Grok Bot has no hook runtime.
+
+Grok Bot can write a live Page, such as a report, a dashboard, or a plan. The Page opens from a card in the chat, stays in the bot's Library, and you can share it with only you, your team, or anyone with the link. A weekly review or a project dashboard from your vault fits this.
+
+On an iPhone 15 Pro or later, pressing and holding the Action Button starts a voice chat with Grok Bot. You need Grok Bot 1.16 or later, and you set it in iPhone Settings > Action Button > Shortcut. Use it to speak a thought and save it into the vault.
 
 ### Run on Hermes / open models
 

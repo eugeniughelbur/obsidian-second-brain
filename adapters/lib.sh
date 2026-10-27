@@ -393,6 +393,48 @@ strip_quotes() {
   printf '%s' "$v"
 }
 
+# skill_display_title <identifier>
+# Print an ATX H1 for a skill directory name: obsidian-save -> "# Obsidian Save".
+# ASCII only. Skill ids are [a-z0-9-], and locale-aware toupper can turn a
+# leading "i" into a non-ASCII capital.
+skill_display_title() {
+  awk -v name="$1" 'BEGIN {
+    n = split(name, parts, "-")
+    out = ""
+    for (i = 1; i <= n; i++) {
+      word = parts[i]
+      if (length(word) == 0) continue
+      c = substr(word, 1, 1)
+      pos = index("abcdefghijklmnopqrstuvwxyz", c)
+      if (pos > 0) c = sprintf("%c", pos + 64)
+      word = c substr(word, 2)
+      out = out (out == "" ? "" : " ") word
+    }
+    print "# " out
+  }'
+}
+
+# emit_skill_title <command-file> <skill-name>
+# Print the skill's own title as the first body heading, then a blank line.
+#
+# OpenClaw's skill picker (openclaw/openclaw#184724) takes the display name
+# from the first ATX H1. The agent-skills and grok-bot builds embed
+# references/ai-first-rules.md, which opens with "# AI-First Note Rules".
+# A command whose body has no H1 of its own then publishes that shared
+# heading as its name. The title goes first so the embedded spec, which is
+# appended unchanged later, is no longer the first heading.
+#
+# A command that already has an H1 (commands/crew.md opens with "# Crew")
+# keeps that heading. Emitting a second one would duplicate it.
+emit_skill_title() {
+  local file="$1" name="$2"
+  if command_body "$file" | grep -q '^# [^#]'; then
+    return 0
+  fi
+  skill_display_title "$name"
+  echo
+}
+
 # emit_ai_first_rule <references_path>
 # Step 3 of every dispatcher's "How to operate" block: the AI-first write spec
 # summary. Was hand-copied into four adapters with only the path differing,

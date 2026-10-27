@@ -23,11 +23,15 @@
 # Design notes that matter:
 #   - NO SKILL.md at the tree root: a shallow SKILL.md shadows every nested
 #     skill in skills.sh discovery. The tree root carries docs only.
-#   - Each skill body opens with a vault-root resolution preamble
-#     ($OBSIDIAN_VAULT_PATH else the working directory) so the skills are
-#     self-sufficient - no session-start hook required.
+#   - Each skill body opens with that skill's own title (an H1), then a
+#     vault-root resolution preamble ($OBSIDIAN_VAULT_PATH else the working
+#     directory) so the skills are self-sufficient - no session-start hook
+#     required. The title has to be the first heading: a picker that names a
+#     skill from the first body H1 would otherwise show the embedded write
+#     spec's heading (openclaw/openclaw#184724).
 #   - references/ai-first-rules.md is embedded in every command skill so the
-#     non-negotiable write spec survives even a cherry-picked install.
+#     non-negotiable write spec survives even a cherry-picked install. The
+#     spec is appended after the title and is not rewritten.
 #   - The trigger policy (proactive vs explicit) is encoded in each description,
 #     the only signal these harnesses use for implicit selection. Source
 #     `trigger-mode: proactive` opts a command in; default is explicit.
@@ -87,6 +91,8 @@ _ask_emit_skills() {
       echo "  category: $category"
       echo "---"
       echo
+      # Title H1 first. See emit_skill_title in adapters/lib.sh.
+      emit_skill_title "$f" "$name"
       # Crew can run without a vault; its command owns setup and discovery.
       [[ "$name" == "crew" ]] || _ask_preamble
       command_body "$f"

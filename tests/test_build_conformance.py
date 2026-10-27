@@ -40,6 +40,42 @@ SKILL_ROOT_EXEMPT = {"claude-code"}
 
 CITED_REFERENCE = re.compile(r"[^\s`(\"']*references/[a-z0-9-]+\.md")
 
+# OpenClaw's picker (openclaw/openclaw#184724) uses this same shape: the first
+# line that is a single-hash ATX heading. "## ..." does not count.
+_SHARED_RULES_H1 = "# AI-First Note Rules"
+
+
+def _human_skill_title(name: str) -> str:
+    """Match skill_display_title in adapters/lib.sh. ASCII, so a locale cannot
+    turn a leading "i" into a non-ASCII capital."""
+    words: list[str] = []
+    for part in name.split("-"):
+        if not part:
+            continue
+        first = part[0]
+        if "a" <= first <= "z":
+            first = chr(ord(first) - 32)
+        words.append(first + part[1:])
+    return " ".join(words)
+
+
+def _first_body_h1(text: str) -> str | None:
+    """First ATX H1 after YAML frontmatter, trailing hash marks stripped."""
+    body = text
+    if text.startswith("---"):
+        lines = text.splitlines()
+        if lines and lines[0].strip() == "---":
+            for index, line in enumerate(lines[1:], start=1):
+                if line.strip() == "---":
+                    body = "\n".join(lines[index + 1 :])
+                    break
+    for line in body.splitlines():
+        # A single hash plus whitespace. "## Setup" is a lower heading.
+        if len(line) < 2 or line[0] != "#" or not line[1].isspace():
+            continue
+        return line[1:].strip().rstrip("#").strip()
+    return None
+
 
 def _tree_relative(cited: str) -> str:
     """Map a citation onto a path inside the built tree. Kept in step with
@@ -234,3 +270,46 @@ def test_standalone_search_runs_from_built_tree(built, platform, tmp_path):
         )
         assert result.returncode == 0, result.stderr
         assert json.loads(result.stdout)[0]["path"] == "Synthetic.md"
+
+
+@pytest.mark.parametrize("platform", PLATFORMS)
+def test_skill_title_is_not_the_shared_rules_heading(built: Path, platform: str) -> None:
+    """A picker that titles a skill from its first body H1 must not show the
+    embedded write spec's heading.
+
+    agent-skills and grok-bot append references/ai-first-rules.md, which opens
+    with "# AI-First Note Rules". That heading has to stay, word for word, and
+    it has to come after the skill's own title. Other builds do not embed the
+    spec; they pass as long as they do not lead with that heading either.
+    """
+    tree = built / platform
+    skills = sorted(tree.rglob("SKILL.md"))
+    if not skills:
+        pytest.skip(f"{platform} emits no SKILL.md")
+
+    shared: list[str] = []
+    for path in skills:
+        text = path.read_text(encoding="utf-8")
+        title = _first_body_h1(text)
+        rel = path.relative_to(tree).as_posix()
+        assert title != "AI-First Note Rules", (
+            f"{platform}/{rel} leads with the shared rules heading, so a skill "
+            "picker would give it that title"
+        )
+        if _SHARED_RULES_H1 not in text:
+            continue
+        expected = _human_skill_title(path.parent.name)
+        assert title == expected, (
+            f"{platform}/{rel} embeds the rules spec but its first heading is "
+            f"{title!r}, not {expected!r}"
+        )
+        assert text.index(f"# {title}") < text.index(_SHARED_RULES_H1), (
+            f"{platform}/{rel} places the shared rules heading above its own title"
+        )
+        # The command that already carried this title must not gain a second copy.
+        if title == "Crew":
+            assert text.count("\n# Crew\n") == 1, f"{platform}/{rel} duplicates its title"
+        shared.append(rel)
+
+    if platform in {"agent-skills", "grok-bot"}:
+        assert shared, f"{platform} no longer embeds the AI-first spec in any skill"
