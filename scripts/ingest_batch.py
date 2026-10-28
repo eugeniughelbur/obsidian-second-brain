@@ -28,6 +28,8 @@ from vault_health import VaultExcludes  # noqa: E402
 FORMATS = {
     **dict.fromkeys((".md", ".markdown", ".txt"), "text"),
     ".pdf": "pdf",
+    # Office/OpenDocument text goes through document_to_pdf.py, as in single-source ingest.
+    **dict.fromkeys((".docx", ".doc", ".odt"), "document"),
     **dict.fromkeys((".m4a", ".mp3", ".wav", ".ogg", ".webm"), "audio"),
     **dict.fromkeys((".png", ".jpg", ".jpeg", ".webp"), "image"),
 }

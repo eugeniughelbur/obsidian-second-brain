@@ -63,7 +63,7 @@ def test_supported_formats_are_discovered_and_hashed_as_bytes(vault, suffix, kin
 
 
 def test_discovery_orders_and_prunes_without_reading_bodies(vault, monkeypatch):
-    for name in ("z.txt", "A.pdf", "a.md", "nested/b.mp3", "x.docx", ".hidden.md",
+    for name in ("z.txt", "A.pdf", "a.md", "nested/b.mp3", "x.xlsx", ".hidden.md",
                  "Templates/t.md", "raw/generated.md", "Private/secret.md", "Skip/a.md"):
         source(vault, name)
     (vault / ".vault-config.json").write_text(json.dumps({
@@ -75,6 +75,19 @@ def test_discovery_orders_and_prunes_without_reading_bodies(vault, monkeypatch):
     assert [e["source_path"] for e in result["candidates"]] == [
         "Sources/a.md", "Sources/A.pdf", "Sources/nested/b.mp3", "Sources/z.txt"]
     assert len(result["excluded"]) == 6
+
+
+def test_office_documents_are_discovered_like_single_source_ingest(vault):
+    # Single-source ingest converts these to PDF; folder discovery must not drop them.
+    for name in ("report.docx", "legacy.DOC", "notes.odt"):
+        source(vault, name)
+    result = batch.discover(vault, vault / "Sources")
+    assert result["candidates"] == [
+        {"source_path": "Sources/legacy.DOC", "format": "document"},
+        {"source_path": "Sources/notes.odt", "format": "document"},
+        {"source_path": "Sources/report.docx", "format": "document"},
+    ]
+    assert result["excluded"] == []
 
 
 def test_permissions_are_applied_before_hashing(vault, monkeypatch):
