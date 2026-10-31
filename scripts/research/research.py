@@ -97,6 +97,14 @@ def _free_sources(academic: bool):
 
         sources.append(BraveSource())
 
+    # Keenable needs no key, so it opts in through RESEARCH_KEENABLE=1 instead.
+    # Unset means it never runs and makes no request; KEENABLE_API_KEY alone
+    # never switches it on (the key only lifts the anonymous rate limit).
+    if os.environ.get("RESEARCH_KEENABLE", "").strip() == "1":
+        from .lib.sources.keenable import KeenableSource
+
+        sources.append(KeenableSource())
+
     return sources
 
 
