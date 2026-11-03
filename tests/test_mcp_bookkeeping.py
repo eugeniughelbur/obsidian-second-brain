@@ -153,3 +153,35 @@ def test_post_write_cmd_split_strips_windows_quotes(vault):
     assert ops._split_post_write_cmd('"/usr/bin/python3" "/tmp/a b.py"', windows=False) == [
         "/usr/bin/python3", "/tmp/a b.py",
     ]
+
+
+def test_index_summary_never_leaves_a_wikilink_open(vault):
+    """A capture that cites an earlier note near the 140-character cut used to
+    leave its catalog line ending in an open `[[...`; one live vault had about
+    170 such lines in two months of captures."""
+    v, ops = vault
+    cited = "Inbox/2026-09-25 - leane-workbook-review-completed"
+    first = "Laser reconciliation completed on 25 September 2026. " * 2 + f"Following [[{cited}]]."
+    assert first.index("[[") < 140 < first.index("]]"), "the plain cut would land inside the link"
+    res = ops.capture_idea(first + "\nMore detail.")
+    index = (v / "index.md").read_text(encoding="utf-8")
+    line = next(x for x in index.splitlines() if x.startswith(f"- [[{res['saved'][:-3]}]]"))
+    assert line.endswith(f"[[{cited}]]"), line
+    assert line.count("[[") == line.count("]]"), line
+
+
+@pytest.mark.parametrize(
+    ("text", "limit", "expected"),
+    [
+        ("see [[A]] now", 140, "see [[A]] now"),
+        ("a\t b \n second line", 140, "a b"),
+        ("0123456789 [[Target note]] tail", 20, "0123456789 [[Target note]]"),
+        ("0123456789 [[Target note never closes", 20, "0123456789"),
+        ("0123456789012345678[[X]] tail", 20, "0123456789012345678[[X]]"),
+        ("0123456789 [[Targe]] tail", 19, "0123456789 [[Targe]]"),
+        ("[[A]] 0123456789012345678901", 20, "[[A]] 01234567890123"),
+    ],
+)
+def test_summary_excerpt_cuts_outside_wikilinks(vault, text, limit, expected):
+    _, ops = vault
+    assert ops._summary_excerpt(text, limit) == expected

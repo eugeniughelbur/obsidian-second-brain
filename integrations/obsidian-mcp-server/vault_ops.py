@@ -809,6 +809,28 @@ def _append_log_line(vault: Path, action: str, description: str) -> str:
     return "log.md"
 
 
+_SUMMARY_LIMIT = 140
+
+
+def _summary_excerpt(content: str, limit: int = _SUMMARY_LIMIT) -> str:
+    """The note's first line, whitespace collapsed and cut to about `limit`
+    characters for its index entry. A plain cut that landed inside a wikilink
+    left the catalog line ending in `... following [[2026-09-25 - leane-wor`,
+    which renders as literal brackets and makes link scanners pair it with the
+    next line's `]]`. A link the cut lands in is kept whole when it closes on
+    the line and dropped from the excerpt when it never does."""
+    line = re.sub(r"\s+", " ", content.split("\n", 1)[0]).strip()
+    if len(line) <= limit:
+        return line
+    opened = line.rfind("[[", 0, limit + 1)
+    if opened == -1:
+        return line[:limit]
+    closes = line.find("]]", opened + 2)
+    if closes == -1:
+        return line[:opened].rstrip()
+    return line[: max(limit, closes + 2)]
+
+
 def _add_index_entry(vault: Path, rel: str, summary: str) -> str:
     """Append `- [[note]] - summary` under index.md's section for the note's folder
     (`## Inbox/`, `## wiki/entities/`, ...). Reports rather than guesses when the
@@ -961,7 +983,7 @@ def save_note(
     _write_atomic(target, body)
     rel = target.relative_to(vault).as_posix()
     action = "save" if path else "capture"
-    first = re.sub(r"\s+", " ", content.split("\n", 1)[0]).strip()[:140]
+    first = _summary_excerpt(content)
     tag_note = f" (tags: {', '.join(tags)})" if tags else ""
     result: Dict[str, Any] = {"saved": rel}
     result.update(_bookkeep(vault, action, rel, f"{title[:80]} -> [[{rel[:-3]}]]{tag_note}",
