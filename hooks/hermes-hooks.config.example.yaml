@@ -7,8 +7,10 @@
 #
 # OPT-IN / SHIPS INERT. Registering the hook is not enough: the script no-ops
 # unless BOTH OBSIDIAN_VAULT_PATH and OBSIDIAN_HERMES_HOOK_ENABLED=1 are in the
-# environment (it writes to the vault unattended). See the script header for the
-# trust caveat. To disable later, clear OBSIDIAN_HERMES_HOOK_ENABLED.
+# environment (it writes to the vault unattended). Set them in ~/.hermes/.env, and
+# run `hermes --accept-hooks -z "reply OK"` once to consent to the hook. See the
+# script header for the trust caveat. To disable later, clear
+# OBSIDIAN_HERMES_HOOK_ENABLED.
 #
 # At most one consolidation per OBSIDIAN_HERMES_MIN_INTERVAL seconds (default
 # 21600, 6 hours; 0 turns the interval off), counted from the start of the last.

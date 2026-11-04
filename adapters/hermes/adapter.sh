@@ -304,9 +304,35 @@ Install:
 mkdir -p ~/.hermes/agent-hooks
 cp hooks/obsidian-hermes-session-end.sh ~/.hermes/agent-hooks/
 chmod +x ~/.hermes/agent-hooks/obsidian-hermes-session-end.sh
-# merge hooks/hermes-hooks.config.example.yaml into your ~/.hermes/config.yaml,
-# then: export OBSIDIAN_VAULT_PATH=... OBSIDIAN_HERMES_HOOK_ENABLED=1
+# merge hooks/hermes-hooks.config.example.yaml into your ~/.hermes/config.yaml
 ```
+
+Add these two lines to `~/.hermes/.env` (`$HERMES_HOME/.env` if you set
+`HERMES_HOME`):
+
+```bash
+OBSIDIAN_VAULT_PATH=/absolute/path/to/your/vault
+OBSIDIAN_HERMES_HOOK_ENABLED=1
+```
+
+Then record your consent and check it:
+
+```bash
+hermes --accept-hooks -z "reply OK"   # spends one model call
+hermes hooks list                     # the hook should now show as allowed
+```
+
+Both steps fail silently if skipped, because the hook can run inside the gateway:
+
+- A shell `export` does not reach a gateway that is already running or runs as a
+  service, and without the two variables the hook does nothing.
+- Hermes skips a shell hook nobody consented to, and only a foreground
+  `hermes chat` asks. The gateway logs a warning and carries on.
+
+Known issue: one-shot `hermes -z` runs never fire `on_session_finalize`, so they
+don't start a memory consolidation. Normal sessions are not affected: in a CLI
+chat, `/new` and closing the chat fire it. A real messaging gateway (Telegram
+etc.) is not tested yet (#374).
 
 The consolidation runs headlessly via `hermes -z` (one-shot mode: prompt passed
 as the argument, only the final response printed). Override the command with

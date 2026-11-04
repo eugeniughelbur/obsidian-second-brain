@@ -129,6 +129,14 @@ def test_hermes_build_generates_native_skills():
     assert (REPO_ROOT / "dist/hermes/hooks/hermes-hooks.config.example.yaml").is_file()
     hooks_text = hooks_doc.read_text(encoding="utf-8")
     assert "on_session_finalize" in hooks_text
+    # A one-shot run never fires the event (#374), and the install has to reach a
+    # hook that runs inside the gateway: it never sees the caller's shell exports
+    # and skips a hook nobody consented to, both without an error.
+    assert "`hermes -z` runs never fire `on_session_finalize`" in hooks_text
+    assert "#374" in hooks_text
+    assert "~/.hermes/.env" in hooks_text
+    assert "--accept-hooks" in hooks_text
+    assert "then: export OBSIDIAN_VAULT_PATH" not in hooks_text
     # Blueprints never arm on install (#134): the docs must teach explicit arming.
     assert "hermes cron create" in hooks_text
     assert "arms as soon as" not in hooks_text
