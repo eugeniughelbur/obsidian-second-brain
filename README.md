@@ -383,7 +383,9 @@ Powered by xAI Grok (live X access) + Perplexity Sonar (web research) + YouTube.
 
 **Setup:** copy `.env.example` to `~/.config/obsidian-second-brain/.env`, add your keys (xAI, Perplexity, YouTube optional, OpenAI optional for podcast Whisper). Run `install.sh` and answer "y" to the research prompt to do this automatically.
 
-**No keys? `/research` and `/research-deep` still work.** With no `PERPLEXITY_API_KEY` set they automatically fall back to free, key-less sources (Wikipedia, HackerNews, arXiv, Reddit, Lobsters, dev.to, OpenAlex, Semantic Scholar, CrossRef, DuckDuckGo - plus Tavily/Brave when keyed) and Claude synthesizes the dossier. Pass `--free` to force it even when keyed, or `--academic` to restrict to scholarly sources. The other research commands (`/x-read`, `/x-pulse`, `/notebooklm`, `/youtube`) still need their respective keys.
+**No keys? `/research` and `/research-deep` still work.** With no `PERPLEXITY_API_KEY` set they automatically fall back to free, key-less sources (Wikipedia, HackerNews, arXiv, Reddit, Lobsters, dev.to, OpenAlex, Semantic Scholar, CrossRef, DuckDuckGo - plus Tavily/Brave when keyed and Keenable when `RESEARCH_KEENABLE=1`) and Claude synthesizes the dossier. Pass `--free` to force it even when keyed, or `--academic` to restrict to scholarly sources. The other research commands (`/x-read`, `/x-pulse`, `/notebooklm`, `/youtube`) still need their respective keys.
+
+**Optional Keenable source, off by default.** Set `RESEARCH_KEENABLE=1` to add Keenable web search to the free pool; unset, it never runs, and `KEENABLE_API_KEY` alone does not switch it on. Keenable runs this source, and your query text is sent to Keenable (`api.keenable.ai`). The anonymous limit is 1,000 requests an hour and 10 a second per IP; an optional `KEENABLE_API_KEY` lifts it.
 
 <details>
 <summary><strong>See the thinking tools in action</strong></summary>

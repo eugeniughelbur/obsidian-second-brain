@@ -15,6 +15,7 @@ import json
 import os
 
 import pytest
+import requests
 
 from scripts.research.lib import cache, http, source_config
 from scripts.research.lib.aggregator import aggregate
@@ -30,6 +31,7 @@ def test_library_imports_without_vault_path():
     from scripts.research.lib.sources.devto import DevToSource
     from scripts.research.lib.sources.duckduckgo import DuckDuckGoSource
     from scripts.research.lib.sources.hackernews import HackerNewsSource
+    from scripts.research.lib.sources.keenable import KeenableSource
     from scripts.research.lib.sources.lobsters import LobstersSource
     from scripts.research.lib.sources.openalex import OpenAlexSource
     from scripts.research.lib.sources.reddit import RedditSource
@@ -39,10 +41,10 @@ def test_library_imports_without_vault_path():
 
     names = {
         ArxivSource.name, CrossRefSource.name, DevToSource.name, DuckDuckGoSource.name,
-        HackerNewsSource.name, LobstersSource.name, OpenAlexSource.name, RedditSource.name,
-        SemanticScholarSource.name, TavilySource.name, WikipediaSource.name,
+        HackerNewsSource.name, KeenableSource.name, LobstersSource.name, OpenAlexSource.name,
+        RedditSource.name, SemanticScholarSource.name, TavilySource.name, WikipediaSource.name,
     }
-    assert len(names) == 11  # all source names distinct
+    assert len(names) == 12  # all source names distinct
 
 
 def test_result_json_roundtrip():
@@ -265,6 +267,182 @@ def test_free_sources_gate_brave_on_key(monkeypatch):
     monkeypatch.setenv("BRAVE_API_KEY", "brv-test-key")
     with_key = {type(s).__name__ for s in research._free_sources(academic=False)}
     assert "BraveSource" in with_key
+
+
+class _KeenableWire(requests.adapters.BaseAdapter):
+    """Stand-in for api.keenable.ai, mounted on the source's real toolkit
+    session: it records each prepared request and answers with a canned status
+    and JSON body, so the tests see the exact wire request and nothing leaves
+    the machine."""
+
+    def __init__(self, status=200, body=None):
+        super().__init__()
+        self.status = status
+        self.body = {"results": []} if body is None else body
+        self.sent = []
+
+    def send(self, request, **kwargs):
+        self.sent.append((request, kwargs))
+        resp = requests.Response()
+        resp.status_code = self.status
+        resp.reason = "OK" if self.status == 200 else "Too Many Requests"
+        resp._content = json.dumps(self.body).encode()
+        resp.headers["Content-Type"] = "application/json"
+        resp.url = request.url
+        resp.request = request
+        return resp
+
+    def close(self):
+        pass
+
+
+def _keenable(monkeypatch, tmp_path, wire, key=None, email=None):
+    """An opted-in KeenableSource on the real toolkit session with the fake
+    wire mounted, an isolated disk cache and freshly loaded source config."""
+    from scripts.research.lib.sources.keenable import KeenableSource
+
+    monkeypatch.setenv("RESEARCH_KEENABLE", "1")
+    for var, value in (("KEENABLE_API_KEY", key), ("RESEARCH_CONTACT_EMAIL", email)):
+        if value:
+            monkeypatch.setenv(var, value)
+        else:
+            monkeypatch.delenv(var, raising=False)
+    monkeypatch.delenv("RESEARCH_CACHE_TTL_HOURS", raising=False)
+    monkeypatch.setattr(source_config, "_CACHE", None)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+
+    src = KeenableSource()
+    src._session.mount("https://", wire)
+    return src
+
+
+def test_keenable_requires_opt_in(monkeypatch):
+    """Without RESEARCH_KEENABLE=1 the constructor refuses, so the source can
+    never send a request. KEENABLE_API_KEY alone does not switch it on."""
+    from scripts.research.lib.sources.keenable import KeenableSource
+
+    monkeypatch.delenv("RESEARCH_KEENABLE", raising=False)
+    monkeypatch.setenv("KEENABLE_API_KEY", "keen-test-key")
+    with pytest.raises(RuntimeError):
+        KeenableSource()
+    for value in ("", "0"):
+        monkeypatch.setenv("RESEARCH_KEENABLE", value)
+        with pytest.raises(RuntimeError):
+            KeenableSource()
+
+
+def test_free_sources_gate_keenable_on_env(monkeypatch):
+    """Keenable joins the free-mode pool only with RESEARCH_KEENABLE=1, never
+    on KEENABLE_API_KEY alone, and stays out of academic mode either way."""
+    from scripts.research import research
+
+    monkeypatch.delenv("RESEARCH_KEENABLE", raising=False)
+    monkeypatch.setenv("KEENABLE_API_KEY", "keen-test-key")
+    key_only = {type(s).__name__ for s in research._free_sources(academic=False)}
+    assert "KeenableSource" not in key_only
+
+    monkeypatch.setenv("RESEARCH_KEENABLE", "0")
+    off = {type(s).__name__ for s in research._free_sources(academic=False)}
+    assert "KeenableSource" not in off
+
+    monkeypatch.setenv("RESEARCH_KEENABLE", "1")
+    on = {type(s).__name__ for s in research._free_sources(academic=False)}
+    assert "KeenableSource" in on
+
+    academic = {type(s).__name__ for s in research._free_sources(academic=True)}
+    assert "KeenableSource" not in academic
+
+
+def test_keenable_source_search_keyless(monkeypatch, tmp_path):
+    """Without a key the source posts the query to the public endpoint with a
+    bounded timeout. The only identifying headers name the toolkit: the
+    X-Keenable-Title app identifier and a bare User-Agent, without the
+    RESEARCH_CONTACT_EMAIL the shared session adds for the polite pools. The
+    result text comes from `snippet` (Keenable's `description` is always
+    empty), and rows without a URL are dropped."""
+    wire = _KeenableWire(body={
+        "results": [
+            {"title": "Keenable Result", "url": "https://example.com",
+             "description": "", "snippet": "A snippet"},
+            {"title": "dropped", "url": "", "snippet": "no url"},
+        ]
+    })
+    src = _keenable(monkeypatch, tmp_path, wire, email="me@x.io")
+    assert src._session.headers["User-Agent"].endswith("(mailto:me@x.io)")
+
+    results = src.search("test query", n=5)
+
+    assert [(r.source, r.title, r.url, r.snippet) for r in results] == [
+        ("keenable", "Keenable Result", "https://example.com", "A snippet"),
+    ]
+    assert len(wire.sent) == 1
+    request, kwargs = wire.sent[0]
+    assert (request.method, request.url) == ("POST", "https://api.keenable.ai/v1/search/public")
+    assert request.headers["X-Keenable-Title"] == "obsidian-second-brain"
+    assert request.headers["User-Agent"] == http.USER_AGENT_BASE
+    assert "X-API-Key" not in request.headers
+    assert not any("me@x.io" in value for value in request.headers.values())
+    assert json.loads(request.body) == {"query": "test query", "max_results": 5}
+    assert kwargs["timeout"] == http.DEFAULT_TIMEOUT
+
+
+def test_keenable_source_uses_key_when_set(monkeypatch, tmp_path):
+    """An optional KEENABLE_API_KEY switches to the keyed endpoint and travels
+    in the X-API-Key header, never in the JSON body."""
+    wire = _KeenableWire()
+    src = _keenable(monkeypatch, tmp_path, wire, key="keen-test-key")
+
+    src.search("test query", n=5)
+
+    request, _ = wire.sent[0]
+    assert request.url == "https://api.keenable.ai/v1/search"
+    assert request.headers["X-API-Key"] == "keen-test-key"
+    assert json.loads(request.body) == {"query": "test query", "max_results": 5}
+
+
+def test_keenable_snippet_is_collapsed_and_capped(monkeypatch, tmp_path):
+    """Keenable sends raw page text in `snippet` (a few thousand chars with
+    newlines). The source collapses whitespace and caps it to a preview, so the
+    aggregated JSON stays the same size it is for every other source."""
+    from scripts.research.lib.sources.keenable import MAX_SNIPPET_CHARS
+
+    long_text = "word\n\n" * MAX_SNIPPET_CHARS  # well over the cap, with newlines
+    wire = _KeenableWire(body={"results": [{"title": "t", "url": "https://x.y", "snippet": long_text}]})
+    src = _keenable(monkeypatch, tmp_path, wire)
+
+    snippet = src.search("q", n=1)[0].snippet
+    assert snippet is not None
+    assert len(snippet) <= MAX_SNIPPET_CHARS
+    assert "\n" not in snippet  # whitespace collapsed to single spaces
+
+
+def test_keenable_results_use_the_shared_cache(monkeypatch, tmp_path):
+    """Results go through the shared on-disk result cache like every other
+    source: a repeated query is answered from the cache with no request."""
+    wire = _KeenableWire(body={"results": [{"title": "t", "url": "https://x.y", "snippet": "s"}]})
+    src = _keenable(monkeypatch, tmp_path, wire)
+
+    first = src.search("rust async", n=5)
+    second = src.search("rust async", n=5)
+
+    assert len(wire.sent) == 1
+    assert first == second
+    assert cache._key("keenable", "rust async").exists()
+
+
+def test_keenable_failure_is_reported_through_the_aggregator(monkeypatch, tmp_path):
+    """A service error (here a 429) surfaces as an aggregator warning like any
+    other source's failure: the run does not crash and nothing is cached."""
+    wire = _KeenableWire(status=429, body={"detail": "rate limited"})
+    src = _keenable(monkeypatch, tmp_path, wire)
+
+    out = aggregate("topic", [src], n_per_source=5, timeout=10)
+
+    assert out["stats"]["sources_attempted"] == 1
+    assert out["stats"]["sources_succeeded"] == 0
+    assert any(w.startswith("keenable:") and "429" in w for w in out["warnings"])
+    assert not cache._key("keenable", "topic").exists()
 
 
 def test_usage_ledger_is_fail_soft(monkeypatch, tmp_path, capsys):
