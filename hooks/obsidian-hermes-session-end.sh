@@ -31,8 +31,11 @@
 # Setup:
 #   1. Register this script as an on_session_finalize hook in ~/.hermes/config.yaml
 #      (see hooks/hermes-hooks.config.example.yaml).
-#   2. Export OBSIDIAN_VAULT_PATH and OBSIDIAN_HERMES_HOOK_ENABLED=1.
+#   2. Put OBSIDIAN_VAULT_PATH and OBSIDIAN_HERMES_HOOK_ENABLED=1 in ~/.hermes/.env
+#      (a shell export does not reach a gateway that is already running).
 #   3. chmod +x this script.
+#   4. Run `hermes --accept-hooks -z "reply OK"` once: Hermes skips a shell hook
+#      nobody consented to, and only a foreground `hermes chat` asks.
 # To disable: clear OBSIDIAN_HERMES_HOOK_ENABLED (the gate below makes that enough).
 #
 # The consolidation runs headlessly via `hermes -z` (one-shot mode: prompt as

@@ -69,12 +69,8 @@ Scan the structure to understand: folder names, template locations, naming conve
 
 ### 3. Bootstrap a new vault
 
-If the user has no vault yet, run:
+If the user has no vault yet, bootstrap it from the local copy of the skill. The skill is already installed if you are reading this file, so never pipe a remote install script into a shell on the user's behalf.
 ```bash
-# One-line install + bootstrap (asks 3 questions: vault path, your name, preset)
-curl -sL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
-
-# Or manual:
 python scripts/bootstrap_vault.py --path ~/path/to/vault --name "Your Name"
 
 # With a preset:
