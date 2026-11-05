@@ -810,25 +810,34 @@ def _append_log_line(vault: Path, action: str, description: str) -> str:
 
 
 _SUMMARY_LIMIT = 140
+_LOG_TITLE_LIMIT = 80
+# The longest link a cut may keep whole. save_note names a note `Inbox/<date> - `
+# plus an 80-character slug, 103 characters with the brackets; a longer span
+# between `[[` and `]]` is pasted data such as `data = [[0,1,...,1499]]`.
+_WIKILINK_MAX = 120
+
+
+def _cut_outside_wikilinks(text: str, limit: int) -> str:
+    """`text` cut to about `limit` characters, never ending inside a wikilink. A
+    plain cut left lines ending in `... following [[2026-09-25 - leane-wor`, which
+    renders as literal brackets and makes link scanners pair it with the next
+    line's `]]`. A link the cut lands in is kept whole when it closes and is
+    link-sized; otherwise the text stops before it. The result is never longer
+    than `limit + _WIKILINK_MAX`."""
+    opened = text.rfind("[[", 0, limit + 1)
+    if opened == -1:
+        return text[:limit]
+    closes = text.find("]]", opened + 2)
+    if closes != -1 and closes + 2 <= limit:
+        return text[:limit]
+    if closes == -1 or closes + 2 - opened > _WIKILINK_MAX:
+        return text[:opened].rstrip()
+    return text[: closes + 2]
 
 
 def _summary_excerpt(content: str, limit: int = _SUMMARY_LIMIT) -> str:
-    """The note's first line, whitespace collapsed and cut to about `limit`
-    characters for its index entry. A plain cut that landed inside a wikilink
-    left the catalog line ending in `... following [[2026-09-25 - leane-wor`,
-    which renders as literal brackets and makes link scanners pair it with the
-    next line's `]]`. A link the cut lands in is kept whole when it closes on
-    the line and dropped from the excerpt when it never does."""
-    line = re.sub(r"\s+", " ", content.split("\n", 1)[0]).strip()
-    if len(line) <= limit:
-        return line
-    opened = line.rfind("[[", 0, limit + 1)
-    if opened == -1:
-        return line[:limit]
-    closes = line.find("]]", opened + 2)
-    if closes == -1:
-        return line[:opened].rstrip()
-    return line[: max(limit, closes + 2)]
+    """The note's first line, whitespace collapsed and cut for its index entry."""
+    return _cut_outside_wikilinks(re.sub(r"\s+", " ", content.split("\n", 1)[0]).strip(), limit)
 
 
 def _add_index_entry(vault: Path, rel: str, summary: str) -> str:
@@ -986,7 +995,10 @@ def save_note(
     first = _summary_excerpt(content)
     tag_note = f" (tags: {', '.join(tags)})" if tags else ""
     result: Dict[str, Any] = {"saved": rel}
-    result.update(_bookkeep(vault, action, rel, f"{title[:80]} -> [[{rel[:-3]}]]{tag_note}",
+    # The title can already end inside a link (capture_idea cuts it at 60). The
+    # filename drops the brackets, so only the log line needs the safe cut.
+    logged_title = _cut_outside_wikilinks(title, _LOG_TITLE_LIMIT)
+    result.update(_bookkeep(vault, action, rel, f"{logged_title} -> [[{rel[:-3]}]]{tag_note}".lstrip(),
                             summary=f"`type: {note_type}`, {action}d {datetime.now().strftime('%Y-%m-%d %H:%M')} through the MCP server. {first}"))
     return result
 
