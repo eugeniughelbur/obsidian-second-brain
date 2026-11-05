@@ -23,7 +23,8 @@ import urllib.request
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path, PurePosixPath
-from typing import Any, Dict, List, Optional
+from threading import Lock
+from typing import Any, Callable, Dict, List, Optional
 
 _VAULT_ENV = "OBSIDIAN_VAULT_PATH"
 
@@ -233,6 +234,8 @@ _EMBED_BACKEND = os.environ.get("OBSIDIAN_EMBED_BACKEND", "ollama").lower()
 _EMBED_URL = os.environ.get("OBSIDIAN_EMBED_URL", _OLLAMA_URL).rstrip("/")
 _EMBED_KEY = os.environ.get("OBSIDIAN_EMBED_KEY", "")
 _SEMANTIC_ENABLED = os.environ.get("OBSIDIAN_SEARCH_SEMANTIC", "1") != "0"
+_SEMANTIC_FALLBACK_WARNED = False
+_SEMANTIC_FALLBACK_LOCK = Lock()
 _RRF_K = 60
 _FUSE_DEPTH = 25  # how many from each ranking feed the fusion
 # Semantic votes count more than lexical ones in the fusion. Measured on the
@@ -531,30 +534,38 @@ def _warn_if_index_stale(vault: Path, scanned: List[str], notes: Dict[str, Any])
 def _semantic_fuse(
     query: str, lexical: List[Dict[str, Any]], vault: Path, limit: int,
     enabled: Optional[bool] = None, scanned: Optional[List[str]] = None,
+    on_fallback: Optional[Callable[[str], None]] = None,
 ) -> Optional[List[Dict[str, Any]]]:
     """Fuse lexical results with local semantic ranking via RRF. Returns None (so the
     caller uses pure lexical) whenever semantic is unavailable or anything fails.
     enabled overrides the env toggle for this call (None = follow the env)."""
-    if not (_SEMANTIC_ENABLED if enabled is None else enabled):
+    active = _SEMANTIC_ENABLED if enabled is None else enabled
+    if not active:
+        if enabled is None:
+            _report_semantic_fallback("disabled by configuration", on_fallback)
         return None
     index_path = vault / _SEMANTIC_INDEX_FILE
     if not index_path.exists():
+        _report_semantic_fallback("semantic index missing", on_fallback)
         return None
     try:
         index = _load_index_cached(index_path)
         notes = index.get("notes") or {}
         if not notes:
+            _report_semantic_fallback("semantic index has no vectors", on_fallback)
             return None
         _warn_if_index_stale(vault, scanned or [], notes)
         # The query MUST be embedded with the model the index was built with -
         # vectors from different models live in different spaces (fix 16/24).
         qvec = _embed_query(query, model=index.get("model") or _EMBED_MODEL)
         if not qvec:
+            _report_semantic_fallback("query embedding unavailable", on_fallback)
             return None
         # Normalize the query ONCE. It is invariant across the whole scoring
         # loop, and recomputing its norm per comparison was a third of the work.
         qunit = _unit(qvec)
         if not qunit:
+            _report_semantic_fallback("query embedding is invalid", on_fallback)
             return None
         # Best-chunk scoring (fix 13/24): a note is as relevant as its most
         # relevant section, not the average of everything it contains.
@@ -572,6 +583,9 @@ def _semantic_fuse(
              for rel, n in notes.items() if n.get("_unit")),
             key=lambda r: r["score"], reverse=True,
         )[:_FUSE_DEPTH]
+        if not sem:
+            _report_semantic_fallback("semantic index has no usable vectors", on_fallback)
+            return None
         lex_rank = {r["path"]: i for i, r in enumerate(lexical[:min(_FUSE_DEPTH, _FUSE_LEX_DEPTH)])}
         sem_rank = {r["path"]: i for i, r in enumerate(sem)}
         snippet = {r["path"]: r.get("snippet", "") for r in lexical}
@@ -588,11 +602,36 @@ def _semantic_fuse(
         for r in out:
             r.pop("score", None)
         return out
-    except Exception:
+    except Exception as exc:
+        reason = getattr(exc, "reason", None)
+        timed_out = isinstance(exc, TimeoutError) or isinstance(reason, TimeoutError) \
+            or "timed out" in str(exc).lower()
+        _report_semantic_fallback(
+            "embedding timed out" if timed_out else f"semantic error ({type(exc).__name__})",
+            on_fallback,
+        )
         return None  # any failure -> pure lexical, never break search
 
 
-def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> List[Dict[str, Any]]:
+def _report_semantic_fallback(reason: str, callback: Optional[Callable[[str], None]]) -> None:
+    """Report degraded search once per process and expose per-query eval telemetry."""
+    global _SEMANTIC_FALLBACK_WARNED
+    if callback is not None:
+        callback(reason)
+    with _SEMANTIC_FALLBACK_LOCK:
+        should_warn = not _SEMANTIC_FALLBACK_WARNED
+        _SEMANTIC_FALLBACK_WARNED = True
+    if should_warn:
+        print(
+            f"warning: semantic search fell back to lexical results ({reason})",
+            file=sys.stderr,
+        )
+
+
+def search(
+    query: str, *, limit: int = 6, semantic: Optional[bool] = None,
+    on_semantic_fallback: Optional[Callable[[str], None]] = None,
+) -> List[Dict[str, Any]]:
     """Bounded keyword search over vault markdown, fused with local semantic search
     when an embedding index + Ollama are available (else pure lexical).
 
@@ -669,7 +708,13 @@ def search(query: str, *, limit: int = 6, semantic: Optional[bool] = None) -> Li
             file=sys.stderr,
         )
     scored.sort(key=lambda r: r["score"], reverse=True)
-    fused = _semantic_fuse(query, scored, vault, limit, enabled=semantic, scanned=seen)
+    if on_semantic_fallback is None:
+        fused = _semantic_fuse(query, scored, vault, limit, enabled=semantic, scanned=seen)
+    else:
+        fused = _semantic_fuse(
+            query, scored, vault, limit, enabled=semantic, scanned=seen,
+            on_fallback=on_semantic_fallback,
+        )
     if fused is not None:
         return _freshness_rerank(fused, vault, current_intent)
     for r in scored:
