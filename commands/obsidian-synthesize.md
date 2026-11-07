@@ -26,6 +26,8 @@ This command can run manually or as a scheduled agent. It thinks for you.
    
    - **Orphan rescue agent**: find notes in any note folder (enumerate the folders present, per `references/folder-map.md`) with no incoming links that contain claims or ideas that SHOULD be linked to existing pages. Create the missing links and explain why.
 
+   > **`speculation` sources do not corroborate (#258).** Read `source_quality` on every `type: source` note a candidate rests on (`references/source-quality-check.md`). A source graded `speculation` (derived, conflicting, or with no traceable locator) does not count toward the "2+ unrelated sources" bar: two summaries of one claim are one claim. A pattern that clears the bar only with `speculation` sources is not written; list it under **Candidates held (speculation sources)** in the output and count it in the log line of step 7. A synthesis page that cites a `speculation` source anyway marks each claim drawn from it `(confidence: speculation)`. A change to an existing note that a `speculation` source drives (a Concept Evolution section, a rewritten claim) is listed as a proposal in the output and never written by a scheduled run. A source with no `source_quality` key is unjudged and counts as before.
+
 5. For each synthesis found:
    - Create `Synthesis - Title.md` in the concepts folder (resolved per `references/folder-map.md`) with:
      ```yaml
@@ -41,7 +43,7 @@ This command can run manually or as a scheduled agent. It thinks for you.
    - Link the synthesis page FROM all the source notes it references
 
 6. Update `index.md` with new synthesis pages
-7. Append to the operation log: if `Logs/` exists write `**HH:MM** - synthesize | X synthesis pages created, Y orphans rescued, Z connections found` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] synthesize | X synthesis pages created, Y orphans rescued, Z connections found` to `log.md`
+7. Append to the operation log: if `Logs/` exists write `**HH:MM** - synthesize | X synthesis pages created, Y orphans rescued, Z connections found` to `Logs/YYYY-MM-DD.md`; otherwise append `## [YYYY-MM-DD] synthesize | X synthesis pages created, Y orphans rescued, Z connections found` to `log.md`. When step 4 held candidates or proposals for `speculation` sources, end the line with `; held: N speculation`
 8. If a daily note exists for today, add a Synthesis section with a brief summary
 
 The vault should generate its own insights. Not just when asked - on its own schedule.

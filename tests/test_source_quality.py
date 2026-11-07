@@ -181,3 +181,29 @@ def test_quoted_value_with_template_comment_is_recognised(vault, line):
         encoding="utf-8")
     _note(vault, "Claim", ["q"])
     assert [f["files"][0] for f in _findings(vault)] == ["Knowledge/Claim.md"]
+
+
+# The compile-time gate (#258) lives in command instructions, not code: these
+# pins fail if an edit drops the rule from either consumer or from the spec.
+@pytest.mark.parametrize("rel, phrases", [
+    ("commands/obsidian-ingest.md", [
+        "`source_quality`, `ai-first: true`",
+        "A `speculation` source proposes, never rewrites (#258)",
+        "**Held (speculation source)**",
+        "; held: N speculation",
+    ]),
+    ("commands/obsidian-synthesize.md", [
+        "`speculation` sources do not corroborate (#258)",
+        "**Candidates held (speculation sources)**",
+        "; held: N speculation",
+    ]),
+    ("references/source-quality-check.md", [
+        "`/obsidian-ingest` step 5 sets the label",
+        "`/obsidian-synthesize` step 4",
+    ]),
+])
+def test_compile_time_gate_is_in_the_instructions(rel, phrases):
+    text = (REPO_ROOT / rel).read_text(encoding="utf-8")
+    missing = [p for p in phrases if p not in text]
+    assert not missing, f"{rel} lost the #258 compile-time gate: {missing}"
+    assert "Later, separately" not in text

@@ -318,7 +318,7 @@ A vault that has decided a locator is not a source sets `"source_policy": "stric
 - `medium` - provenance is traceable from signals capture already had: a named author or channel, a publication date, a stable URL, a repository owner.
 - `speculation` - the floor. Provenance unknown, derived (a summary of a summary) or conflicting. An uninvestigated source is `speculation`, which is the honest default and not an error state.
 
-The exact signals, and the rule that makes a label checkable by reading the note, are in `references/source-quality-check.md`. The field says nothing about whether the claims are true. `/obsidian-health` warns when a note cites only `speculation` sources; `"source_quality_policy": "silent"` in `.vault-config.json` mutes that, and no value blocks a capture.
+The exact signals, and the rule that makes a label checkable by reading the note, are in `references/source-quality-check.md`. The field says nothing about whether the claims are true. `/obsidian-health` warns when a note cites only `speculation` sources; `"source_quality_policy": "silent"` in `.vault-config.json` mutes that, and no value blocks a capture. At compile time, `/obsidian-ingest` and `/obsidian-synthesize` treat a `speculation` source as a proposal: it never rewrites an existing note on its own, even in `unattended` mode.
 
 ## Documented exceptions
 
