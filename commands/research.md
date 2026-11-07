@@ -16,7 +16,7 @@ Use the obsidian-second-brain skill. Execute `/research [topic]`:
    ```bash
    uv run --directory "SKILL_ROOT" -m scripts.research.research "<topic>"
    ```
-   The script auto-selects its mode: if `PERPLEXITY_API_KEY` is set it uses Perplexity Sonar (paid); otherwise it falls back to free, key-less sources. Pass `--free` to force free mode even when a key is set, or `--academic` (free mode only) to restrict to scholarly sources (arXiv, Semantic Scholar, OpenAlex, CrossRef). If `TAVILY_API_KEY` or `BRAVE_API_KEY` is set, that source joins the free-mode pool as an extra web source; without them the pool stays fully key-less - never require either.
+   The script auto-selects its mode: if `PERPLEXITY_API_KEY` is set it uses Perplexity Sonar (paid); otherwise it falls back to free, key-less sources. Pass `--free` to force free mode even when a key is set, or `--academic` (free mode only) to restrict to scholarly sources (arXiv, Semantic Scholar, OpenAlex, CrossRef). If `TAVILY_API_KEY` or `BRAVE_API_KEY` is set, that source joins the free-mode pool as an extra web source, and `RESEARCH_KEENABLE=1` adds Keenable the same way (no key needed; the query text goes to Keenable); without them the pool stays fully key-less - never require any of them.
 
 3. Handle the output by mode:
    - **Paid mode** - the script prints a finished dossier (Summary, Key Facts with recency markers, Timeline, Key Players, Contrarian Views, Further Reading, Open Questions, Sources) and saves the AI-first note itself to `Research/Web/` plus a log line. Show the dossier verbatim, then surface the saved file path. Nothing else to do.

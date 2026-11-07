@@ -129,10 +129,12 @@ def test_hermes_build_generates_native_skills():
     assert (REPO_ROOT / "dist/hermes/hooks/hermes-hooks.config.example.yaml").is_file()
     hooks_text = hooks_doc.read_text(encoding="utf-8")
     assert "on_session_finalize" in hooks_text
-    # A one-shot run never fires the event (#374), and the install has to reach a
-    # hook that runs inside the gateway: it never sees the caller's shell exports
-    # and skips a hook nobody consented to, both without an error.
-    assert "`hermes -z` runs never fire `on_session_finalize`" in hooks_text
+    # The docs say when the event fires per surface (#374): a one-shot run only
+    # after the gateway closes its idle session, possibly after the orphan grace.
+    # The install has to reach a hook that runs inside the gateway: it never sees
+    # the caller's shell exports and skips a hook nobody consented to, both
+    # without an error.
+    assert "sessions.orphan_end_grace_s" in hooks_text
     assert "#374" in hooks_text
     assert "~/.hermes/.env" in hooks_text
     assert "--accept-hooks" in hooks_text

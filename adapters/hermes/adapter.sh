@@ -329,10 +329,21 @@ Both steps fail silently if skipped, because the hook can run inside the gateway
 - Hermes skips a shell hook nobody consented to, and only a foreground
   `hermes chat` asks. The gateway logs a warning and carries on.
 
-Known issue: one-shot `hermes -z` runs never fire `on_session_finalize`, so they
-don't start a memory consolidation. Normal sessions are not affected: in a CLI
-chat, `/new` and closing the chat fire it. A real messaging gateway (Telegram
-etc.) is not tested yet (#374).
+When the event fires (read from Hermes source at commit 071d31f, 2026-11-07;
+not live-tested, #374):
+
+- CLI chat: `/new` and closing the chat fire it.
+- One-shot `hermes -z`: the run closes its session through the gateway, and the
+  gateway fires `on_session_finalize` once that session is idle. If the close
+  never reaches the gateway, the gateway ends the session after
+  `sessions.orphan_end_grace_s` (default 300 seconds). Keep the gateway running
+  at least that long when you test.
+- Messaging gateway (Telegram etc.): it fires when the chat starts a new session
+  (`/new`) or the gateway shuts down, not after each message.
+
+Builds before November 2026 ran `-z` outside the gateway, and live runs on them
+never saw the event. If your build never fires it, the `obsidian-nightly` cron
+job still runs the same maintenance once a day.
 
 The consolidation runs headlessly via `hermes -z` (one-shot mode: prompt passed
 as the argument, only the final response printed). Override the command with
