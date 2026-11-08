@@ -74,6 +74,15 @@ body:
       required: true
 
   - type: textarea
+    id: use-case
+    attributes:
+      label: What do you use this for? (optional)
+      description: One or two lines on what your vault and agents do for you. It helps decide what to build next.
+      placeholder: |
+        Research notes for my thesis, mostly with Claude Code.
+        Meeting notes and project decisions for a small team, with Codex.
+
+  - type: textarea
     id: extra
     attributes:
       label: Additional context
