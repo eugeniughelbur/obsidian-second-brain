@@ -1057,7 +1057,13 @@ Customizing your own fork? Copy [`references/DELTAS.template.md`](references/DEL
 
 ### Contributors
 
-This project is maintained by one person but built with many. 18+ external contributors have landed merged PRs - security fixes, platform ports (Pi came from a contributor), Windows compatibility, translations, and the first automated test. Ideas from closed or stalled PRs get reimplemented with the original author credited as co-author rather than dropped. See the full list on the [contributors graph](https://github.com/eugeniughelbur/obsidian-second-brain/graphs/contributors).
+This project is maintained by one person but built with many. Close to 50 people have landed merged PRs: security fixes, platform ports (Pi came from a contributor), Windows compatibility, translations, and the first automated test. Ideas from closed or stalled PRs get reimplemented with the original author credited as co-author rather than dropped.
+
+Thank you to everyone below, and to the nearly 100 people who filed issues or PRs by November 2026. Every report made the tool better.
+
+<a href="https://github.com/eugeniughelbur/obsidian-second-brain/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=eugeniughelbur/obsidian-second-brain" alt="Avatars of obsidian-second-brain contributors" />
+</a>
 
 If your PR goes quiet mid-review, that is normal life - the idea stays on the table, and if it lands later you stay on the commit.
 
