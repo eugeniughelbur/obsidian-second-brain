@@ -222,7 +222,7 @@ uv run -m scripts.research.x_read "https://x.com/some/post"
 2. Update `CHANGELOG.md` - move "Unreleased" entries under a new version header with date
 3. Bump version in `pyproject.toml` and `CITATION.cff`
 4. Tag the release: `git tag v0.X.0 && git push origin v0.X.0`
-5. Create a GitHub release with detailed notes covering: new commands, breaking changes, bug fixes, contributors
+5. Create a GitHub release with detailed notes covering: new commands, breaking changes, bug fixes, contributors. The layout lives in `.github/RELEASE_NOTES_TEMPLATE.md` and ends with a short signed note from the maintainer.
 
 ---
 
