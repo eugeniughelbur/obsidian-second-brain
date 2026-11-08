@@ -29,7 +29,7 @@
   <img src="https://img.shields.io/github/v/release/eugeniughelbur/obsidian-second-brain?style=for-the-badge&color=green" alt="Release" />
   <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License: MIT" />
   <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?style=for-the-badge&color=yellow" alt="Stars" />
-  <a href="https://github.com/sponsors/eugeniughelbur"><img src="https://img.shields.io/badge/Sponsor-EA4AAA?style=for-the-badge&logo=github-sponsors&logoColor=white" alt="Sponsor" /></a>
+  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=support-badge"><img src="https://img.shields.io/badge/Support-EA4AAA?style=for-the-badge&logo=substack&logoColor=white" alt="Support this project" /></a>
 </p>
 
 <h1 align="center">obsidian-second-brain: AI second brain for Obsidian - persistent memory for Claude Code, Codex, Cursor and Grok Bot</h1>
@@ -1065,9 +1065,11 @@ If your PR goes quiet mid-review, that is normal life - the idea stays on the ta
 
 ## Sponsors
 
-Sponsorships help fund ongoing development of obsidian-second-brain: new commands, research-toolkit API costs, and ongoing maintenance.
+obsidian-second-brain is free and MIT-licensed. If it saves you time, a paid subscription to The AI Operator is the best way to support it. That is where I write about building it, and paid readers also get a monthly no-code guide and a monthly Q&A.
 
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-eugeniughelbur-EA4AAA?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/eugeniughelbur)
+[![Support on Substack](https://img.shields.io/badge/Support_on_Substack-EA4AAA?style=for-the-badge&logo=substack&logoColor=white)](https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=sponsors-section)
+
+Prefer GitHub? [GitHub Sponsors](https://github.com/sponsors/eugeniughelbur) works too.
 
 ---
 
