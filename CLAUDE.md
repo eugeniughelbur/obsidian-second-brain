@@ -80,7 +80,7 @@ If you change an adapter's output layout, update the matching assertion in `test
 2. Move "Unreleased" entries in `CHANGELOG.md` under a new version header with the release date.
 3. Bump version in `pyproject.toml`, `CITATION.cff`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json` (metadata + plugin entry; `tests/test_plugin_manifest.py` fails CI if these drift from pyproject).
 4. Tag and push: `git tag v0.X.0 && git push origin v0.X.0`.
-5. Cut a GitHub Release with notes copied from the CHANGELOG entry.
+5. Cut a GitHub Release with notes copied from the CHANGELOG entry, laid out with `.github/RELEASE_NOTES_TEMPLATE.md`. End with the signed note from the maintainer, and set `utm_campaign` in its Substack link to the version tag.
 
 ## What not to do
 
