@@ -53,6 +53,7 @@ PERPLEXITY_API_KEY = lambda: get_required("PERPLEXITY_API_KEY")
 GEMINI_API_KEY = lambda: get_required("GEMINI_API_KEY")
 OPENAI_API_KEY = lambda: get_required("OPENAI_API_KEY")
 YOUTUBE_API_KEY = lambda: get_optional("YOUTUBE_API_KEY", "")
+FIRECRAWL_API_KEY = lambda: get_optional("FIRECRAWL_API_KEY", "")
 
 # grok-4 no longer appears in GET /v1/models (it still resolves server-side, but is
 # unlisted). grok-4.5 is current and verified against the x_search tool.

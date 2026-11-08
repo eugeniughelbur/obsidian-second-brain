@@ -504,8 +504,9 @@ def test_gemini_call_maps_response_and_uses_header_auth(monkeypatch, tmp_path):
 
 
 def test_web_reader_unavailable_without_key(monkeypatch):
-    """No TAVILY_API_KEY -> read() returns {} without any network call."""
+    """No reader key -> read() returns {} without any network call."""
     monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
     monkeypatch.setenv("OBSIDIAN_VAULT_PATH", "/tmp/x")
     from scripts.research.lib import web_reader
 
@@ -566,3 +567,170 @@ def test_web_reader_caps_urls_and_truncates(monkeypatch, tmp_path):
 
     monkeypatch.setattr(web_reader.requests, "post", broken_post)
     assert web_reader.read(["https://a.example"]) == {}
+
+
+def _firecrawl_page(markdown, status_code=200, page_status=200):
+    """A fake /v2/scrape response: HTTP status plus the page's own statusCode."""
+    from unittest.mock import MagicMock
+
+    resp = MagicMock()
+    resp.status_code = status_code
+    resp.json.return_value = {
+        "success": status_code < 400,
+        "data": {"markdown": markdown, "metadata": {"statusCode": page_status}},
+    }
+    if status_code >= 400:
+        resp.raise_for_status.side_effect = requests.HTTPError(f"{status_code} error")
+    else:
+        resp.raise_for_status.return_value = None
+    return resp
+
+
+def _firecrawl_only(monkeypatch, tmp_path):
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fc-test-key")
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(tmp_path))
+    from scripts.research.lib import web_reader
+
+    monkeypatch.setattr("scripts.research.lib.usage.USAGE_LOG", tmp_path / "usage.log")
+    return web_reader
+
+
+def test_web_reader_current_reader_wins_when_both_keys_set(monkeypatch, tmp_path):
+    """With both keys set the current reader runs exactly as before, and
+    Firecrawl is never called, not even as a fallback when extraction fails."""
+    from unittest.mock import MagicMock
+
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test-key")
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fc-test-key")
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(tmp_path))
+    from scripts.research.lib import web_reader
+
+    monkeypatch.setattr("scripts.research.lib.usage.USAGE_LOG", tmp_path / "usage.log")
+    assert web_reader.provider() == "tavily"
+
+    fake_resp = MagicMock()
+    fake_resp.json.return_value = {"results": [{"url": "https://a.example", "raw_content": "text"}]}
+    fake_resp.raise_for_status.return_value = None
+    called = []
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        called.append(url)
+        return fake_resp
+
+    monkeypatch.setattr(web_reader.requests, "post", fake_post)
+    assert web_reader.read(["https://a.example"]) == {"https://a.example": "text"}
+    assert called == [web_reader.API_URL]
+
+    def broken_post(url, json=None, headers=None, timeout=None):
+        called.append(url)
+        raise OSError("network down")
+
+    called.clear()
+    monkeypatch.setattr(web_reader.requests, "post", broken_post)
+    assert web_reader.read(["https://a.example"]) == {}
+    assert called == [web_reader.API_URL]
+
+
+def test_web_reader_firecrawl_when_only_its_key_is_set(monkeypatch, tmp_path):
+    """Only FIRECRAWL_API_KEY: one scrape per URL, same dedupe, cap and #194
+    marker, and the request names the toolkit only."""
+    web_reader = _firecrawl_only(monkeypatch, tmp_path)
+    assert web_reader.available() is True
+    assert web_reader.provider() == "firecrawl"
+
+    long_text = "x" * (web_reader.MAX_EXTRACT_CHARS + 500)
+    pages = {"https://a.example": long_text, "https://b.example": "short"}
+    calls = []
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        calls.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
+        return _firecrawl_page(pages.get(json["url"], ""))
+
+    monkeypatch.setattr(web_reader.requests, "post", fake_post)
+
+    urls = ["https://a.example", "https://a.example", "https://b.example",
+            "https://c.example", "https://d.example", "not-a-url"]
+    out = web_reader.read(urls)
+
+    assert [c["json"]["url"] for c in calls] == [
+        "https://a.example", "https://b.example", "https://c.example"]
+    for c in calls:
+        assert c["url"] == "https://api.firecrawl.dev/v2/scrape"
+        assert c["headers"]["Authorization"] == "Bearer fc-test-key"
+        assert c["json"] == {
+            "url": c["json"]["url"],
+            "formats": ["markdown"],
+            "onlyMainContent": True,
+            "origin": "obsidian-second-brain",
+        }
+        assert c["timeout"] == web_reader.TIMEOUT
+
+    body = out["https://a.example"]
+    assert body.count("x") == web_reader.MAX_EXTRACT_CHARS
+    assert "TRUNCATED" in body
+    assert out["https://b.example"] == "short"
+    # An empty page is not returned as content.
+    assert "https://c.example" not in out
+
+    entry = json.loads((tmp_path / "usage.log").read_text().splitlines()[-1])
+    assert entry["provider"] == "firecrawl"
+    assert entry["urls_extracted"] == 2
+
+
+def test_web_reader_firecrawl_skips_failed_pages(monkeypatch, tmp_path):
+    """A page that errors, returns 5xx, is itself a 404, or comes back in an
+    unexpected shape is skipped; the other pages still come back and nothing
+    raises."""
+    from unittest.mock import MagicMock
+
+    web_reader = _firecrawl_only(monkeypatch, tmp_path)
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        target = json["url"]
+        if target == "https://a.example":
+            raise OSError("connection reset")
+        if target == "https://b.example":
+            return _firecrawl_page("", status_code=500)
+        if target == "https://c.example":
+            return _firecrawl_page("# Not Found", page_status=404)
+        return _firecrawl_page("page text")
+
+    monkeypatch.setattr(web_reader.requests, "post", fake_post)
+    assert web_reader.read(["https://a.example", "https://b.example", "https://c.example"]) == {}
+    assert web_reader.read(["https://a.example", "https://d.example"]) == {
+        "https://d.example": "page text"}
+
+    shapes = {
+        "https://e.example": {"data": ["not", "a", "dict"]},
+        "https://f.example": {"data": {"markdown": "text", "metadata": {"statusCode": "404"}}},
+        "https://g.example": {"data": {"markdown": 42}},
+    }
+
+    def odd_post(url, json=None, headers=None, timeout=None):
+        resp = MagicMock(status_code=200)
+        resp.raise_for_status.return_value = None
+        resp.json.return_value = shapes[json["url"]]
+        return resp
+
+    monkeypatch.setattr(web_reader.requests, "post", odd_post)
+    assert web_reader.read(list(shapes)) == {}
+
+
+@pytest.mark.parametrize("status", [401, 402, 429])
+def test_web_reader_firecrawl_stops_on_key_or_account_error(monkeypatch, tmp_path, status):
+    """401, 402 and 429 are about the key or account, not the page: stop the
+    remaining requests and keep what was already read."""
+    web_reader = _firecrawl_only(monkeypatch, tmp_path)
+    sent = []
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        sent.append(json["url"])
+        if json["url"] == "https://a.example":
+            return _firecrawl_page("first page")
+        return _firecrawl_page("", status_code=status)
+
+    monkeypatch.setattr(web_reader.requests, "post", fake_post)
+    out = web_reader.read(["https://a.example", "https://b.example", "https://c.example"])
+    assert out == {"https://a.example": "first page"}
+    assert sent == ["https://a.example", "https://b.example"]
