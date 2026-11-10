@@ -61,3 +61,9 @@ When the result is `speculation` because of a clear red flag (no byline and no c
 ## Optional: lateral read
 
 When the read is ambiguous, an agent may offer a bounded lateral-reading check (Caulfield's SIFT: stop, investigate the source, find better coverage, trace to the original; one or two searches). It runs only on an explicit yes, and the best moment to offer it is when a `speculation` source is about to rewrite existing notes, not at capture. If it ran, the grade may be raised.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

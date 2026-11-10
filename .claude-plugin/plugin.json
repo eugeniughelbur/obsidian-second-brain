@@ -4,7 +4,8 @@
   "version": "0.20.0",
   "author": {
     "name": "Eugeniu Ghelbur",
-    "email": "e.ghelbur@gmail.com"
+    "email": "e.ghelbur@gmail.com",
+    "url": "https://github.com/eugeniughelbur"
   },
   "homepage": "https://github.com/eugeniughelbur/obsidian-second-brain",
   "license": "MIT",

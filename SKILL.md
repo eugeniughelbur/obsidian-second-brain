@@ -1393,3 +1393,9 @@ The default install path (`scripts/setup.sh`) writes `OBSIDIAN_VAULT_PATH` into 
 - `scripts/vault_health.py` - Audit a vault for structural issues
 - `scripts/checkin.py` - Pick old people and project notes, keep the open check-in questions in `<vault>/.checkin.json`, render the cards, stamp `last-checked` (used by `/obsidian-checkin`)
 - `scripts/check_notes.py` - Run the write-time AI-first hook over a list of notes, for hosts with no hook runtime (Grok Bot, cron agents); `--fix` rewrites banned characters, exit 1 on anything left
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

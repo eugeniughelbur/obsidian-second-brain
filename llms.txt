@@ -8,7 +8,9 @@ obsidian-second-brain is an open-source skill (MIT license) for Obsidian users w
 
 The skill is platform-neutral. The same 48 commands run in Claude Code, OpenAI Codex CLI (native Agent Skills), Google Gemini CLI, OpenCode, Google Antigravity (via the unified `.agents/skills/` Agent Skills build), Nous Research Hermes (native skills), Pi, and Grok Bot (workflow SKILL.md files + MCP). One codebase compiles into all eight via `bash scripts/build.sh`.
 
-Owner: Eugeniu Ghelbur. AI Automation Engineer at Single Grain.
+Owner: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: e.ghelbur@gmail.com or LinkedIn https://www.linkedin.com/in/eugeniu-ghelbur/
+
+Author links: GitHub https://github.com/eugeniughelbur | The AI Operator (blog) https://theaioperator.io | X https://x.com/eugeniu_ghelbur | LinkedIn https://www.linkedin.com/in/eugeniu-ghelbur/
 
 ## Crew: one logbook for Claude Code, Codex, Cursor and Grok Bot
 

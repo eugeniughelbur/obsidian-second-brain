@@ -53,7 +53,8 @@ If you are editing a command file in `commands/`, do not rewrite the AI-first pr
 3. **Apply the AI-first rule to every vault write.** Reference `references/ai-first-rules.md` from the command body so future agent has the spec inline.
 4. If the command produces a new note type, add its frontmatter schema to `references/ai-first-rules.md`.
 5. Update `SKILL.md` (Layer section + command list) and `README.md` (commands table).
-6. Add a `CHANGELOG.md` entry under "Unreleased".
+6. Run `uv run python scripts/stamp_credit.py` so the new file carries the author credit. `tests/test_author_credit.py` fails CI if a command, reference or script is missing it.
+7. Add a `CHANGELOG.md` entry under "Unreleased".
 
 ## Testing locally
 

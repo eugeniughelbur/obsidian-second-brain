@@ -76,3 +76,9 @@ Run on a schedule (weekly fits the default 7-day window), this loop keeps a know
 ## Why this works
 
 Slow facts compound: the more you store, the smarter the folder gets. Fast facts rot: every stored one is a future lie. The policy keeps the folder full of the first kind and honest about the second, and the lint makes that a property of the system instead of a habit of the writer.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

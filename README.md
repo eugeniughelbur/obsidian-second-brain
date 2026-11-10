@@ -244,7 +244,7 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 </p>
 
 <p align="center">
-  Built by <a href="https://github.com/eugeniughelbur"><strong>Eugeniu Ghelbur</strong></a> &middot; AI Automation Engineer @ Single Grain<br />
+  Built by <a href="https://github.com/eugeniughelbur"><strong>Eugeniu Ghelbur</strong></a> &middot; AI Automation Engineer, AI Tooling Engineer, AI Educator<br />
   <em>building in public &middot; sharing what works</em>
 </p>
 
@@ -1096,7 +1096,7 @@ Prefer GitHub? [GitHub Sponsors](https://github.com/sponsors/eugeniughelbur) wor
 <tr>
 <td align="center" width="700">
 
-Built by **Eugeniu Ghelbur**, AI Automation Engineer @ Single Grain
+Built by **Eugeniu Ghelbur**, AI Automation Engineer, AI Tooling Engineer, AI Educator
 
 *If this skill helped you, the best thanks is following along.*
 

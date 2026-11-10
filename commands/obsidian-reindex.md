@@ -39,3 +39,9 @@ If coverage did not improve, say so plainly and use the builder output to distin
 ---
 
 **Anti-fabrication:** Report coverage and build counts exactly as the tools emit them. Never infer a successful refresh from an unchanged file or a zero exit status alone when the builder reports dropped notes.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

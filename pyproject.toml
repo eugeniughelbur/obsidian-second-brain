@@ -3,6 +3,7 @@ name = "obsidian-second-brain-research"
 version = "0.20.0"
 description = "Research toolkit for obsidian-second-brain - Grok, Perplexity, Gemini, and YouTube research that saves to your vault"
 requires-python = ">=3.10"
+authors = [{ name = "Eugeniu Ghelbur" }]
 dependencies = [
     "openai>=1.40.0,<3",
     "requests>=2.32.0",
@@ -13,6 +14,11 @@ dependencies = [
     "feedparser>=6.0.10",
     "pyyaml>=6",
 ]
+
+[project.urls]
+Homepage = "https://github.com/eugeniughelbur/obsidian-second-brain"
+Author = "https://github.com/eugeniughelbur"
+Blog = "https://theaioperator.io"
 
 [dependency-groups]
 dev = [

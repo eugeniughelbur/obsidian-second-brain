@@ -35,3 +35,9 @@ Given a taxonomy, every note's tags fall into one of three buckets:
 - **Not in the taxonomy at all** (`tag_not_in_taxonomy`, info) - the tag matches neither a heading nor any bullet. This is informational, not an error: a vault's vocabulary grows, and a new tag is often legitimate before it is added to the file. Never auto-fixed; the taxonomy is a human-curated document, so the fix (if any) is adding a heading or a synonym line, not editing the note.
 
 Matching is case-insensitive; tags and taxonomy entries are compared lowercased, matching this project's `tags:` convention (see `CLAUDE.md` Conventions).
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

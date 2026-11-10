@@ -52,3 +52,9 @@ Use the obsidian-second-brain skill. Execute `/notebooklm [topic]`:
 **Why Gemini File Search and not the browser:** NotebookLM has no public API for personal Google accounts. Gemini File Search (generally available, plain API key, same Gemini model family) gives the same architectural shape: source-grounded retrieval, multi-document context, citation-style synthesis. One HTTP call, no manual paste step.
 
 **Cost:** $0.15 per million tokens indexed, storage free, generation at standard Gemini token rates. For a 12-note vault bundle (~30K tokens), expect $0.01-0.05 per run.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.
