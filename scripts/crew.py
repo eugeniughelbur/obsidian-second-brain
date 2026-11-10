@@ -21,7 +21,7 @@ import tempfile
 import time
 import unicodedata
 from collections import Counter
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from datetime import date, datetime
 from pathlib import Path
 
@@ -353,6 +353,42 @@ def rules_text(path: Path, agent: str) -> str:
     return text
 
 
+def keep_rules(folder: Path, row: dict, ident: str, targets: list[tuple[str, Path]]) -> None:
+    """Write the kept block into every target or into none (#399).
+
+    Every new text is built and checked before the first write, the way setup()
+    works, so one broken rules file cannot leave the others changed while the
+    lesson stays open."""
+    # Separate per-lesson marker lets two logbooks share an agent's rules.
+    key = hashlib.sha256(str(folder).encode()).hexdigest()[:12]
+    body = f"## Kept Crew lesson {ident}\n\n{clean(row['text'])}\n"
+    body += f"\nSource: {folder / 'lessons.md'} ({ident}, {row['date']}).\n"
+    # The Crew folder's own lock is already held; locking it again would wait on itself.
+    parents = sorted({p.parent for _, p in targets if p.parent.resolve() != folder.resolve()})
+    with ExitStack() as stack:
+        for parent in parents:
+            stack.enter_context(locked(parent))
+        plan = {}
+        for agent, target in targets:
+            try:
+                plan[target] = replace_block(rules_text(target, agent), f"KEPT-{key}-{ident}", body)
+            except ValueError as exc:
+                raise ValueError(
+                    f"{target}: {exc}. No rules file changed; {ident} is still open"
+                ) from exc
+        written = []
+        for target, content in plan.items():
+            try:
+                write(target, content)
+            except OSError as exc:
+                done = ", ".join(str(p) for p in written) or "none"
+                raise OSError(
+                    f"{target}: {exc}. Already written: {done}. {ident} is still open; "
+                    "run keep again once the file is writable"
+                ) from exc
+            written.append(target)
+
+
 def decide(folder: Path, args) -> str:
     with locked(folder):
         path = folder / "lessons.md"
@@ -368,17 +404,7 @@ def decide(folder: Path, args) -> str:
             if row["for"] not in (*AGENTS, "all"):
                 raise ValueError("Unknown lesson recipient; no rules changed")
             targets = AGENTS if row["for"] == "all" else (row["for"],)
-            for agent in targets:
-                target = rules_path(agent)
-                # Separate per-lesson marker lets two logbooks share an agent's rules.
-                key = hashlib.sha256(str(folder).encode()).hexdigest()[:12]
-                body = f"## Kept Crew lesson {args.id}\n\n{clean(row['text'])}\n"
-                body += f"\nSource: {folder / 'lessons.md'} ({args.id}, {row['date']}).\n"
-                with locked(target.parent):
-                    write(
-                        target,
-                        replace_block(rules_text(target, agent), f"KEPT-{key}-{args.id}", body),
-                    )
+            keep_rules(folder, row, args.id, [(agent, rules_path(agent)) for agent in targets])
         row["status"] = desired
         # Replace the parsed row even if a user changed column spacing.
         updated = []

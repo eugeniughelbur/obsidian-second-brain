@@ -204,6 +204,68 @@ def test_only_keep_promotes_a_lesson(sandbox, agent, path):
     run("drop", ident, ok=False)
 
 
+RULES = (
+    ".claude/CLAUDE.md",
+    ".codex/AGENTS.md",
+    ".cursor/rules/crew.mdc",
+    ".config/crew/grok-profile.md",
+)
+
+
+def broken_cursor_home(home):
+    for path in RULES:
+        (home / path).parent.mkdir(parents=True, exist_ok=True)
+        (home / path).write_text("base\n", encoding="utf-8")
+    # Frontmatter with no closing ---, which rules_text() rejects.
+    (home / RULES[2]).write_text("---\ndescription: x\n", encoding="utf-8")
+    return {path: (home / path).read_bytes() for path in RULES}
+
+
+def lesson_status(folder, ident):
+    for line in (folder / "lessons.md").read_text(encoding="utf-8").splitlines():
+        cells = [cell.strip() for cell in line.split("|")]
+        if len(cells) > 6 and cells[1] == ident:
+            return cells[6]
+    return None
+
+
+def test_keep_for_all_changes_no_rules_file_when_one_target_fails(sandbox):
+    # #399: keep wrote Claude's and Codex's rules, then stopped on Cursor's.
+    home, _ = sandbox
+    before = broken_cursor_home(home)
+    ident = lesson(target="all", text="Shared rule")
+    result = run("keep", ident, ok=False)
+    assert {path: (home / path).read_bytes() for path in RULES} == before
+    assert str(home / RULES[2]) in result.stderr
+
+
+def test_keep_for_all_stays_open_and_completes_after_repair(sandbox):
+    # Guard, passes before and after #399: the failed keep must not mark the
+    # lesson kept, and a retry after the repair must reach every target.
+    home, folder = sandbox
+    broken_cursor_home(home)
+    ident = lesson(target="all", text="Shared rule")
+    run("keep", ident, ok=False)
+    assert lesson_status(folder, ident) == "open"
+    (home / RULES[2]).write_text("---\ndescription: x\n---\nbase\n", encoding="utf-8")
+    run("keep", ident)
+    for path in RULES:
+        assert (home / path).read_text(encoding="utf-8").count(f"Kept Crew lesson {ident}") == 1
+    assert lesson_status(folder, ident) == "kept"
+
+
+def test_keep_into_the_crew_folder_itself_does_not_wait_on_its_own_lock(
+    sandbox, monkeypatch
+):
+    # Grok Bot's rules live in ~/.config/crew. With Crew logging there too, the
+    # old per-file lock asked for the lock decide() already held and timed out.
+    home, _ = sandbox
+    monkeypatch.setenv("CREW_DIR", str(home / ".config" / "crew"))
+    ident = lesson(target="grokbot")
+    run("keep", ident)
+    assert "Check the empty input" in (home / RULES[3]).read_text(encoding="utf-8")
+
+
 def test_drop_does_not_promote_or_erase_evidence(sandbox):
     home, folder = sandbox
     ident = lesson(kind="gap")

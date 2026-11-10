@@ -87,6 +87,7 @@ python3 "SKILL_ROOT/scripts/crew.py" drop L2
 `keep` writes a marked section into the recipient's global rules file.
 Claude uses `CLAUDE.md`, Codex uses `AGENTS.md`, and Cursor uses an always-on `crew.mdc` rule.
 Grok Bot receives a local profile draft; tell the user to paste the changed block into its actual profile.
+A lesson for `all` changes every rules file or none. If one file fails its check, the error names it, nothing changes, and the lesson stays open.
 `drop` preserves the evidence and marks the lesson dropped. Final decisions cannot be reversed by these commands.
 At nightly review, list open lessons for human decisions. Crew does not schedule the review.
 
