@@ -4,101 +4,80 @@
   </a>
 </p>
 
-<p align="center">
-  <a href="#install"><img src="https://img.shields.io/badge/Claude_Code-D97757?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude Code" /></a>
-  <a href="#use-it-in-grok-bot"><img src="https://img.shields.io/badge/Grok_Bot-000000?style=for-the-badge&logo=x&logoColor=white" alt="Grok Bot" /></a>
-  <a href="#codex-cli--gemini-cli--opencode"><img src="https://img.shields.io/badge/Codex_CLI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="Codex CLI" /></a>
-  <a href="#codex-cli--gemini-cli--opencode"><img src="https://img.shields.io/badge/Gemini_CLI-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini CLI" /></a>
-  <a href="#codex-cli--gemini-cli--opencode"><img src="https://img.shields.io/badge/OpenCode-181818?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="OpenCode" /></a>
-</p>
-
-<p align="center">
-  <strong>Your vault is the memory. Claude, Grok Bot, Codex - same brain.</strong>
-  <br />
-  <em>Your vault outlives whichever CLI you switch to.</em>
-</p>
-
-<p align="center">
-  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top"><img src="https://img.shields.io/badge/Subscribe_on_Substack-FF6719?style=for-the-badge&logo=substack&logoColor=white" alt="Subscribe on Substack" /></a>
-  <br />
-  <em>Free posts on AI agent memory, from the person who builds this repo.</em>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Obsidian-Vault-7C3AED?style=for-the-badge&logo=obsidian&logoColor=white" alt="Obsidian Vault" />
-  <img src="https://img.shields.io/github/v/release/eugeniughelbur/obsidian-second-brain?style=for-the-badge&color=green" alt="Release" />
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License: MIT" />
-  <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?style=for-the-badge&color=yellow" alt="Stars" />
-  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=support-badge"><img src="https://img.shields.io/badge/Support-EA4AAA?style=for-the-badge&logo=substack&logoColor=white" alt="Support this project" /></a>
-</p>
-
 <h1 align="center">obsidian-second-brain: AI second brain for Obsidian - persistent memory for Claude Code, Codex, Cursor and Grok Bot</h1>
 
-## Crew: one logbook for all your agents
-
-**Crew works without Obsidian.** Claude Code, Codex, Cursor, and Grok Bot share job records in any plain folder.
-Each agent sees what the others finished and can leave a lesson for review.
-
-<p align="center"><img src="media/crew-demo.gif" alt="Crew demo: a new Claude Code session shows the team log on its own and answers what Codex did at 18:40" width="640" /></p>
-
-- Grok Bot joins the same team through its existing runner.
-- A lesson becomes a rule only when a human runs `keep`.
-- Crew runs no background loop.
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
-```
-
-Restart Claude Code, then type `/crew setup`. Pick `~/crew` or `wiki/team/` inside your Obsidian vault.
-Codex users run `/hooks` once to trust Crew's hooks. Setup prints a Grok Bot profile block to paste.
-
-```text
-18:40 | codex | brand | Astra pass, 0 errors
-```
-
-[Setup, exact commands, and limits](references/crew.md). Python 3.10 or later; no extra packages for Crew.
-Shared agent memory isn't new. What Crew adds is the three parts above.
+<p align="center">
+  <b>Your AI second brain for <a href="https://obsidian.md">Obsidian</a>. Free, open source, and plain Markdown you own.</b><br />
+  Talk to Claude as usual. It saves what matters to your vault and remembers it next time.
+</p>
 
 <p align="center">
-  <strong>An evolution of <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">Karpathy's LLM Wiki pattern</a>: a vault that rewrites itself.</strong>
-  <br /><br />
-  <em>Every source updates existing pages instead of just appending new ones. Contradictions reconcile automatically. Your vault compounds while you sleep.</em>
-  <br /><br />
-  <strong>Powered by <a href="references/freshness-policy.md">OKM - Open Knowledge Metabolism</a>:</strong> <em>every stored fact is timeless, dated, or a pointer - so your knowledge base never fills with facts that used to be true.</em>
-  <br /><br />
-  <strong>Built for</strong> <em>developers &middot; founders and operators &middot; writers &middot; researchers - <a href="#choose-your-preset">pick a preset at setup</a></em>
-  <br /><br />
-  <strong>Start with three:</strong> <em><code>/obsidian-init</code> to set up, <code>/obsidian-save</code> to capture, <code>/obsidian-find</code> to recall. The other 42 are there when you need them.</em>
-  <br /><br />
-  <em>auto-synthesis &middot; thinking tools that argue with you</em>
-  <br /><br />
-  <em>live research from X, the web, and YouTube &middot; 4 scheduled agents &middot; 4 role presets</em>
-  <br /><br />
-  <em>write-time AI-first validator &middot; <code>/create-command</code> interview flow &middot; multilingual trigger schema</em>
-  <br /><br />
-  <a href="#install"><strong>Install &rarr;</strong></a> &middot;
-  <a href="DEMOS.md">Demos</a> &middot;
-  <a href="#what-happens-when-you-install-this">See it in action</a> &middot;
+  <a href="#quick-start">Install</a> &middot;
+  <a href="#see-it-work">See it work</a> &middot;
   <a href="#49-commands">All commands</a> &middot;
-  <a href="#choose-your-preset">Presets</a> &middot;
-  <a href="#the-vault-is-alive">OKM</a> &middot;
-  <a href="https://github.com/eugeniughelbur/obsidian-second-brain/discussions">Discussions</a>
+  <a href="#crew-one-logbook-for-all-your-agents">Crew</a> &middot;
+  <a href="#faq">FAQ</a> &middot;
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
+
+<p align="center">
+  <a href="#quick-start"><img src="https://img.shields.io/badge/Claude_Code-plugin-D97757?logo=anthropic&logoColor=white" alt="Claude Code plugin" /></a>
+  <a href="#codex-cli--gemini-cli--opencode"><img src="https://img.shields.io/badge/also-Codex_%C2%B7_Gemini_%C2%B7_OpenCode_%C2%B7_Grok_Bot-555" alt="Also runs in Codex, Gemini CLI, OpenCode and Grok Bot" /></a>
+  <img src="https://img.shields.io/github/v/release/eugeniughelbur/obsidian-second-brain?color=green" alt="Release" />
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT" />
+  <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?color=yellow" alt="Stars" />
+  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top"><img src="https://img.shields.io/badge/Substack-The_AI_Operator-FF6719?logo=substack&logoColor=white" alt="Subscribe on Substack" /></a>
+</p>
+
+**Claude forgets you when a chat ends. Your Obsidian vault doesn't.** This skill connects the two, so every chat adds to one set of linked notes that the next chat reads.
+
+- **Save.** `/obsidian-save` turns a chat into linked notes: people, projects, decisions and tasks.
+- **Feed it.** `/obsidian-ingest` takes a link, PDF, Word file, voice memo or screenshot. It updates the notes you already have instead of piling up new ones.
+- **Find.** `/obsidian-find` answers from your own notes, with the context around each hit.
+- **Push back.** `/obsidian-challenge` checks a plan against your past decisions.
+- **Work while you sleep.** Optional scheduled agents fix contradictions, link lonely notes and write your morning brief.
+
+Your notes stay as Markdown files on your computer. The core commands need no API keys.
+
+## See it work
 
 <p align="center">
   <a href="DEMOS.md">
     <img src="media/obsidian-save.gif" alt="One /obsidian-save command turns a conversation into five cross-linked AI-first notes: a person, a project with the decision, a task, a board card, and the daily note." width="100%" />
   </a>
   <br />
-  <em>One <code>/obsidian-save</code> - five cross-linked notes. Real footage, synthetic vault. <a href="DEMOS.md">More demos &rarr;</a></em>
-  <br /><br />
-  <em>If this looks useful, <a href="https://github.com/eugeniughelbur/obsidian-second-brain">star the repo</a>. It is how other people find it.</em>
+  <em>One <code>/obsidian-save</code>, five linked notes. Real footage, made-up vault. <a href="DEMOS.md">More demos &rarr;</a></em>
+</p>
+
+## Quick start
+
+Inside any Claude Code session, run:
+
+```
+/plugin marketplace add eugeniughelbur/obsidian-second-brain
+/plugin install obsidian-second-brain@obsidian-second-brain
+```
+
+Then tell Claude where your vault is. Add this to the `env` section of `~/.claude/settings.json`:
+
+```json
+"env": { "OBSIDIAN_VAULT_PATH": "/path/to/your/vault" }
+```
+
+Restart Claude Code and run `/obsidian-second-brain:obsidian-init` inside your vault. Start with three commands: `obsidian-init` to set up, `obsidian-save` to capture and `obsidian-find` to recall.
+
+No vault yet, another AI tool, or bare command names? See the [full install guide](#install).
+
+<p align="center">
+  <em>If this helps you, a <a href="https://github.com/eugeniughelbur/obsidian-second-brain">star</a> helps other people find it.</em>
 </p>
 
 <p align="center">
-  <strong>v0.18 - Crew (October 2026):</strong> Claude Code, Codex, Cursor and Grok Bot now share one logbook, so each agent knows what the others did.<br/>
-  <em>One line per job in any plain folder or your vault, read through each agent's own hooks; lessons agents leave each other become rules only when you keep them; no background loop. Plus source quality labels and German triggers from contributors.</em>
-  <a href="CHANGELOG.md">See the changelog &rarr;</a>
+  <strong>An evolution of <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">Karpathy's LLM Wiki pattern</a>: a vault that rewrites itself.</strong>
+  <br />
+  <em>Every source updates the pages you already have, not only adds new ones. <a href="#how-this-extends-karpathys-llm-wiki">How it differs &rarr;</a></em>
+  <br /><br />
+  <strong>Powered by <a href="references/freshness-policy.md">Open Knowledge Metabolism (OKM)</a>:</strong> <em>each fact is timeless, dated, or a pointer. Your notes never fill with facts that used to be true.</em>
 </p>
 
 ---
@@ -205,6 +184,32 @@ Free transcript via youtube-transcript-api. Optional metadata + top comments via
 | Researching what you already know | Re-research from scratch | `/research-deep` scans vault first, fills only the gaps, flags contradictions |
 | YouTube videos | Watch passively, forget | `/youtube [url]` transcript + summary + quotes saved to vault |
 | Vault notes for future agent | Notes for human reading | AI-first rule: every note has "For future agent" preamble + recency markers + citations |
+
+## Crew: one logbook for all your agents
+
+**Crew works without Obsidian.** Claude Code, Codex, Cursor, and Grok Bot share job records in any plain folder.
+Each agent sees what the others finished and can leave a lesson for review.
+
+<p align="center"><img src="media/crew-demo.gif" alt="Crew demo: a new Claude Code session shows the team log on its own and answers what Codex did at 18:40" width="640" /></p>
+
+- Grok Bot joins the same team through its existing runner.
+- A lesson becomes a rule only when a human runs `keep`.
+- Crew runs no background loop.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
+```
+
+Restart Claude Code, then type `/crew setup`. Pick `~/crew` or `wiki/team/` inside your Obsidian vault.
+Codex users run `/hooks` once to trust Crew's hooks. Setup prints a Grok Bot profile block to paste.
+
+```text
+18:40 | codex | brand | Astra pass, 0 errors
+```
+
+[Setup, exact commands, and limits](references/crew.md). Python 3.10 or later; no extra packages for Crew.
+Shared agent memory isn't new. What Crew adds is the three parts above.
+
 ## More from the author
 
 *The product is above. This is where it came from and where it goes next.*
