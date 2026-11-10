@@ -66,7 +66,10 @@ python3 "SKILL_ROOT/scripts/crew.py" digest --date 2026-10-17
 ```
 
 `show` returns other agents' jobs and lessons addressed to the reader.
-`--new` shows the newest 50 unread records and says how many older ones it skipped. Use `digest` to read a full day, or set `--limit`.
+`--new` shows the newest 50 unread job records and says how many older ones it skipped. Use `digest` to read a full day, or set `--limit`.
+`--new` lists open lessons only. Kept and dropped lessons stay in plain `show` and `digest`.
+`show --agent codex --id L12` prints one lesson in full and moves no cursor.
+A hook read stays under 9,000 characters so the host injects all of it. Records that do not fit stay unread for the next read. Too many open lessons collapse to one line of IDs. With nothing new, a hook read prints nothing (`{}` for Cursor).
 `--session NAME` gives concurrent sessions independent read cursors. Installed hooks derive it from the host payload.
 `digest` reads a day's records without moving any cursor.
 Folder precedence is `--dir`, `CREW_DIR`, saved setup, configured vault's `wiki/team/`, then `~/crew`.

@@ -37,6 +37,9 @@ HEADER = (
 JOB = re.compile(r"^-?\s*(\d{2}:\d{2})\s*\|\s*([^|]+)\s*\|\s*(.+)$")
 DAY = re.compile(r"\d{4}-\d{2}-\d{2}\.md\Z")
 LESSON_COLUMNS = "| ID | Date | From | For | Kind | Status | Text | Evidence |\n"
+# Claude Code saves a hook's additionalContext over 10,000 characters to a file and
+# shows the model a 2,000-character preview; Codex trims near 2,500 tokens (#397).
+HOOK_MAX_CHARS = 9000
 
 
 def clean(value: str, limit: int = 600, *, delimiters: bool = False) -> str:
@@ -251,7 +254,13 @@ def add_lesson(folder: Path, args) -> str:
     return ident
 
 
-def records(folder: Path, agent: str | None, day: str | None) -> list[str]:
+def records(
+    folder: Path, agent: str | None, day: str | None, *, decided: bool = True
+) -> list[str]:
+    """Job lines from other agents, then lessons addressed to this agent.
+
+    decided=False leaves out kept and dropped lessons: a kept one is in the
+    rules file already, and a dropped one is closed (#398)."""
     result = []
     for path in sorted(folder.glob("*.md")):
         if not DAY.fullmatch(path.name) or (day and path.stem != day):
@@ -266,40 +275,97 @@ def records(folder: Path, agent: str | None, day: str | None) -> list[str]:
             continue
         if day and row["date"] != day:
             continue
+        if not decided and row["status"] != "open":
+            continue
         result.append("Lesson: " + clean(lesson_line(row), 1600, delimiters=True))
     return result
 
 
+def id_ranges(ids: list[int]) -> str:
+    """[1, 2, 3, 7] -> "L1-L3, L7"."""
+    spans: list[list[int]] = []
+    for n in sorted(set(ids)):
+        if spans and n == spans[-1][1] + 1:
+            spans[-1][1] = n
+        else:
+            spans.append([n, n])
+    return ", ".join(f"L{a}" if a == b else f"L{a}-L{b}" for a, b in spans)
+
+
 def show(folder: Path, args) -> str:
     with locked(folder):
-        lines = records(folder, args.agent, args.date)
+        if args.id:
+            # Read-only: prints one lesson in full and moves no cursor.
+            row = next(
+                (r for r in lesson_rows(read(folder / "lessons.md")) if r["id"] == args.id), None
+            )
+            if row is None:
+                raise ValueError(f"Lesson {args.id} not found in Crew's lesson table")
+            return HEADER + "\n\n> Lesson: " + clean(lesson_line(row), 1600, delimiters=True)
         if args.new:
-            reader = hashlib.sha256(f"{args.agent}:{args.session}".encode()).hexdigest()
-            path = folder / ".crew-readers" / f"{reader}.json"
-            previous = read_json(path)
-            counts = Counter()
-            unread = []
-            for line in lines:
-                key = hashlib.sha256(line.encode()).hexdigest()
-                counts[key] += 1
-                if counts[key] > previous.get(key, 0):
-                    unread.append(line)
-                    previous[key] = counts[key]
-            # Every new session starts with an empty cursor, so the whole history is unread.
-            # Show the newest records and count the rest, or a session would only see old days.
-            skipped = max(0, len(unread) - args.limit)
-            # Keep cursors for other dates when --date narrows this read.
-            write_json(path, previous)
-            lines = unread[-args.limit :]
-        else:
-            lines = lines[-args.limit :]
-    note = (
-        f"\n\n{skipped} older unread records not shown; `digest --date YYYY-MM-DD` reads a full day."
-        if args.new and skipped
-        else ""
-    )
-    return HEADER + note + (
+            return read_new(folder, args)
+        lines = records(folder, args.agent, args.date)[-args.limit :]
+    return HEADER + (
         "\n\n" + "\n".join("> " + line for line in lines) if lines else "\n\nNo new records."
+    )
+
+
+def read_new(folder: Path, args) -> str:
+    """Consume this reader's unread records. Caller holds the folder lock.
+
+    A hook read stays under HOOK_MAX_CHARS so the host injects all of it, and
+    only the lines it prints are marked read. With nothing new it returns ""."""
+    reader = hashlib.sha256(f"{args.agent}:{args.session}".encode()).hexdigest()
+    path = folder / ".crew-readers" / f"{reader}.json"
+    seen = read_json(path)
+    counts: Counter = Counter()
+    jobs, lessons = [], []
+    for line in records(folder, args.agent, args.date, decided=False):
+        key = hashlib.sha256(line.encode()).hexdigest()
+        counts[key] += 1
+        if counts[key] > seen.get(key, 0):
+            (lessons if line.startswith("Lesson: ") else jobs).append((line, key, counts[key]))
+    budget = HOOK_MAX_CHARS if args.hook else None
+    shown = [line for line, _, _ in lessons]
+    if budget is not None and sum(len(line) + 3 for line in shown) > budget // 3:
+        # Too long to print in full: name them, and let the reader ask for one.
+        ids = [int(m[1]) for line in shown if (m := re.search(r"\| L(\d+) \|", line))]
+        shown = [
+            f"Open lessons for {args.agent}: {id_ranges(ids)} ({len(ids)}). "
+            f"Print one in full: `show --agent {args.agent} --id L{max(ids, default=1)}`."
+        ]
+    consumed = list(lessons)
+    # Every new session starts with an empty cursor, so the whole history is unread.
+    # Show the newest records and count the rest, or a session would only see old days.
+    window = jobs[-args.limit :]
+    skipped = len(jobs) - len(window)
+    consumed += jobs[:skipped]
+    used = len(HEADER) + sum(len(line) + 3 for line in shown) + 300  # room for the notes
+    picked = []
+    for item in reversed(window):
+        if budget is not None and used + len(item[0]) + 3 > budget:
+            break
+        picked.append(item)
+        used += len(item[0]) + 3
+    picked.reverse()
+    deferred = len(window) - len(picked)
+    consumed += picked
+    for _, key, n in consumed:
+        seen[key] = max(seen.get(key, 0), n)
+    # Keep cursors for other dates when --date narrows this read.
+    write_json(path, seen)
+    lines = shown + [line for line, _, _ in picked]
+    notes = []
+    if skipped:
+        notes.append(
+            f"{skipped} older unread records not shown; `digest --date YYYY-MM-DD` reads a full day."
+        )
+    if deferred:
+        notes.append(f"{deferred} more unread records come with the next read (size limit).")
+    if not lines:
+        return "" if args.hook else HEADER + "\n\nNo new records."
+    return HEADER + "".join("\n\n" + note for note in notes) + (
+        "\n\n" + "\n".join("> " + line for line in lines)
     )
 
 
@@ -585,12 +651,17 @@ def parser() -> argparse.ArgumentParser:
     lesson.add_argument("--evidence", required=True, type=field)
     view = sub.add_parser("show", help="read other agents' records and addressed lessons")
     view.add_argument("--agent", "--for", required=True, choices=AGENTS)
-    view.add_argument("--limit", type=int, default=50, help="maximum records per read (default 50)")
+    view.add_argument(
+        "--limit", type=int, default=50, help="maximum job records per read (default 50)"
+    )
     view.add_argument("--new", action="store_true", help="consume unread records for this reader")
     view.add_argument("--json", action="store_true", help="Cursor additional_context JSON")
     view.add_argument("--date", type=day_arg)
     view.add_argument("--session", default="default", help="independent reader within an agent")
     view.add_argument("--hook", action="store_true", help="read host event JSON from stdin")
+    view.add_argument(
+        "--id", type=lambda x: x.upper(), help="print one lesson in full; moves no cursor"
+    )
     digest = sub.add_parser("digest", help="read a day's jobs and lessons without moving cursors")
     digest.add_argument("--date", type=day_arg, default=date.today().isoformat())
     for name in ("keep", "drop"):
@@ -664,6 +735,11 @@ def main(argv: list[str] | None = None) -> int:
                     payload.get("session_id") or payload.get("conversation_id") or "default"
                 )
             output = show(folder, args)
+            if args.hook and not output:
+                # Nothing new: inject nothing. Cursor's failClosed hooks need valid JSON.
+                if args.agent == "cursor":
+                    print("{}")
+                return 0
             if args.json or (args.hook and args.agent == "cursor"):
                 output = json.dumps({"additional_context": output})
             elif args.hook and event:

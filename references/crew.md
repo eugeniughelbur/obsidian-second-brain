@@ -70,7 +70,9 @@ Writes use a local file lock and atomic replacement. Coordinate writers on one h
 Concurrent copies through file-sync services can conflict. Crew does not resolve sync conflicts.
 
 `show --new` tracks each agent separately. Hooks also track sessions separately to avoid consuming another session's records.
-Reads return the newest 50 unread records and count the older ones. Use `digest --date` for a full day, or set `--limit 100`.
+Reads return the newest 50 unread job records and count the older ones. Use `digest --date` for a full day, or set `--limit 100`.
+`--new` reads list open lessons first and leave out kept and dropped ones (#398). `show --id L12` prints one lesson without moving a cursor.
+Hook reads stay under 9,000 characters (Claude Code caps hook context at 10,000) and mark only the lines they print as read; the rest come with the next read. Open lessons too long to print collapse to an ID line such as `L46-L60`. A hook read with nothing new prints nothing, or `{}` for Cursor (#397).
 Without `--new`, `show` returns the latest records. `--date YYYY-MM-DD` narrows either mode.
 `digest` includes all agents' jobs and lessons created that day without consuming them.
 Control characters are stripped, pipes are replaced inside fields, and each input field is capped at 600 characters.

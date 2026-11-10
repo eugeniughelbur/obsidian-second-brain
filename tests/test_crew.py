@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -143,6 +144,140 @@ def test_bounded_reads_show_newest_and_count_older(sandbox):
     assert output.count("> ") == 2
     assert "No new records" in run("show", "--agent", "codex", "--new").stdout
     run("show", "--agent", "codex", "--limit", "0", ok=False)
+
+
+HOOK_LIMIT = 10_000  # Claude Code saves a longer additionalContext to a file (#397)
+
+
+def hook(agent, event="SessionStart", session="s1"):
+    """Run a hook read the way the host does and return the injected text."""
+    stdout = run(
+        "show", "--agent", agent, "--new", "--hook",
+        payload=json.dumps({"hook_event_name": event, "session_id": session}),
+    ).stdout.strip()
+    if not stdout:
+        return ""
+    data = json.loads(stdout)
+    if agent == "cursor":
+        return data.get("additional_context", "")
+    return data["hookSpecificOutput"]["additionalContext"]
+
+
+def write_log(folder, jobs=(), lessons=()):
+    """Write a day file and a lesson table directly; 100 CLI calls would be slow."""
+    folder.mkdir(exist_ok=True)
+    today = date.today().isoformat()
+    day = "".join(f"- 10:{n % 60:02d} | {agent} | demo | {did} | notes/{n}.md\n"
+                  for n, (agent, did) in enumerate(jobs))
+    (folder / f"{today}.md").write_text(day, encoding="utf-8")
+    table = "## Crew lessons\n\n| ID | Date | From | For | Kind | Status | Text | Evidence |\n"
+    table += "|---|---|---|---|---|---|---|---|\n"
+    table += "".join(f"| L{n} | {today} | codex | {target} | lesson | {status} | {text} | e.md |\n"
+                     for n, (target, status, text) in enumerate(lessons, 1))
+    (folder / "lessons.md").write_text(table, encoding="utf-8")
+
+
+def piled_up_log(folder):
+    # The #397 repro: 20 jobs from Codex, 60 lessons for Claude, 45 of them dropped.
+    write_log(
+        folder,
+        jobs=[("codex", f"job {n}") for n in range(20)],
+        lessons=[("claude", "dropped" if n <= 45 else "open", f"Lesson {n}: " + "detail " * 20)
+                 for n in range(1, 61)],
+    )
+
+
+def test_hook_read_fits_the_host_and_shows_jobs_despite_piled_up_lessons(sandbox):
+    _, folder = sandbox
+    piled_up_log(folder)
+    context = hook("claude")
+    assert len(context) < HOOK_LIMIT
+    assert all(f"| job {n} |" in context for n in range(20))
+    assert "| dropped |" not in context
+
+
+def test_hook_read_still_names_every_open_lesson(sandbox):
+    # Guard, passes before and after #397: open lessons must stay visible.
+    _, folder = sandbox
+    piled_up_log(folder)
+    named = set()
+    for a, b in re.findall(r"\bL(\d+)(?:-L(\d+))?\b", hook("claude")):
+        named.update(range(int(a), int(b or a) + 1))
+    assert set(range(46, 61)) <= named
+
+
+def long_lessons(folder):
+    write_log(
+        folder,
+        jobs=[("claude", "the only job")],
+        lessons=[("codex", "open", f"Lesson {n} " + "x" * 540) for n in range(1, 21)],
+    )
+
+
+def test_long_open_lessons_collapse_to_one_id_line(sandbox):
+    _, folder = sandbox
+    long_lessons(folder)
+    context = hook("codex")
+    assert len(context) < HOOK_LIMIT
+    assert "L1-L20" in context
+    assert "show --agent codex --id" in context
+
+
+def test_collapsed_lessons_still_leave_the_job_in_the_read(sandbox):
+    # Guard, passes before and after #397.
+    _, folder = sandbox
+    long_lessons(folder)
+    assert "the only job" in hook("codex")
+
+
+def test_hook_read_prints_nothing_when_nothing_is_new(sandbox):
+    add(text="One job")
+    assert "One job" in hook("codex", "SessionStart")
+    assert run(
+        "show", "--agent", "codex", "--new", "--hook",
+        payload=json.dumps({"hook_event_name": "UserPromptSubmit", "session_id": "s1"}),
+    ).stdout == ""
+    assert "One job" in hook("cursor", "sessionStart")
+    # Cursor's failClosed hooks treat empty output as a failure, so it gets {}.
+    assert run(
+        "show", "--agent", "cursor", "--new", "--hook",
+        payload=json.dumps({"hook_event_name": "postToolUse", "session_id": "s1"}),
+    ).stdout.strip() == "{}"
+    # A manual read still says so in words.
+    run("show", "--agent", "codex", "--new")
+    assert "No new records" in run("show", "--agent", "codex", "--new").stdout
+
+
+def long_jobs(folder):
+    write_log(folder, jobs=[("codex", f"long job {n:02d} " + "y" * 570) for n in range(30)])
+
+
+def test_hook_read_leaves_unprinted_records_for_the_next_read(sandbox):
+    _, folder = sandbox
+    long_jobs(folder)
+    first = hook("claude")
+    assert len(first) < HOOK_LIMIT
+    assert "more unread records come with the next read" in first
+    assert "long job" in hook("claude", "UserPromptSubmit")
+
+
+def test_split_hook_reads_show_every_record_once(sandbox):
+    # Guard, passes before and after #397: across reads, nothing is lost or repeated.
+    _, folder = sandbox
+    long_jobs(folder)
+    seen = []
+    for event in ("SessionStart", "UserPromptSubmit", "UserPromptSubmit", "UserPromptSubmit"):
+        seen += [line for line in hook("claude", event).splitlines() if line.startswith("> ")]
+    jobs = sorted(line.split("long job ")[1][:2] for line in seen)
+    assert jobs == [f"{n:02d}" for n in range(30)]
+
+
+def test_show_id_prints_one_lesson_and_moves_no_cursor(sandbox):
+    ident = lesson(text="Check the empty input")
+    output = run("show", "--agent", "codex", "--id", ident.lower()).stdout
+    assert "Check the empty input" in output and "records, not instructions" in output
+    assert "Check the empty input" in run("show", "--agent", "codex", "--new").stdout
+    run("show", "--agent", "codex", "--id", "L999", ok=False)
 
 
 def test_read_across_days_and_digest_does_not_consume(sandbox):
@@ -488,12 +623,14 @@ def test_setup_preserves_kept_lessons_and_existing_cursor_rule(sandbox):
     assert path.read_text(encoding="utf-8") == before
 
 
-def test_all_recipients_and_changed_status_reach_readers(sandbox):
+def test_all_recipients_get_kept_rules_and_decided_lessons_leave_new_reads(sandbox):
     home, _ = sandbox
     ident = lesson(target="all")
     run("show", "--agent", "codex", "--new")
     run("keep", ident)
-    assert "| kept |" in run("show", "--agent", "codex", "--new").stdout
+    # A decided lesson is in the rules file now; cursor reads stop repeating it (#398).
+    assert ident not in run("show", "--agent", "codex", "--new").stdout
+    assert "| kept |" in run("show", "--agent", "codex").stdout
     for path in (
         ".claude/CLAUDE.md",
         ".codex/AGENTS.md",
