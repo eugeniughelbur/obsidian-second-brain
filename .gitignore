@@ -20,8 +20,6 @@ __pycache__/
 # Logs
 *.log
 
-# Build output (regenerate with `bash scripts/build.sh`)
-dist/
 
 # Node / npm scratch. The rule is repo-wide because stray package.json files
 # used to appear from tooling experiments and none of them belonged here.

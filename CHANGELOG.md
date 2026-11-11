@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed (breaking: slim Claude Code + Codex fork)
+
+- **Five skills instead of 49 commands.** `skills/obsidian-init`, `obsidian-save` (absorbs ingest: conversation, URL, file, pasted text, YouTube in one call), `obsidian-find`, `obsidian-health` (absorbs reconcile and merge, fixes issues one at a time with user approval), `obsidian-review` (absorbs recap: daily/weekly/monthly review notes from saved markdown only, including what was learned, what is being missed, and what matters most). All other commands removed.
+- **Claude Code and Codex only.** Removed the adapter layer and the Gemini CLI, OpenCode, Hermes, Pi, Agent Skills and Grok Bot builds, the Codex command wrappers, the MCP server, the Obsidian plugin, the Telegram journal, the docs site, and the Grok/Gemini/Perplexity/OpenAI research toolkit. One `SKILL.md` per skill serves both hosts.
+- **User scope from any project.** Skills resolve the vault through `scripts/osb_env.py` (config file `~/.config/obsidian-second-brain/.env`) and refuse to write when it is not configured, instead of falling back to the working directory.
+- **Vault schema is `AGENTS.md`**, with `CLAUDE.md` linked to it, replacing `_CLAUDE.md`. New fixed layout (`raw/`, `wiki/...`, `Logs/`) in `references/folder-map.md`.
+- **Installer rewritten.** `scripts/quick-install.sh` downloads the toolkit to `~/.obsidian-second-brain`, builds `.venv`, asks for the hosts (Claude / Codex / both), the vault folder under `~/Documents/`, name, company, role and note language, installs the skills, creates the vault, and registers it. `install.sh`, `update.sh` and `setup.sh` are gone.
+- **`scripts/bootstrap_vault.py` rewritten** (layout, profile, owner and company notes) and `scripts/host_config.py` added: Claude `permissions.additionalDirectories` and validator hook; Codex `[sandbox_workspace_write] writable_roots` and `network_access`, and validator hook in `~/.codex/hooks.json`. Idempotent, backs up first, removes hook entries left by older installs.
+- **Validator hook handles Codex `apply_patch`** payloads (one patch, several files) in addition to Claude `Write|Edit`. The SessionStart context hook and the background agent are removed.
+- **Korean.** `scripts/vault_search.py` is self-contained, NFC-normalizes, and matches Hangul by bigrams so particles do not break a match. `scripts/youtube_transcript.py` fetches transcripts key-less in the configured language first.
+
+## [Pre-fork unreleased]
+
 ### Added
 
 - **Author credit inside every file that travels alone.** AI answer engines cite single raw files (a 2026-11 inbound reached the maintainer through a Perplexity link to a raw script), and people copy single commands into their own setups, so the README, LICENSE and CITATION.cff are not there to say who built it. `scripts/stamp_credit.py` now writes a one-line footer after an `<!-- author-credit -->` marker into the 49 commands, the references, `SKILL.md`, `AI-FIRST.md` and `architecture.md`, and a REUSE-style SPDX header (`SPDX-FileCopyrightText` + `SPDX-License-Identifier: MIT`) plus project and author links into every script under `scripts/`, `hooks/`, `adapters/` and `integrations/`. The footer is descriptive text, never an instruction, so agents reading a command body are not told to do anything. Re-running replaces the credit rather than duplicating it; `--check` reports missing ones and `tests/test_author_credit.py` runs it in CI. `plugin.json`, `marketplace.json` and `CITATION.cff` gain the author's GitHub URL, `pyproject.toml` gains `authors` and `[project.urls]`, and `llms.txt` lists the author links. The README, `llms.txt` and `CITATION.cff` now give the author's roles instead of naming an employer. Every credit lists the maintainer's public email (already in `plugin.json` and `CITATION.cff`) next to LinkedIn for questions or consulting.

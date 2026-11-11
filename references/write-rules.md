@@ -13,32 +13,23 @@ How Claude writes, links, formats, and updates notes in an Obsidian vault.
 When you create or update something, trace forward: what other notes need to know about this?
 
 ```
-New project created
-  → Add card to kanban board (Backlog column)
-  → Link from today's daily note
-  → If it has a person involved, link from their note
+Source processed (obsidian-save)
+  -> raw capture in raw/, summary page in wiki/sources/
+  -> rewrite the entity and concept pages it touches (proposals for existing pages)
+  -> regenerate the changed sections of index.md
+  -> append one line to Logs/YYYY-MM-DD.md
 
-Task completed
-  → Move card in kanban (to ✅ Done, with strikethrough)
-  → Update project note (Recent Activity or Delivered section)
-  → Log in today's daily note
-
-Person note updated
-  → If interaction happened today, log in daily note
-  → If they made a mention/shoutout, add to Mentions Log
-
-Dev log created
-  → Link from project note (Recent Activity section)
-  → Link from today's daily note (Work / Work Log section)
+Conversation result saved (obsidian-save)
+  -> update the project / decision / entity pages it concerns
+  -> link the session log from each page it touched
 
 Decision made
-  → Log in project note (Key Decisions section)
-  → Log in today's daily note
+  -> log in the project note (Key Decisions section)
+  -> link the decision note from the project and the session log
 
-Deal moved forward
-  → Update deal file (status, probability, notes)
-  → Update Side Biz kanban board
-  → Reflect in daily note
+Contradiction resolved (obsidian-health)
+  -> rewrite the outdated page with a History entry, or write a conflict note
+  -> regenerate the changed sections of index.md
 ```
 
 ---
@@ -63,41 +54,8 @@ If the linked note doesn't exist yet, create it (stub is fine - frontmatter + ti
 |---|---|---|
 | Frontmatter `date` field | `YYYY-MM-DD` | `2026-03-24` |
 | Frontmatter `due` field | `YYYY-MM-DD` | `2026-03-28` |
-| Kanban due date tag | `@{YYYY-MM-DD}` | `@{2026-03-28}` |
 | Body text references | Human format | `March 24` or `Mar 24` |
 | File names (dated) | `YYYY-MM-DD` | `2026-03-24.md` |
-
----
-
-## Kanban Board Format
-
-Boards use the `kanban-plugin: board` YAML frontmatter.
-Columns are H2 headings. Items are task checkboxes with optional indented description.
-
-**Active item:**
-```markdown
-- [ ] 🔴 **Task Title** · @{2026-03-28}
-	One-line description. [[Related Project]] [[Person]]
-```
-
-**Waiting item:**
-```markdown
-- [ ] 🟡 **Task Title** · @{2026-04-07}
-	Context for why it's blocked. [[Person responsible]]
-```
-
-**Completed item** (move to `## ✅ Done` column):
-```markdown
-- [x] ~~🔴 **Task Title**~~ ✅ Mar 24
-	Brief note on outcome.
-```
-
-**Priority emoji convention:**
-- 🔴 Critical / blocking
-- 🟡 Important / this week
-- 🟢 Nice to have / low urgency
-
-**Never delete done items** - move them to the Done column with strikethrough. Done items are the changelog.
 
 ---
 
@@ -143,12 +101,6 @@ Never delete vault notes - archive them. The vault is a permanent record.
 
 ---
 
-## Template Usage
-
-When creating notes from templates, strip all Templater syntax (`<% ... %>`) and replace with actual values. Never leave template placeholders in saved notes.
-
----
-
 ## Stub Notes
 
 When a link target doesn't exist yet, create a minimal stub:
@@ -175,8 +127,6 @@ When updating an existing note (vs creating new), use targeted section injection
 3. Append content below the last item in that section (before the next `---` or next `##`)
 4. Write back the full file with `write_file`
 
-For kanban boards: find the correct column heading, insert the new item above the last item in that column (or at top if empty).
-
 ---
 
 ## Sentinel-safe regeneration
@@ -199,13 +149,13 @@ Rules on refresh:
 3. Never touch `@user` blocks, and never touch anything outside the markers (treat it as human-owned).
 4. On the first run (no markers yet), wrap the content you generate in `@generated` markers so future refreshes are safe.
 
-This lets a command be idempotent and re-runnable without the user fearing it will wipe their additions. Used by `/obsidian-architect`; available to any command that maintains a regenerable note.
+This lets a command be idempotent and re-runnable without the user fearing it will wipe their additions. Available to any command that maintains a regenerable note.
 
 ---
 
 ## Batch writes
 
-A run of many `/obsidian-ingest` or `/obsidian-save` calls in one sitting has no unit-of-work boundary of its own: every note lands live as it is written, and abandoning the batch halfway means finding each note by hand (#222, raised by @konsone). The boundary has to come from the vault's own history, because it is the only layer that sees every write from every tool - the Python scripts, the MCP server, and the agent's own Write and Edit tools alike. A staging mode inside the commands would cover only the first two and leave the rest of the batch live, which is worse than no staging at all.
+A run of many `obsidian-save` or `obsidian-save` calls in one sitting has no unit-of-work boundary of its own: every note lands live as it is written, and abandoning the batch halfway means finding each note by hand (#222, raised by @konsone). The boundary has to come from the vault's own history, because it is the only layer that sees every write from every tool - the Python scripts, the MCP server, and the agent's own Write and Edit tools alike. A staging mode inside the commands would cover only the first two and leave the rest of the batch live, which is worse than no staging at all.
 
 **Git-backed vault.** Branch, run, review, then merge or discard:
 
@@ -222,7 +172,7 @@ Notes written on the branch are searchable while you are on it, which is what yo
 
 **LiveSync (CouchDB) vault.** Take a snapshot before the batch: Self-hosted LiveSync stores document history in CouchDB, so a `Settings > Sync settings > Hatch > Make a backup` (or a CouchDB replication to a scratch database) before the run is the rollback point. Restore the snapshot to abandon the batch. Pausing sync on the other devices during the batch keeps a half-finished set from propagating.
 
-**Either way**, the ingest log line the command writes (step 7 of `/obsidian-ingest`) is the audit trail for what one batch touched; keep the batch small enough that the log fits in one screen.
+**Either way**, the ingest log line the command writes (step 7 of `obsidian-save`) is the audit trail for what one batch touched; keep the batch small enough that the log fits in one screen.
 
 ## Search Before Write
 

@@ -1,24 +1,19 @@
 [project]
-name = "obsidian-second-brain-research"
-version = "0.20.0"
-description = "Research toolkit for obsidian-second-brain - Grok, Perplexity, Gemini, and YouTube research that saves to your vault"
+name = "obsidian-second-brain"
+version = "1.0.0"
+description = "LLM Wiki skills for Claude Code and Codex: init, save, find, health, review over an Obsidian vault"
 requires-python = ">=3.10"
 authors = [{ name = "Eugeniu Ghelbur" }]
+# Runtime deps for the toolkit venv. requirements.txt mirrors this list for the
+# installer, which builds the venv with plain pip.
 dependencies = [
-    "openai>=1.40.0,<3",
-    "requests>=2.32.0",
-    "python-dotenv>=1.0.0",
-    "youtube-transcript-api>=0.6.2",
-    "google-api-python-client>=2.110.0",
-    "google-genai>=2.3.0",
-    "feedparser>=6.0.10",
-    "pyyaml>=6",
+    "pyyaml>=6,<7",
+    "youtube-transcript-api>=1.2,<2",
+    "tomli>=2; python_version < \"3.11\"",
 ]
 
 [project.urls]
-Homepage = "https://github.com/eugeniughelbur/obsidian-second-brain"
-Author = "https://github.com/eugeniughelbur"
-Blog = "https://theaioperator.io"
+Upstream = "https://github.com/eugeniughelbur/obsidian-second-brain"
 
 [dependency-groups]
 dev = [
@@ -33,21 +28,8 @@ pythonpath = ["."]
 line-length = 100
 target-version = "py310"
 
-# CI gates this exact set and nothing more. "F" is pyflakes: undefined names,
-# unused imports, f-strings with no placeholders - the rules that catch bugs
-# rather than opinions. "I" sorts imports. "PTH" prefers pathlib over os.path
-# (#168), which is enforceable because the backlog was cleared first rather
-# than silenced.
-#
-# Deliberately NOT gated:
-#   E501  line length. A few hundred existing violations; line-length above
-#         stays the formatting convention, not a build-breaking rule. No count
-#         is quoted here on purpose - the last one drifted unnoticed. Run
-#         `ruff check --select E501 --statistics .` for the current number.
-#   E402  module-level import not at top. The sys.path shim these scripts use
-#         to import siblings requires it.
-#   E731  lambda assignment. Used intentionally in research/lib/config.py.
-# Widening this list means fixing the backlog first, not adding a noqa sweep.
+# CI gates this exact set: F (pyflakes), I (import sorting), PTH (pathlib).
+# Deliberately not gated: E501 line length (formatting convention only) and
+# E402 (the sys.path shim the scripts use to import siblings requires it).
 [tool.ruff.lint]
 select = ["F", "I", "PTH"]
-

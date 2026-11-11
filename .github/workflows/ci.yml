@@ -5,81 +5,28 @@ on:
     branches: [main]
   pull_request:
 
-# Least-privilege: this workflow only reads the repo to run tests.
 permissions:
   contents: read
 
 jobs:
-  smoke:
-    name: Smoke tests
-    runs-on: ubuntu-latest
+  tests:
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-      # build.sh is pure bash and vault_health.py is stdlib-only, but the
-      # free-research source library imports `requests`, export_okf (tested
-      # via the test interpreter since stress-test fix 5/24) needs `pyyaml`,
-      # and the #124 regression fence exercises `.env` loading via `python-dotenv`.
-      - name: Install test dependencies
-        run: python -m pip install --upgrade pip pytest requests pyyaml python-dotenv ruff
-      # CLAUDE.md declares ruff as the Python standard but nothing ran it.
-      # The gated set is pinned in pyproject [tool.ruff.lint]; see the comment
-      # there for what is deliberately excluded and why.
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pytest ruff -r requirements.txt
       - name: Lint Python
         run: ruff check .
-      - name: Run smoke tests
-        run: pytest -q
-      # Fail the build if a banned substitution character (em-dash, curly quote,
-      # Unicode math, ...) appears in prose in any tracked source file. Characters
-      # inside code fences / backtick spans are preserved and never fail.
-      - name: Lint substitution characters
-        run: python scripts/sweep_non_ascii.py --check
-      # The README publishes a per-platform conformance board. Fail if it no
-      # longer matches a real build, so the published table cannot go stale and
-      # a regression on a platform the maintainer does not personally use
-      # cannot pass unnoticed. Regenerate with:
-      #   uv run python scripts/conformance_report.py --write
-      - name: Verify the conformance board is current
-        run: python scripts/conformance_report.py --check
-
-      # docs/ is generated from commands/, so a command whose description or
-      # triggers changed without a site rebuild would ship a page that
-      # contradicts the command it documents. Regenerate with:
-      #   uv run python scripts/build_site.py
-      - name: Verify the docs site is current
-        run: python scripts/build_site.py --check
-
-      # The Obsidian plugin is a second implementation of AI-FIRST.md, in a
-      # second language, so it needs its own gate. A linter's failure mode is
-      # false positives, and most of these tests are about not firing.
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: integrations/obsidian-plugin/package-lock.json
-
-      - name: Obsidian plugin - typecheck, build and test
-        working-directory: integrations/obsidian-plugin
-        run: |
-          npm ci --no-audit --no-fund
-          npm run build
-          npm test
-
-  # Six of the recent bugs were Windows-only (the Store python3 alias, WSL's
-  # bash, codepage decoding, CRLF and BOM notes), and each shipped because the
-  # suite only ran here on Linux. The lint and generator checks above are
-  # platform-neutral, so this job runs the tests alone.
-  windows:
-    name: Tests (Windows)
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-      - name: Install test dependencies
-        run: python -m pip install --upgrade pip pytest requests pyyaml python-dotenv
       - name: Run tests
         run: pytest -q
+      # Fail the build if a banned substitution character (em-dash, curly quote,
+      # Unicode math) appears in prose in a tracked source file.
+      - name: Lint substitution characters
+        run: python scripts/sweep_non_ascii.py --check

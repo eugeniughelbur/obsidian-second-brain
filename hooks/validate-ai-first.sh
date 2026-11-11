@@ -166,6 +166,44 @@ FILE=$(printf '%s' "$INPUT" | jq -r '
   // ""
 ' 2>/dev/null)
 
+# Physical path: resolves `..` and symlinked folders (macOS /var -> /private/var)
+# so the vault containment check compares like with like. A path whose folder
+# does not exist is returned unchanged.
+canon_path() {
+  local d b
+  d=$(dirname -- "$1"); b=$(basename -- "$1")
+  if d=$(cd -- "$d" 2>/dev/null && pwd -P); then printf '%s/%s' "${d%/}" "$b"; else printf '%s' "$1"; fi
+}
+canon_dir() {
+  local d
+  if d=$(cd -- "$1" 2>/dev/null && pwd -P); then printf '%s' "$d"; else printf '%s' "$1"; fi
+}
+
+# Codex apply_patch: tool_input.command carries the patch text, and one patch
+# can touch several files. Codex accepts `Write|Edit` as matcher aliases for
+# apply_patch, so the same matcher fires here for both hosts. Re-run this hook
+# once per added/updated file with a Claude-shaped payload and merge whatever
+# the children report into one message. Relative patch paths resolve against
+# the payload's cwd.
+if [[ -z "$FILE" ]]; then
+  PATCH=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // .tool_input.patch // .tool_input.input // ""' 2>/dev/null)
+  if [[ "$PATCH" == *"*** Begin Patch"* ]]; then
+    PCWD=$(printf '%s' "$INPUT" | jq -r '.cwd // ""' 2>/dev/null)
+    [[ -z "$PCWD" ]] && PCWD="$PWD"
+    MSGS=""
+    while IFS= read -r rel; do
+      [[ -z "$rel" ]] && continue
+      case "$rel" in /*) abs="$rel" ;; *) abs="$PCWD/$rel" ;; esac
+      abs=$(canon_path "$abs")
+      child=$(jq -n --arg f "$abs" '{tool_name:"Write", tool_input:{file_path:$f}}' | bash "$0" 2>/dev/null)
+      m=$(printf '%s' "$child" | jq -r '.reason // empty' 2>/dev/null)
+      [[ -n "$m" ]] && MSGS="${MSGS}${m}"$'\n'
+    done < <(printf '%s\n' "$PATCH" | sed -n -e 's/^\*\*\* Add File: //p' -e 's/^\*\*\* Update File: //p' -e 's/^\*\*\* Move to: //p')
+    [[ -n "$MSGS" ]] && emit_ai_first_warning "${MSGS%$'\n'}"
+    exit 0
+  fi
+fi
+
 # Unparseable input, or input that names no tool, is not a write this hook was
 # asked about: bail silently. A payload that names a tool but carries no path
 # key this hook knows is host drift (a new editor, a renamed field): the matcher
@@ -183,6 +221,7 @@ if [[ -z "$FILE" ]]; then
   exit 1
 fi
 FILE=$(normalize_path "$FILE")
+FILE=$(canon_path "$FILE")
 # Classification (the .md gate, the vault scope, the excluded folders) uses the
 # comparison form; FILE itself stays the real path for reading the note.
 FILE_KEY=$(path_key "$FILE")
@@ -229,6 +268,7 @@ SKIP_RAW="${AI_FIRST_SKIP_CHECKS:-}"
 [[ -z "$SKIP_RAW" ]] && SKIP_RAW=$(env_value AI_FIRST_SKIP_CHECKS)
 SKIP_CHECKS=",$(printf '%s' "$SKIP_RAW" | tr -d '[:space:]'),"
 VAULT=$(normalize_path "$VAULT")
+VAULT=$(canon_dir "${VAULT%/}")
 VAULT="${VAULT%/}"
 VAULT_KEY=$(path_key "$VAULT")
 case "$FILE_KEY" in
@@ -241,7 +281,7 @@ esac
 # below keep matching the lowercased key; elsewhere the case is exact.
 case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) shopt -s nocasematch ;; esac
 case "$FILE_KEY" in
-  */raw/*|*/templates/*|*/_export/*|"$VAULT_KEY"/.obsidian/*|*/.git/*|*/.trash/*|*/.claude/*|*/.claude-memory/*|*/boards/*|*/Boards/*|*/Logs/*|*/_CLAUDE.md|*/Home.md|*/index.md|*/log.md|*/catchup.md)
+  */raw/*|*/templates/*|*/_export/*|"$VAULT_KEY"/.obsidian/*|*/.git/*|*/.trash/*|*/.claude/*|*/.claude-memory/*|*/boards/*|*/Boards/*|*/Logs/*|*/_CLAUDE.md|*/AGENTS.md|*/CLAUDE.md|*/Home.md|*/index.md|*/log.md|*/catchup.md)
     exit 0 ;;
 esac
 shopt -u nocasematch

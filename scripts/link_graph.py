@@ -246,7 +246,7 @@ def build_graph(vault: Path, scope: str | None = None) -> dict:
     for rel, note in notes.items():
         # The operating manual's [[wikilinks]] are syntax demos, not references
         # (vault_health skips it the same way).
-        if rel.rsplit("/", 1)[-1] == "_CLAUDE.md":
+        if rel.rsplit("/", 1)[-1] in ("_CLAUDE.md", "AGENTS.md", "CLAUDE.md"):
             continue
         seen: set[str] = set()
         for raw in LINK_RE.findall(note["content"]):
@@ -274,7 +274,7 @@ def build_graph(vault: Path, scope: str | None = None) -> dict:
     typed_edges: list[dict] = []
     typed_problems: list[dict] = []
     for rel, note in notes.items():
-        if rel.rsplit("/", 1)[-1] == "_CLAUDE.md":
+        if rel.rsplit("/", 1)[-1] in ("_CLAUDE.md", "AGENTS.md", "CLAUDE.md"):
             continue
         seen_typed: set[tuple[str, str]] = set()
         for etype, raw_target in note["relations"]:

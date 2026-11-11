@@ -159,7 +159,7 @@ class VaultExcludes:
     __slots__ = ("dirs", "paths", "link_scan")
 
     #: Notes whose outgoing links are never audited (see class docstring).
-    DEFAULT_LINK_SCAN_EXCLUDES = ("_CLAUDE.md", "log.md", "Vault Health*")
+    DEFAULT_LINK_SCAN_EXCLUDES = ("_CLAUDE.md", "AGENTS.md", "CLAUDE.md", "log.md", "Vault Health*")
 
     def __init__(self, dirs=None, paths=None, link_scan=None):
         self.dirs = dirs or set()
@@ -686,7 +686,7 @@ def check_orphans(notes: dict) -> list:
     for rel, note in notes.items():
         if _orphan_exempt_folder(rel):
             continue
-        if rel in ("Home.md", "_CLAUDE.md"):
+        if rel in ("Home.md", "_CLAUDE.md", "AGENTS.md", "CLAUDE.md", "index.md", "log.md"):
             continue
         stem_lower = _nfc(note["stem"]).lower()
         stem_norm = stem_lower.replace("-", " ").replace("_", " ")
@@ -729,7 +729,7 @@ def check_stale_tasks(notes: dict) -> list:
 # filename at any depth, that hooks/validate-ai-first.sh exempts at write time, so
 # a file the hook lets through is not reported here later.
 _FRONTMATTER_EXEMPT_FILES = frozenset({
-    "_CLAUDE.md", "Home.md", "index.md", "log.md", "catchup.md",
+    "_CLAUDE.md", "AGENTS.md", "CLAUDE.md", "Home.md", "index.md", "log.md", "catchup.md",
 })
 
 
@@ -816,6 +816,15 @@ def check_code_fence_wrapped(notes: dict) -> list:
     return issues
 
 
+# The skeleton scripts/bootstrap_vault.py creates (references/folder-map.md).
+# Empty on a new vault by design, so an empty one is not a finding.
+LAYOUT_FOLDERS = frozenset({
+    "raw", "raw/articles", "raw/videos", "raw/documents", "raw/images", "raw/sessions",
+    "wiki", "wiki/entities", "wiki/concepts", "wiki/sources", "wiki/projects",
+    "wiki/decisions", "wiki/synthesis", "wiki/sessions", "wiki/reviews", "Logs",
+})
+
+
 def check_empty_folders(vault: Path, excludes=None) -> list:
     excludes = excludes or _NO_EXCLUDES
     issues = []
@@ -831,6 +840,8 @@ def check_empty_folders(vault: Path, excludes=None) -> list:
             continue
         if not list(folder.iterdir()):
             rel = str(folder.relative_to(vault))
+            if _rel.as_posix() in LAYOUT_FOLDERS:
+                continue
             issues.append({
                 "type": "empty_folder",
                 "severity": "info",
@@ -1547,17 +1558,6 @@ def main():
         print(json.dumps(result, indent=2, default=str))
     else:
         print_report(result)
-        # Only on a clean run, and only ever once. A tool asking for a favour
-        # right after reporting problems it found in your vault has the tone
-        # exactly backwards.
-        if result["total_issues"] == 0 and result["total_notes"] > 0:
-            try:
-                from star_prompt import maybe_ask
-                maybe_ask(
-                    f"Clean bill of health across {result['total_notes']} notes."
-                )
-            except Exception:
-                pass  # a growth prompt must never be able to fail a health check
 
 
 if __name__ == "__main__":

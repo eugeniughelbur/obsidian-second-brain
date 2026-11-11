@@ -34,7 +34,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-__all__ = ["config_dir", "env_file", "env_value", "vault_path"]
+__all__ = ["config_dir", "env_file", "env_value", "vault_path", "language", "skill_root"]
 
 
 def config_dir() -> Path:
@@ -115,3 +115,47 @@ def vault_path() -> str:
     question the same way.
     """
     return env_value("OBSIDIAN_VAULT_PATH")
+
+
+def language() -> str:
+    """Vault writing language chosen at install time (`ko` or `en`). Default `ko`."""
+    return env_value("OSB_LANGUAGE", "ko")
+
+
+def skill_root() -> Path:
+    """The installed toolkit checkout (this file lives in <root>/scripts/)."""
+    return Path(__file__).resolve().parent.parent
+
+
+def _main() -> int:
+    """Print the resolved configuration as JSON.
+
+    Every skill runs this first. A missing or non-directory vault exits 2 so the
+    skill stops instead of writing notes into whatever directory the session was
+    started from.
+    """
+    import json
+    import sys
+
+    vault = vault_path()
+    vault_dir = Path(vault).expanduser() if vault else None
+    ok = bool(vault_dir and vault_dir.is_dir())
+    root = skill_root()
+    py = root / ".venv" / "bin" / "python"
+    print(json.dumps({
+        "vault_path": str(vault_dir) if vault_dir else "",
+        "vault_ok": ok,
+        "language": language(),
+        "skill_root": str(root),
+        "python": str(py if py.exists() else sys.executable),
+        "config_file": str(env_file()),
+    }, ensure_ascii=False, indent=2))
+    if not ok:
+        print("error: vault path is not configured or does not exist. Re-run the "
+              "installer, or set OBSIDIAN_VAULT_PATH in " + str(env_file()), file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())

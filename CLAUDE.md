@@ -1,93 +1,39 @@
 # CLAUDE.md
 
-Operating instructions for Claude Code when working inside this repo.
+Operating instructions for agents (Claude Code, Codex) working on this repo. `AGENTS.md` is a symlink to this file.
 
-This is the source repo for **obsidian-second-brain**, a Claude Code skill that turns any Obsidian vault into a living AI-first second brain. The skill ships 49 slash commands across 4 layers (vault management, thinking tools, research toolkit, scheduled agents).
-
-If you are Claude operating on a user's vault, you want `_CLAUDE.md` inside their vault, not this file. This file is for working on the skill's source code.
+This is a slimmed fork of obsidian-second-brain: five skills that run a Karpathy-style LLM Wiki over an Obsidian vault, on Claude Code and Codex only, with no external LLM APIs. If you are operating on a user's vault, read that vault's `AGENTS.md`, not this file.
 
 ## Repo layout
 
-- `commands/` - 49 slash command definitions, one `.md` per command. **This is the platform-neutral source.** Adapters compile it for each platform.
-- `references/` - shared specs that commands link to. **`ai-first-rules.md` is the canonical vault-write spec** and is non-negotiable.
-- `scripts/` - Python helpers (`bootstrap_vault.py`, `vault_health.py`, the `research/` toolkit), plus `build.sh` (the adapter orchestrator) and `lib.sh`.
-- `adapters/` - platform translation layer. `lib.sh` holds shared parsing helpers. `claude-code/`, `codex-cli/`, `gemini-cli/`, `opencode/`, `hermes/`, `pi/`, `agent-skills/`, `grok-bot/` each ship an `adapter.sh`.
-- `dist/` - build output, one tree per platform. **Gitignored.** Regenerate with `bash scripts/build.sh` (all platforms) or `bash scripts/build.sh --platform <name>`.
-- `hooks/` - Claude Code hooks shipped with the skill.
-- `SKILL.md` - full operating manual loaded by Claude when the skill activates.
-- `architecture.md` - how the layers fit together.
-- `README.md` - public-facing docs on github.com.
-- `pyproject.toml` - Python deps managed via `uv`.
-- `install.sh` - one-shot installer that symlinks the skill into `~/.claude/`. (Legacy; for non-Claude platforms see `dist/<platform>/INSTALL.md` after building.)
+- `skills/<name>/SKILL.md` - the five skills (`obsidian-init`, `obsidian-save`, `obsidian-find`, `obsidian-health`, `obsidian-review`). One file serves both hosts. `{{OSB_ROOT}}` is replaced with the absolute toolkit path by the installer.
+- `references/` - `ai-first-rules.md` (canonical note spec, non-negotiable), `folder-map.md` (vault layout), `agents-md-template.md` (vault schema template), `write-rules.md`, `freshness-policy.md`, `source-quality-check.md`.
+- `scripts/` - stdlib-first Python helpers. `osb_env.py` resolves config (vault path, language, toolkit root); `bootstrap_vault.py` creates the vault; `host_config.py` edits Claude/Codex config; `quick-install.sh` is the only installer.
+- `hooks/validate-ai-first.sh` - PostToolUse validator. Handles Claude `Write|Edit` payloads and Codex `apply_patch` payloads.
+- `tests/test_core.py` - CI suite.
 
-### The adapter pattern
+## Invariants
 
-Source files in `commands/` use Claude Code's slash-command shape. The Claude Code adapter is an identity copy. The other adapters translate per platform: `codex-cli`, `hermes`, `agent-skills`, and `grok-bot` emit **native skills** (one `SKILL.md` per command; `agent-skills` is a single spec-compliant `.agents/skills/` tree that Codex, OpenCode, and Google Antigravity all read, with a shared `obsidian-core` engine skill; `grok-bot` emits Grok Bot / Sand skills that use the `user-obsidian-second-brain` MCP server for vault I/O), `pi` emits a Pi package (`.pi/prompts/` + `.pi/skills/`), and `gemini-cli` / `opencode` emit a dispatcher file (`GEMINI.md` / `AGENTS.md`) with an **auto-generated routing table** built from each command's `description:` frontmatter, plus the command bodies under `.gemini/` / `.opencode/`. Tool-name references like `Read tool` are rewritten to neutral wording (`read files`) so the instructions still make sense outside Claude Code.
-
-**When adding a new command, only edit `commands/<name>.md`.** The adapters pick it up automatically on the next build. Optional frontmatter fields: `exclude: [<platform>]` to opt out per platform.
-
-## The AI-first rule (non-negotiable)
-
-Every command that writes to a user's vault MUST follow `references/ai-first-rules.md`. Vault notes are designed for **future agent retrieval**, not human reading. This means:
-
-- A `## For future agent` preamble at the top of every note
-- Rich frontmatter: `type`, `date`, `tags`, `ai-first: true`, plus type-specific fields
-- `[[wikilinks]]` for every person, project, idea, decision referenced
-- External claims carry recency markers like `(as of 2026-04, source.com)`
-- Source URLs preserved verbatim inline
-- Confidence levels where applicable (`stated | high | medium | speculation`)
-
-If you are editing a command file in `commands/`, do not rewrite the AI-first preamble out of it. Do not "humanize" vault output. Do not drop frontmatter to make notes look cleaner.
+- Skills resolve the vault through `python3 {{OSB_ROOT}}/scripts/osb_env.py` and stop if it fails. Never fall back to the working directory: skills run from any project.
+- Skills must not depend on host-only tools or env vars. Subagents: parallel if the host supports them, otherwise sequential, same result.
+- Every vault write follows `references/ai-first-rules.md` and is re-checked with `scripts/check_notes.py` at the end of the skill, hook or no hook.
+- Existing vault notes change only after the user approves a proposal (unless the vault sets `rewrite_policy: unattended`). Notes are never deleted; merges leave `type: redirect`.
+- `host_config.py` must stay idempotent, back up before writing, keep other tools' hooks in place (Codex trusts hooks by position), and verify the TOML it writes parses.
+- No em-dashes, en-dashes, curly quotes or Unicode math in source files (`scripts/sweep_non_ascii.py --check`).
 
 ## Conventions
 
-- **Markdown:** sentence-case headers (`## What it does`, not `## What It Does`). No emojis in command files. No substitution Unicode in source files, docs, or commits: em-dashes (`—`), en-dashes (`–`), curly/smart quotes, and Unicode math substitutions (`≥ ≤ ≠`) are banned. Allowed: box-drawing chars (`─` U+2500-257F), arrows (`→ ←`), currency symbols (`€ £ ¥`), and Nerd Font / private-use codepoints - all carry semantic meaning rather than substituting for ASCII. Enforced by `hooks/validate-ai-first.sh` check 5 on vault writes.
-- **Python:** ruff, target `py310`. CI runs `ruff check .`; the gated rule set is pinned in `pyproject.toml` under `[tool.ruff.lint]` and is currently `F` (pyflakes), `I` (import sorting), and `PTH` (prefer `pathlib` over `os.path`), with a comment there listing what is excluded and why. Read the `select` list rather than this sentence when it matters - it is the source of truth, and this sentence has drifted behind it before. `line-length = 100` is the formatting convention, not a build-breaking rule - there are 203 existing violations, so gating it means fixing that backlog first, not adding a noqa sweep.
-- **Commits:** imperative mood (`Add`, `Fix`, `Update`). Co-author Claude when pair-programmed.
-- **Frontmatter:** YAML, double-quoted strings when in doubt, lowercase tag values.
+- Python: ruff (`F`, `I`, `PTH`), target py310, line length 100 as convention.
+- Commits: imperative mood. Co-author Claude when pair-programmed.
+- Skill bodies are written in Korean; frontmatter `description` is English plus Korean trigger phrases.
 
-## Adding a new command
-
-1. Create `commands/<name>.md` with `description:` frontmatter and operating instructions.
-2. If it runs Python, add `scripts/research/<name>.py` (or appropriate subfolder).
-3. **Apply the AI-first rule to every vault write.** Reference `references/ai-first-rules.md` from the command body so future agent has the spec inline.
-4. If the command produces a new note type, add its frontmatter schema to `references/ai-first-rules.md`.
-5. Update `SKILL.md` (Layer section + command list) and `README.md` (commands table).
-6. Run `uv run python scripts/stamp_credit.py` so the new file carries the author credit. `tests/test_author_credit.py` fails CI if a command, reference or script is missing it.
-7. Add a `CHANGELOG.md` entry under "Unreleased".
-
-## Testing locally
-
-Symlink the local checkout into Claude Code so slash commands run from this repo:
+## Checks
 
 ```bash
-ln -s "$(pwd)" ~/.claude/skills/obsidian-second-brain
-ln -s commands/* ~/.claude/commands/
+.venv/bin/pytest -q
+.venv/bin/ruff check .
+python3 scripts/sweep_non_ascii.py --check
+bash scripts/quick-install.sh --local   # install from this checkout
 ```
 
-Then restart Claude Code and run the command against a test vault. Command behavior itself is still verified manually: run the command, inspect the resulting vault notes, confirm AI-first compliance.
-
-There is a smoke-test suite (`tests/test_smoke.py`) that guards the build pipeline (adapter output paths, `vault_health` JSON, OKF export, and similar). CI runs it on every push. Run it locally before pushing any change to `adapters/`, `scripts/`, or `commands/`:
-
-```bash
-uv run pytest -q
-```
-
-If you change an adapter's output layout, update the matching assertion in `tests/test_smoke.py` in the same commit.
-
-## Release process
-
-1. PRs land on `main` only when CI is green and the AI-first rule is upheld.
-2. Move "Unreleased" entries in `CHANGELOG.md` under a new version header with the release date.
-3. Bump version in `pyproject.toml`, `CITATION.cff`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json` (metadata + plugin entry; `tests/test_plugin_manifest.py` fails CI if these drift from pyproject).
-4. Tag and push: `git tag v0.X.0 && git push origin v0.X.0`.
-5. Cut a GitHub Release with notes copied from the CHANGELOG entry, laid out with `.github/RELEASE_NOTES_TEMPLATE.md`. End with the signed note from the maintainer, and set `utm_campaign` in its Substack link to the version tag.
-
-## What not to do
-
-- Do not rewrite vault output to be "more human-friendly." The vault is for future agent, not human readers.
-- Do not strip frontmatter or `## For future agent` preambles from existing commands.
-- Do not add emojis to command files or vault output (unless explicitly part of a UI element like a kanban column emoji).
-- Do not invent rates, dates, or relationships when writing project notes - mark unknowns as `TBD`.
-- **Contributors:** do not push to `main` directly - open a PR.
-- **Maintainer (Eugeniu) and Claude assisting him:** may push to `main` directly when working solo. PRs are optional, not mandatory.
+Changes that can affect Codex behavior (skills, hooks, host_config, installer) get a Codex review before merging.

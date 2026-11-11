@@ -17,7 +17,7 @@ record).
 The merged BODY is deliberately NOT composed here. Deciding what is actually a
 contradiction between two notes' prose is judgment, not mechanics - the same
 split heal_links.py (mechanical) draws against triage_links.py (AI judgment).
-commands/obsidian-merge.md composes the body (following references/ai-first-
+skills/obsidian-health/SKILL.md composes the body (following references/ai-first-
 rules.md: one `## For future agent` preamble, both provenance trails kept,
 contradictions listed) and hands it to this script via --merged-body-file.
 
@@ -42,7 +42,7 @@ from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from export_okf import parse_note  # noqa: E402 - reuse the one dict-frontmatter parser in the repo
+from frontmatter import parse_note  # noqa: E402
 from note_io import NoteChangedError, read_exact, write_exact_if_unchanged  # noqa: E402
 from vault_health import check_duplicates, load_vault, load_vault_config  # noqa: E402
 
@@ -104,7 +104,7 @@ def _dump_entry(key: str, v, indent: int = 0) -> str:
 
 
 def dump_frontmatter(fm: dict) -> str:
-    """The inverse of export_okf.parse_note's yaml.safe_load - there is no
+    """The inverse of frontmatter.parse_note's yaml.safe_load - there is no
     existing serializer in this repo (yaml.dump's default style does not match
     the hand-tuned conventions in CLAUDE.md), so this writes clean text
     directly instead of reformatting through PyYAML."""
@@ -362,7 +362,7 @@ def main():
     if not args.merged_body_file:
         ap.error(
             "--merged-body-file is required: dry-run previews the exact text --apply would "
-            "write, so compose the merged body first (see commands/obsidian-merge.md)"
+            "write, so compose the merged body first (see skills/obsidian-health/SKILL.md)"
         )
     merged_body = read_exact(Path(args.merged_body_file).expanduser())
     if merged_body is None:
