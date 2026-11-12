@@ -261,5 +261,10 @@ def test_query_embedding_timeout_follows_the_env(monkeypatch):
             mod = importlib.reload(vault_ops)
             assert mod._embed_query("zebra facts") == [1.0]
             assert seen["timeout"] == 45
+
+            # Read at import, so a bad value must not stop the module loading.
+            for bad in ("soon", "0", "-3", "nan", "inf"):
+                patch.setenv("OBSIDIAN_EMBED_QUERY_TIMEOUT", bad)
+                assert importlib.reload(vault_ops)._EMBED_QUERY_TIMEOUT == 10
     finally:
         importlib.reload(vault_ops)

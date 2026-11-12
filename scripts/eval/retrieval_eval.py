@@ -478,6 +478,9 @@ def _fallback_error(fusion: dict[str, Any], n: int, per_case: list[dict[str, Any
     ]
     for reason, count in Counter(x["fusion_reason"] for x in fell).most_common(5):
         lines.append(f"  {count}x {reason}")
+    # Reasons quote the embedder's own error text. Keep the report printable
+    # on a console that cannot encode it (cp1252 on Windows).
+    lines = [x.encode("ascii", "backslashreplace").decode("ascii") for x in lines]
     lines.append(
         "  Check that the embedder is running and the model is loaded, or raise "
         "OBSIDIAN_EMBED_QUERY_TIMEOUT, then rerun. For lexical numbers use --mode lexical."
