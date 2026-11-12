@@ -32,6 +32,10 @@ Usage:
 
 Env (from ~/.config/obsidian-second-brain/.env): OBSIDIAN_VAULT_PATH required;
 XAI_API_KEY optional (enables the LLM question generator).
+
+--mode default counts, per query, whether the shipped search fused, skipped
+fusion on purpose, or fell back to lexical, and exits 1 without a report when
+any query fell back (#386).
 """
 
 from __future__ import annotations
@@ -41,6 +45,8 @@ import json
 import os
 import re
 import sys
+import time
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -246,6 +252,83 @@ def _split_external_cmd(cmd: str) -> list[str]:
     return parts
 
 
+class _FusionTally:
+    """Record, per query, whether the shipped default search really fused (#386).
+
+    `vault_ops.search` serves pure lexical results whenever `_semantic_fuse`
+    returns None, and nothing in its return value says which happened. This
+    wraps `_semantic_fuse` for the length of a default-mode run and sorts each
+    query into one of three outcomes:
+
+      fused     the semantic arm ran and its ranking was fused in
+      skipped   fusion was not attempted, on purpose: a single-term query
+                (search turns fusion off for those), OBSIDIAN_SEARCH_SEMANTIC=0,
+                no semantic index, or a query with no searchable terms
+      fallback  fusion was enabled and an index exists, but the fuse returned
+                None (slow or missing embedder, empty index, any error)
+
+    Only `fallback` means the row is not what its label says.
+    """
+
+    def __init__(self) -> None:
+        self.outcome: str | None = None
+        self.reason: str | None = None
+        self._embed_error: str | None = None
+        self._real_fuse = vault_ops._semantic_fuse
+        self._real_embed = vault_ops._embed_query
+
+    def install(self) -> None:
+        vault_ops._semantic_fuse = self._fuse
+        vault_ops._embed_query = self._embed
+
+    def uninstall(self) -> None:
+        vault_ops._semantic_fuse = self._real_fuse
+        vault_ops._embed_query = self._real_embed
+
+    def start_query(self) -> None:
+        self.outcome, self.reason, self._embed_error = None, None, None
+
+    def search_raised(self, error: Exception) -> None:
+        # Not fused, and not skipped on purpose either: the row must not pass.
+        self.outcome = "fallback"
+        self.reason = f"search raised {type(error).__name__}: {error}"
+
+    def result(self) -> tuple[str, str | None]:
+        if self.outcome is None:  # search returned before it reached the fuse
+            return "skipped", "no searchable terms"
+        return self.outcome, self.reason
+
+    def _embed(self, *args: Any, **kwargs: Any) -> Any:
+        started = time.monotonic()
+        try:
+            return self._real_embed(*args, **kwargs)
+        except Exception as e:
+            self._embed_error = (
+                f"query embedding failed after {time.monotonic() - started:.1f}s "
+                f"(limit {vault_ops._EMBED_QUERY_TIMEOUT:g}s): {type(e).__name__}: {e}"
+            )
+            raise
+
+    def _fuse(self, query: str, lexical: Any, vault: Path, limit: int,
+              enabled: bool | None = None, **kwargs: Any) -> Any:
+        skipped = None
+        if enabled is False:
+            skipped = "single-term query"
+        elif enabled is None and not vault_ops._SEMANTIC_ENABLED:
+            skipped = "OBSIDIAN_SEARCH_SEMANTIC=0"
+        elif not (vault / vault_ops._SEMANTIC_INDEX_FILE).exists():
+            skipped = "no semantic index"
+        fused = self._real_fuse(query, lexical, vault, limit, enabled=enabled, **kwargs)
+        if skipped:
+            self.outcome, self.reason = "skipped", skipped
+        elif fused is not None:
+            self.outcome = "fused"
+        else:
+            self.outcome = "fallback"
+            self.reason = self._embed_error or "semantic arm returned nothing"
+        return fused
+
+
 def _searcher(mode: str):
     """Return a (label, fn(query)->results) for the chosen retrieval mode.
 
@@ -336,6 +419,75 @@ def _searcher(mode: str):
                                    limit=SEARCH_LIMIT)
 
 
+def _score_cases(cases: list[dict[str, Any]], search_fn: Any,
+                 tally: _FusionTally | None = None) -> list[dict[str, Any]]:
+    per_case: list[dict[str, Any]] = []
+    for c in cases:
+        if tally:
+            tally.start_query()
+        try:
+            results = search_fn(c["q"])
+        except Exception as e:
+            # One bad case must not discard every case already scored. In
+            # semantic/hybrid mode embed() uses the full (1,3,8,15) retry ladder
+            # at 120s per attempt, so a slow backend can burn ~10 minutes here
+            # and then take the entire run down with it. Count it as a miss.
+            print(f"  case failed, counted as a miss: {c['q'][:60]!r}: {e}", file=sys.stderr)
+            results = []
+            if tally:
+                tally.search_raised(e)
+        rank = _rank_of_gold(results, c.get("gold", []))
+        top = results[0]["path"] if results else None
+        per_case.append({
+            "q": c["q"],
+            "gold": c.get("gold", []),
+            "rank": rank,
+            "top_hit": top,
+            "title": c.get("title", ""),
+        })
+        if tally:
+            per_case[-1]["fusion"], reason = tally.result()
+            if reason:
+                per_case[-1]["fusion_reason"] = reason
+    return per_case
+
+
+def _fusion_summary(per_case: list[dict[str, Any]]) -> dict[str, Any]:
+    counts = Counter(x["fusion"] for x in per_case)
+    return {
+        "fused": counts["fused"],
+        "skipped": counts["skipped"],
+        "fallback": counts["fallback"],
+        "skipped_reasons": dict(sorted(Counter(
+            x["fusion_reason"] for x in per_case if x["fusion"] == "skipped").items())),
+    }
+
+
+def _fusion_line(fusion: dict[str, Any]) -> str:
+    why = ", ".join(f"{r}: {c}" for r, c in fusion["skipped_reasons"].items())
+    return (f"fusion: {fusion['fused']} fused, {fusion['skipped']} skipped by design"
+            f"{' (' + why + ')' if why else ''}, {fusion['fallback']} fell back")
+
+
+def _fallback_error(fusion: dict[str, Any], n: int, per_case: list[dict[str, Any]]) -> str:
+    fell = [x for x in per_case if x["fusion"] == "fallback"]
+    lines = [
+        f"Refusing to report a default-mode row: {len(fell)} of {n} queries fell back "
+        f"to pure lexical although fusion was enabled and a semantic index exists.",
+        f"  {_fusion_line(fusion)}",
+    ]
+    for reason, count in Counter(x["fusion_reason"] for x in fell).most_common(5):
+        lines.append(f"  {count}x {reason}")
+    # Reasons quote the embedder's own error text. Keep the report printable
+    # on a console that cannot encode it (cp1252 on Windows).
+    lines = [x.encode("ascii", "backslashreplace").decode("ascii") for x in lines]
+    lines.append(
+        "  Check that the embedder is running and the model is loaded, or raise "
+        "OBSIDIAN_EMBED_QUERY_TIMEOUT, then rerun. For lexical numbers use --mode lexical."
+    )
+    return "\n".join(lines)
+
+
 def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
     if not cases_path.exists():
         print(
@@ -350,28 +502,28 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
         return 1
 
     label, search_fn = _searcher(mode)
-    per_case: list[dict[str, Any]] = []
-    for c in cases:
-        try:
-            results = search_fn(c["q"])
-        except Exception as e:
-            # One bad case must not discard every case already scored. In
-            # semantic/hybrid mode embed() uses the full (1,3,8,15) retry ladder
-            # at 120s per attempt, so a slow backend can burn ~10 minutes here
-            # and then take the entire run down with it. Count it as a miss.
-            print(f"  case failed, counted as a miss: {c['q'][:60]!r}: {e}", file=sys.stderr)
-            results = []
-        rank = _rank_of_gold(results, c.get("gold", []))
-        top = results[0]["path"] if results else None
-        per_case.append({
-            "q": c["q"],
-            "gold": c.get("gold", []),
-            "rank": rank,
-            "top_hit": top,
-            "title": c.get("title", ""),
-        })
+    # Default mode only: it is the one mode that goes through search()'s
+    # silent lexical fallback. lexical forces fusion off; semantic and hybrid
+    # call the embedder themselves.
+    tally = _FusionTally() if mode == "default" else None
+    if tally:
+        tally.install()
+    try:
+        per_case = _score_cases(cases, search_fn, tally)
+    finally:
+        if tally:
+            tally.uninstall()
 
     n = len(per_case)
+    fusion = None
+    if tally:
+        fusion = _fusion_summary(per_case)
+        if fusion["fallback"]:
+            # A default row with fallbacks is part lexical under a fused label.
+            # Refuse to report it: in #342 a whole pass came out lexical and
+            # was caught only because one score looked wrong.
+            print(_fallback_error(fusion, n, per_case), file=sys.stderr)
+            return 1
     recall = {k: sum(1 for x in per_case if 0 < x["rank"] <= k) / n for k in RECALL_KS}
     mrr = sum((1.0 / x["rank"]) if x["rank"] else 0.0 for x in per_case) / n
     misses = [x for x in per_case if x["rank"] == 0]
@@ -385,6 +537,8 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
         "misses": len(misses),
         "buried_below_3": len(buried),
     }
+    if fusion is not None:
+        summary["fusion"] = fusion
 
     if as_json:
         # Force UTF-8 stdout: on Windows a pipe defaults to cp1252, which cannot
@@ -402,6 +556,8 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
         bar = "#" * round(recall[k] * 40)
         print(f"  recall@{k:<2} {recall[k]*100:5.1f}%  {bar}")
     print(f"  MRR      {mrr:.3f}")
+    if fusion is not None:
+        print(f"  {_fusion_line(fusion)}")
     print(f"  misses (gold not in top {SEARCH_LIMIT}): {len(misses)}   buried (rank>3): {len(buried)}")
 
     if misses:

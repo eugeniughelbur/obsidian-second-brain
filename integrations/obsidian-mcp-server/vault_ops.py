@@ -259,6 +259,31 @@ _RRF_SEMANTIC_WEIGHT = float(os.environ.get("OBSIDIAN_RRF_SEMANTIC_WEIGHT") or "
 # default because no measured sweep has backed one, and the weight already
 # converges the fusion to pure-semantic quality on the case sets that were run.
 _FUSE_LEX_DEPTH = int(os.environ.get("OBSIDIAN_RRF_LEX_DEPTH") or "25")
+# How long one query embedding may take before search falls back to lexical.
+# The index build waits 120s with retries; a query waits this long with none,
+# so on a loaded machine or a cold model load an index that built fine can
+# still fail to fuse (#386). Raise it there rather than lose the semantic arm.
+# A value that is not a positive number keeps the default and says so, because
+# this is read at import: raising here would take the whole search down.
+def _query_timeout_from_env(default: float = 10.0) -> float:
+    raw = os.environ.get("OBSIDIAN_EMBED_QUERY_TIMEOUT")
+    if not raw:
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        value = 0.0
+    if 0.0 < value < float("inf"):
+        return value
+    print(
+        f"warning: OBSIDIAN_EMBED_QUERY_TIMEOUT={raw!r} is not a positive number "
+        f"of seconds; using {default:g}",
+        file=sys.stderr,
+    )
+    return default
+
+
+_EMBED_QUERY_TIMEOUT = _query_timeout_from_env()
 # The semantic index is built on demand and never invalidates itself, so a note
 # written after the last build is invisible to the semantic arm. On English
 # queries the lexical arm covers for that; on a query in another language it
@@ -384,7 +409,7 @@ def _embed_query(text: str, model: Optional[str] = None) -> Optional[List[float]
         url = f"{_EMBED_URL}/api/embeddings"
     req = urllib.request.Request(url, data=body, headers=headers if _EMBED_BACKEND == "openai"
                                 else {"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=10) as r:
+    with urllib.request.urlopen(req, timeout=_EMBED_QUERY_TIMEOUT) as r:
         data = json.loads(r.read())
     if data.get("embedding"):
         return data["embedding"]
