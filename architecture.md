@@ -207,3 +207,9 @@ Background path: on context compaction the opt-in PostCompact hook runs a headle
 5. **Propagate everything.** Every write updates linked notes, the index, and the operation log.
 6. **Safe by default.** The background agent is opt-in and additive-only; `dist/` is regenerated, not edited; refresh-style commands (`/obsidian-architect`) use sentinel markers so re-runs never clobber hand edits.
 7. **The vault compounds.** More writing means more context, which makes the AI a more capable partner over time.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

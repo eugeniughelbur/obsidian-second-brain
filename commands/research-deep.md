@@ -22,7 +22,7 @@ Use the obsidian-second-brain skill. Execute `/research-deep [topic]`:
    - **Phase 1** - vault scan: finds existing notes mentioning the topic (the baseline).
    - **Phase 2** - gap analysis: Perplexity sonar-pro identifies what's missing/stale and emits 3-5 targeted queries (each tagged `web` or `x`).
    - **Phase 3** - gap-fill: runs each query via Perplexity (web) or Grok x_search (X discourse).
-   - **Phase 3.5** (optional) - if `TAVILY_API_KEY` is set, the top cited sources are fetched as page text (Tavily Extract, capped at 3 pages and 8,000 characters per page) and injected into the synthesis so it reads what the pages actually say, not just snippets. A page longer than the cap arrives as its opening section with the cut marked inline; treat what is missing as unread rather than as absent from the source. Skipped silently without the key - never require it.
+   - **Phase 3.5** (optional) - if `TAVILY_API_KEY` is set, the top cited sources are fetched as page text (Tavily Extract, capped at 3 pages and 8,000 characters per page) and injected into the synthesis so it reads what the pages actually say, not just snippets. A page longer than the cap arrives as its opening section with the cut marked inline; treat what is missing as unread rather than as absent from the source. If only `FIRECRAWL_API_KEY` is set, Firecrawl scrape reads the same pages under the same caps; with both keys set, Tavily runs as before. Skipped silently without either key - never require one.
    - **Phase 4** - synthesis: Perplexity produces a delta report, the script saves it to `Research/Deep/YYYY-MM-DD - <slug>.md`, then emits a JSON payload between `<<<RESEARCH_DEEP_PROPAGATION_PAYLOAD>>>` markers.
 
    Show the synthesis body verbatim, then do the propagation step (step 5).
@@ -54,3 +54,9 @@ Use the obsidian-second-brain skill. Execute `/research-deep [topic]`:
 **AI-first rule:** Every note created or updated by this command MUST follow `references/ai-first-rules.md` - `## For future agent` preamble, rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields), recency markers per external claim, mandatory `[[wikilinks]]` for every person/project/concept referenced, sources preserved verbatim with URLs inline, and confidence levels where applicable. If that path does not resolve from your working directory, search upward for it; if you still cannot read it, say so before writing rather than producing a note that silently skips the rule. The vault is for future agent retrieval - not human reading.
 
 **Anti-fabrication:** Search exhaustively before claiming any note, person, or file is absent - false absence is the most common failure mode - and never invent facts, entities, or dates (mark unknowns as `TBD`). See the anti-fabrication and search-completeness hard rules in `references/ai-first-rules.md`.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

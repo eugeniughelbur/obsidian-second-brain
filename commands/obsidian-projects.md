@@ -89,3 +89,9 @@ If a project note doesn't exist yet but was discoverable via git (e.g. the repo 
 **AI-first rule:** Every vault write MUST follow `references/ai-first-rules.md` - `## For future agent` preamble, rich frontmatter, `[[wikilinks]]` for every project referenced, recency markers on git-sourced facts (e.g. `(as of 2026-05-21, git log)`), sources noted inline. If that path does not resolve from your working directory, search upward for it; if you still cannot read it, say so before writing rather than producing a note that silently skips the rule.
 
 **Anti-fabrication:** Search exhaustively before claiming any note, person, or file is absent - false absence is the most common failure mode - and never invent facts, entities, or dates (mark unknowns as `TBD`). See the anti-fabrication and search-completeness hard rules in `references/ai-first-rules.md`.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

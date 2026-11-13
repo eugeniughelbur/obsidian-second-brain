@@ -318,7 +318,7 @@ A vault that has decided a locator is not a source sets `"source_policy": "stric
 - `medium` - provenance is traceable from signals capture already had: a named author or channel, a publication date, a stable URL, a repository owner.
 - `speculation` - the floor. Provenance unknown, derived (a summary of a summary) or conflicting. An uninvestigated source is `speculation`, which is the honest default and not an error state.
 
-The exact signals, and the rule that makes a label checkable by reading the note, are in `references/source-quality-check.md`. The field says nothing about whether the claims are true. `/obsidian-health` warns when a note cites only `speculation` sources; `"source_quality_policy": "silent"` in `.vault-config.json` mutes that, and no value blocks a capture.
+The exact signals, and the rule that makes a label checkable by reading the note, are in `references/source-quality-check.md`. The field says nothing about whether the claims are true. `/obsidian-health` warns when a note cites only `speculation` sources; `"source_quality_policy": "silent"` in `.vault-config.json` mutes that, and no value blocks a capture. At compile time, `/obsidian-ingest` and `/obsidian-synthesize` treat a `speculation` source as a proposal: it never rewrites an existing note on its own, even in `unattended` mode.
 
 ## Documented exceptions
 
@@ -614,3 +614,9 @@ When auditing an existing note (Phase 2 work or one-off cleanup), verify:
 ## Migration Note
 
 This rule was established 2026-04-25 and shipped as part of obsidian-second-brain v0.5.0 (Research Toolkit). All 5 research commands (`/x-read`, `/x-pulse`, `/research`, `/research-deep`, `/youtube`) follow it from day one. The 26 existing `/obsidian-*` commands were updated in v0.6.0 (Phase 2) to explicitly reference this document. Notes written before that may not yet meet the standard - `/obsidian-health` flags them.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

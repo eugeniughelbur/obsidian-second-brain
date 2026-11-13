@@ -39,3 +39,9 @@ How every command decides **which folder** a note belongs in. Never hardcode a f
 - **ADRs:** wiki-style keeps decision records in `wiki/decisions/`; Obsidian-style keeps them in `Knowledge/` with an `ADR-` filename prefix. Resolve per `_CLAUDE.md`.
 - **Folders this table does not list:** the rule above is for resolving a note type, and rule 4 still holds - a command never invents a folder name. `scripts/bootstrap_vault.py` is the one exception, and only at bootstrap: a preset folder with no row here (`Goals/`, `Sources/`, `Health/`) is created under `wiki/` with its own name lowercased (`wiki/goals/`, `wiki/sources/`, `wiki/health/`) when the vault is built with `--style wiki`, and the vault's `_CLAUDE.md` folder map then names it, which is what commands resolve against.
 - **Searching across types:** when a command greps "everywhere" (e.g. synthesis, find), enumerate whatever top-level note folders actually exist in the vault rather than a fixed list - read the vault root once and match the folders present.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

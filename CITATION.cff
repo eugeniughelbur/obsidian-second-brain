@@ -20,8 +20,8 @@ abstract: >
 authors:
   - family-names: "Ghelbur"
     given-names: "Eugeniu"
-    affiliation: "Single Grain"
     email: "e.ghelbur@gmail.com"
+    website: "https://github.com/eugeniughelbur"
 type: software
 license: MIT
 repository-code: "https://github.com/eugeniughelbur/obsidian-second-brain"

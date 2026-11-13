@@ -146,6 +146,10 @@ def test_the_corpus_is_marked_synthetic(built):
 def test_the_generator_carries_no_real_vault_paths():
     """Guards the reason the real case files are gitignored in the first place."""
     src = (REPO_ROOT / "scripts" / "eval" / "corpus.py").read_text(encoding="utf-8")
+    # The author-credit header (scripts/stamp_credit.py) names the author on
+    # purpose; it is attribution, not vault data, so it is left out of the scan.
+    credit = ("# SPDX-", "# Author:", "# Questions or consulting:")
+    src = "\n".join(ln for ln in src.splitlines() if not ln.startswith(credit))
     for marker in ("/Users/", "Eugeniu", "obsinian", "singlegrain"):
         assert marker not in src, f"generator source contains {marker!r}"
 

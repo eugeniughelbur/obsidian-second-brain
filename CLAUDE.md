@@ -53,7 +53,8 @@ If you are editing a command file in `commands/`, do not rewrite the AI-first pr
 3. **Apply the AI-first rule to every vault write.** Reference `references/ai-first-rules.md` from the command body so future agent has the spec inline.
 4. If the command produces a new note type, add its frontmatter schema to `references/ai-first-rules.md`.
 5. Update `SKILL.md` (Layer section + command list) and `README.md` (commands table).
-6. Add a `CHANGELOG.md` entry under "Unreleased".
+6. Run `uv run python scripts/stamp_credit.py` so the new file carries the author credit. `tests/test_author_credit.py` fails CI if a command, reference or script is missing it.
+7. Add a `CHANGELOG.md` entry under "Unreleased".
 
 ## Testing locally
 
@@ -80,7 +81,7 @@ If you change an adapter's output layout, update the matching assertion in `test
 2. Move "Unreleased" entries in `CHANGELOG.md` under a new version header with the release date.
 3. Bump version in `pyproject.toml`, `CITATION.cff`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json` (metadata + plugin entry; `tests/test_plugin_manifest.py` fails CI if these drift from pyproject).
 4. Tag and push: `git tag v0.X.0 && git push origin v0.X.0`.
-5. Cut a GitHub Release with notes copied from the CHANGELOG entry.
+5. Cut a GitHub Release with notes copied from the CHANGELOG entry, laid out with `.github/RELEASE_NOTES_TEMPLATE.md`. End with the signed note from the maintainer, and set `utm_campaign` in its Substack link to the version tag.
 
 ## What not to do
 

@@ -102,3 +102,9 @@ A kept Grok Bot lesson changes the local profile draft. Paste the changed block 
 Every read labels records as data and quotes each entry. This framing does not guarantee immunity to prompt injection.
 Agents must follow their own rules when records contain instructions.
 Crew makes no model calls and runs no background loop. Agent hosts decide when hooks fire and whether returned context reaches the model.
+
+<!-- author-credit -->
+
+---
+
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
+# SPDX-License-Identifier: MIT
+# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Loads research-toolkit credentials and model defaults from ~/.config/obsidian-second-brain/.env"""
 
 import os
@@ -53,6 +57,7 @@ PERPLEXITY_API_KEY = lambda: get_required("PERPLEXITY_API_KEY")
 GEMINI_API_KEY = lambda: get_required("GEMINI_API_KEY")
 OPENAI_API_KEY = lambda: get_required("OPENAI_API_KEY")
 YOUTUBE_API_KEY = lambda: get_optional("YOUTUBE_API_KEY", "")
+FIRECRAWL_API_KEY = lambda: get_optional("FIRECRAWL_API_KEY", "")
 
 # grok-4 no longer appears in GET /v1/models (it still resolves server-side, but is
 # unlisted). grok-4.5 is current and verified against the x_search tool.

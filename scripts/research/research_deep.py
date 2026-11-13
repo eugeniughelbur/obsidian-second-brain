@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
+# SPDX-License-Identifier: MIT
+# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """/research-deep [topic] [--free] [--academic] - vault-first deep research.
 
 Paid flow (default when PERPLEXITY_API_KEY is set):
@@ -300,12 +304,13 @@ def run_paid_deep(topic: str) -> int:
 
     findings = "\n\n".join(findings_chunks) if findings_chunks else "(no findings - all targeted queries failed)"
 
-    # Phase 3.5 (optional): read the top sources in full via Tavily Extract, so
-    # synthesis sees actual page content instead of snippets. Skipped silently
-    # without TAVILY_API_KEY; never fatal.
+    # Phase 3.5 (optional): read the top sources via Tavily Extract, or Firecrawl
+    # scrape when only FIRECRAWL_API_KEY is set, so synthesis sees actual page
+    # content instead of snippets. Skipped silently without either key; never fatal.
     from .lib import web_reader
     if web_reader.available() and sources_collected:
-        print("[/research-deep] Phase 3.5: extracting full text of top sources (Tavily)...", file=sys.stderr)
+        print(f"[/research-deep] Phase 3.5: extracting full text of top sources "
+              f"({web_reader.provider().title()})...", file=sys.stderr)
         extracted = web_reader.read(sources_collected)
         if extracted:
             blocks = "\n\n".join(

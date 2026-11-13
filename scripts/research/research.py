@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
+# SPDX-License-Identifier: MIT
+# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """/research [topic] [--free] [--academic] - web research with citations.
 
 Two modes, chosen automatically:
@@ -96,6 +100,14 @@ def _free_sources(academic: bool):
         from .lib.sources.brave import BraveSource
 
         sources.append(BraveSource())
+
+    # Keenable needs no key, so it opts in through RESEARCH_KEENABLE=1 instead.
+    # Unset means it never runs and makes no request; KEENABLE_API_KEY alone
+    # never switches it on (the key only lifts the anonymous rate limit).
+    if os.environ.get("RESEARCH_KEENABLE", "").strip() == "1":
+        from .lib.sources.keenable import KeenableSource
+
+        sources.append(KeenableSource())
 
     return sources
 

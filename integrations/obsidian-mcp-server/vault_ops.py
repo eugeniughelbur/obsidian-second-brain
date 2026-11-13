@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
+# SPDX-License-Identifier: MIT
+# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Vault operations for the Obsidian Second Brain MCP server.
 
 Pure stdlib, no MCP dependency, so the logic is unit-testable on its own. The
@@ -542,11 +546,11 @@ def _semantic_fuse(
     active = _SEMANTIC_ENABLED if enabled is None else enabled
     if not active:
         if enabled is None:
-            _report_semantic_fallback("disabled by configuration", on_fallback)
+            _report_semantic_fallback("disabled by configuration", on_fallback, warn=False)
         return None
     index_path = vault / _SEMANTIC_INDEX_FILE
     if not index_path.exists():
-        _report_semantic_fallback("semantic index missing", on_fallback)
+        _report_semantic_fallback("semantic index missing", on_fallback, warn=False)
         return None
     try:
         index = _load_index_cached(index_path)
@@ -557,15 +561,26 @@ def _semantic_fuse(
         _warn_if_index_stale(vault, scanned or [], notes)
         # The query MUST be embedded with the model the index was built with -
         # vectors from different models live in different spaces (fix 16/24).
-        qvec = _embed_query(query, model=index.get("model") or _EMBED_MODEL)
+        try:
+            qvec = _embed_query(query, model=index.get("model") or _EMBED_MODEL)
+        except Exception as exc:
+            reason = getattr(exc, "reason", None)
+            timed_out = isinstance(exc, TimeoutError) or isinstance(reason, TimeoutError) \
+                or "timed out" in str(exc).lower()
+            _report_semantic_fallback(
+                "embedding timed out" if timed_out else f"semantic error ({type(exc).__name__})",
+                on_fallback,
+                warn=True,
+            )
+            return None
         if not qvec:
-            _report_semantic_fallback("query embedding unavailable", on_fallback)
+            _report_semantic_fallback("query embedding unavailable", on_fallback, warn=True)
             return None
         # Normalize the query ONCE. It is invariant across the whole scoring
         # loop, and recomputing its norm per comparison was a third of the work.
         qunit = _unit(qvec)
         if not qunit:
-            _report_semantic_fallback("query embedding is invalid", on_fallback)
+            _report_semantic_fallback("query embedding is invalid", on_fallback, warn=True)
             return None
         # Best-chunk scoring (fix 13/24): a note is as relevant as its most
         # relevant section, not the average of everything it contains.
@@ -609,15 +624,20 @@ def _semantic_fuse(
         _report_semantic_fallback(
             "embedding timed out" if timed_out else f"semantic error ({type(exc).__name__})",
             on_fallback,
+            warn=False,
         )
         return None  # any failure -> pure lexical, never break search
 
 
-def _report_semantic_fallback(reason: str, callback: Optional[Callable[[str], None]]) -> None:
+def _report_semantic_fallback(
+    reason: str, callback: Optional[Callable[[str], None]], *, warn: bool = False
+) -> None:
     """Report degraded search once per process and expose per-query eval telemetry."""
     global _SEMANTIC_FALLBACK_WARNED
     if callback is not None:
         callback(reason)
+    if not warn:
+        return
     with _SEMANTIC_FALLBACK_LOCK:
         should_warn = not _SEMANTIC_FALLBACK_WARNED
         _SEMANTIC_FALLBACK_WARNED = True
@@ -854,6 +874,37 @@ def _append_log_line(vault: Path, action: str, description: str) -> str:
     return "log.md"
 
 
+_SUMMARY_LIMIT = 140
+_LOG_TITLE_LIMIT = 80
+# The longest link a cut may keep whole. save_note names a note `Inbox/<date> - `
+# plus an 80-character slug, 103 characters with the brackets; a longer span
+# between `[[` and `]]` is pasted data such as `data = [[0,1,...,1499]]`.
+_WIKILINK_MAX = 120
+
+
+def _cut_outside_wikilinks(text: str, limit: int) -> str:
+    """`text` cut to about `limit` characters, never ending inside a wikilink. A
+    plain cut left lines ending in `... following [[2026-09-25 - leane-wor`, which
+    renders as literal brackets and makes link scanners pair it with the next
+    line's `]]`. A link the cut lands in is kept whole when it closes and is
+    link-sized; otherwise the text stops before it. The result is never longer
+    than `limit + _WIKILINK_MAX`."""
+    opened = text.rfind("[[", 0, limit + 1)
+    if opened == -1:
+        return text[:limit]
+    closes = text.find("]]", opened + 2)
+    if closes != -1 and closes + 2 <= limit:
+        return text[:limit]
+    if closes == -1 or closes + 2 - opened > _WIKILINK_MAX:
+        return text[:opened].rstrip()
+    return text[: closes + 2]
+
+
+def _summary_excerpt(content: str, limit: int = _SUMMARY_LIMIT) -> str:
+    """The note's first line, whitespace collapsed and cut for its index entry."""
+    return _cut_outside_wikilinks(re.sub(r"\s+", " ", content.split("\n", 1)[0]).strip(), limit)
+
+
 def _add_index_entry(vault: Path, rel: str, summary: str) -> str:
     """Append `- [[note]] - summary` under index.md's section for the note's folder
     (`## Inbox/`, `## wiki/entities/`, ...). Reports rather than guesses when the
@@ -1006,10 +1057,13 @@ def save_note(
     _write_atomic(target, body)
     rel = target.relative_to(vault).as_posix()
     action = "save" if path else "capture"
-    first = re.sub(r"\s+", " ", content.split("\n", 1)[0]).strip()[:140]
+    first = _summary_excerpt(content)
     tag_note = f" (tags: {', '.join(tags)})" if tags else ""
     result: Dict[str, Any] = {"saved": rel}
-    result.update(_bookkeep(vault, action, rel, f"{title[:80]} -> [[{rel[:-3]}]]{tag_note}",
+    # The title can already end inside a link (capture_idea cuts it at 60). The
+    # filename drops the brackets, so only the log line needs the safe cut.
+    logged_title = _cut_outside_wikilinks(title, _LOG_TITLE_LIMIT)
+    result.update(_bookkeep(vault, action, rel, f"{logged_title} -> [[{rel[:-3]}]]{tag_note}".lstrip(),
                             summary=f"`type: {note_type}`, {action}d {datetime.now().strftime('%Y-%m-%d %H:%M')} through the MCP server. {first}"))
     return result
 

@@ -153,3 +153,80 @@ def test_post_write_cmd_split_strips_windows_quotes(vault):
     assert ops._split_post_write_cmd('"/usr/bin/python3" "/tmp/a b.py"', windows=False) == [
         "/usr/bin/python3", "/tmp/a b.py",
     ]
+
+
+def test_index_summary_never_leaves_a_wikilink_open(vault):
+    """A capture that cites an earlier note near the 140-character cut used to
+    leave its catalog line ending in an open `[[...`; one live vault had about
+    170 such lines in two months of captures."""
+    v, ops = vault
+    cited = "Inbox/2026-09-25 - leane-workbook-review-completed"
+    first = "Laser reconciliation completed on 25 September 2026. " * 2 + f"Following [[{cited}]]."
+    assert first.index("[[") < 140 < first.index("]]"), "the plain cut would land inside the link"
+    res = ops.capture_idea(first + "\nMore detail.")
+    index = (v / "index.md").read_text(encoding="utf-8")
+    line = next(x for x in index.splitlines() if x.startswith(f"- [[{res['saved'][:-3]}]]"))
+    assert line.endswith(f"[[{cited}]]"), line
+    assert line.count("[[") == line.count("]]"), line
+
+
+def test_index_summary_stays_bounded_when_the_first_line_is_data(vault):
+    """`[[` early and `]]` at the very end of pasted data is not a link. Keeping
+    that span whole wrote a catalog line of about 6,500 characters from one
+    capture, and every later vault session reads that line."""
+    v, ops = vault
+    res = ops.capture_idea("data = [[" + ",".join(str(i) for i in range(1500)) + "]]")
+    index = (v / "index.md").read_text(encoding="utf-8")
+    line = next(x for x in index.splitlines() if x.startswith(f"- [[{res['saved'][:-3]}]]"))
+    assert line.endswith("through the MCP server. data ="), line
+    assert line.count("[[") == line.count("]]"), line
+
+
+@pytest.mark.parametrize(
+    ("first", "logged"),
+    [
+        ("Follow-up to [[2026-09-25 - leane-workbook-review-completed]] today.", "Follow-up to -> [["),
+        ("Follow-up to [[Short note]] today.", "Follow-up to [[Short note]] today. -> [["),
+        ("[[" + "x" * 70, "-> [["),
+    ],
+)
+def test_log_line_never_leaves_a_wikilink_open(vault, first, logged):
+    """capture_idea cuts the title at 60 characters for the filename, so the title
+    reaching the log line could already end inside a link, or open one that never
+    closes, and a link scanner paired it with the note link after it."""
+    v, ops = vault
+    res = ops.capture_idea(first)
+    line = next(x for x in _today_log(v).splitlines() if " - capture | " in x)
+    assert f" - capture | {logged}{res['saved'][:-3]}]]" in line, line
+    assert line.count("[[") == line.count("]]"), line
+
+
+def test_kept_link_bound_covers_the_longest_generated_note_name(vault):
+    _, ops = vault
+    longest = f"[[Inbox/2026-01-01 - {ops._slug('a' * 200)}]]"
+    assert len(longest) <= ops._WIKILINK_MAX
+
+
+@pytest.mark.parametrize(
+    ("text", "limit", "expected"),
+    [
+        ("see [[A]] now", 140, "see [[A]] now"),
+        ("a\t b \n second line", 140, "a b"),
+        ("short [[never closes", 140, "short"),
+        ("0123456789 [[Target note]] tail", 20, "0123456789 [[Target note]]"),
+        ("0123456789 [[Target note never closes", 20, "0123456789"),
+        ("0123456789012345678[[X]] tail", 20, "0123456789012345678[[X]]"),
+        ("0123456789 [[Targe]] tail", 19, "0123456789 [[Targe]]"),
+        ("[[A]] 0123456789012345678901", 20, "[[A]] 01234567890123"),
+        # A span that closes far past the cut is data, not a link.
+        ("01234[[" + "y" * 393 + "]] tail", 140, "01234"),
+        # The bound is inclusive: 120 characters with the brackets stay whole.
+        ("x" * 130 + "[[" + "y" * 116 + "]] tail", 140, "x" * 130 + "[[" + "y" * 116 + "]]"),
+        ("x" * 130 + "[[" + "y" * 117 + "]] tail", 140, "x" * 130),
+        # Closed before the cut: not cut into, so the bound does not apply.
+        ("[[" + "y" * 130 + "]] tail", 140, "[[" + "y" * 130 + "]] tail"),
+    ],
+)
+def test_summary_excerpt_cuts_outside_wikilinks(vault, text, limit, expected):
+    _, ops = vault
+    assert ops._summary_excerpt(text, limit) == expected

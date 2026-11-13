@@ -92,7 +92,7 @@ def test_default_mode_measures_shipped_behavior(vault, monkeypatch):
     assert "shipped default" in label
 
 
-def test_semantic_fallback_warns_once_and_reports_each_query(vault, monkeypatch, capsys):
+def test_missing_semantic_index_reports_each_query_without_warning(vault, monkeypatch, capsys):
     monkeypatch.setattr(vault_ops, "_SEMANTIC_FALLBACK_WARNED", False)
     reasons = []
 
@@ -102,7 +102,20 @@ def test_semantic_fallback_warns_once_and_reports_each_query(vault, monkeypatch,
         ) is None
 
     assert reasons == ["semantic index missing", "semantic index missing"]
-    assert capsys.readouterr().err.count("warning: semantic search fell back") == 1
+    assert capsys.readouterr().err == ""
+
+
+def test_disabled_semantic_search_reports_without_warning(vault, monkeypatch, capsys):
+    monkeypatch.setattr(vault_ops, "_SEMANTIC_ENABLED", False)
+    monkeypatch.setattr(vault_ops, "_SEMANTIC_FALLBACK_WARNED", False)
+    reasons = []
+
+    assert vault_ops._semantic_fuse(
+        "meaning query", [], vault, 5, on_fallback=reasons.append
+    ) is None
+
+    assert reasons == ["disabled by configuration"]
+    assert capsys.readouterr().err == ""
 
 
 def test_live_search_reports_embedding_timeout_and_keeps_lexical_results(
@@ -143,28 +156,37 @@ def test_semantic_index_without_note_vectors_is_counted(vault, monkeypatch, caps
     ) is None
 
     assert reasons == ["semantic index has no usable vectors"]
-    assert "semantic index has no usable vectors" in capsys.readouterr().err
+    assert capsys.readouterr().err == ""
 
 
 def test_default_eval_counts_semantic_fallbacks(tmp_path, monkeypatch, capsys):
     cases = tmp_path / "cases.jsonl"
     cases.write_text(
         '{"q":"first query","gold":["note.md"]}\n'
-        '{"q":"second query","gold":["note.md"]}\n',
+        '{"q":"second query","gold":["note.md"]}\n'
+        '{"q":"third query","gold":["note.md"]}\n',
         encoding="utf-8",
     )
 
     def fake_search(query, *, limit, on_semantic_fallback=None):
-        if query == "first query":
-            on_semantic_fallback("embedding timed out")
+        reason = {
+            "first query": "semantic index missing",
+            "second query": "disabled by configuration",
+            "third query": "embedding timed out",
+        }[query]
+        on_semantic_fallback(reason)
         return [{"path": "note.md"}]
 
     monkeypatch.setattr(rev.vault_ops, "search", fake_search)
     assert rev.evaluate(cases, as_json=True, mode="default") == 0
     summary = __import__("json").loads(capsys.readouterr().out)["summary"]
     assert summary["semantic_fallbacks"] == {
-        "queries": 1,
-        "reasons": {"embedding timed out": 1},
+        "queries": 3,
+        "reasons": {
+            "disabled by configuration": 1,
+            "embedding timed out": 1,
+            "semantic index missing": 1,
+        },
     }
 
 

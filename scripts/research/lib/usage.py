@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
+# SPDX-License-Identifier: MIT
+# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Soft cost tracking for paid API calls (Grok, Perplexity, Gemini).
 No blocking, just visibility - and fail-soft: a broken ledger must never
 abort the research call it is observing (fork-insights round 2, the
