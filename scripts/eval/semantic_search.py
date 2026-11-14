@@ -316,7 +316,10 @@ def build_index(vault: Path, verbose: bool = True) -> dict:
     cache: dict = {}
     if index_path.exists():
         try:
-            cache = json.loads(index_path.read_text())
+            # utf-8 (#404): the index is written as UTF-8 below. Read with the
+            # Windows code page, a non-ASCII title raised here and the except
+            # dropped the cache, so every build re-embedded the whole vault.
+            cache = json.loads(index_path.read_text(encoding="utf-8"))
         except Exception:
             cache = {}
     # Format 2 = per-chunk vectors with identity headers (fix 13/24). A cache in
@@ -412,7 +415,7 @@ def load_index(vault: Path) -> dict:
     index_path = vault / INDEX_FILE
     if not index_path.exists():
         raise RuntimeError(f"No semantic index at {index_path}. Build it first: --build")
-    return json.loads(index_path.read_text())
+    return json.loads(index_path.read_text(encoding="utf-8"))
 
 
 # --------------------------------------------------------------------------- #
