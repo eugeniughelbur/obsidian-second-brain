@@ -708,6 +708,9 @@ def check_stale_tasks(notes: dict) -> list:
     for rel, note in notes.items():
         if "task" not in note["frontmatter"].lower() and "kanban" not in note["content"][:200].lower():
             continue
+        # A finished task is not stale, however old its due date.
+        if re.search(r"(?mi)^status:\s*[\"']?(done|cancelled|completed)[\"']?\s*(#.*)?$", note["frontmatter"]):
+            continue
         if note["due"]:
             try:
                 due_date = date.fromisoformat(note["due"])
