@@ -68,6 +68,8 @@ Restart Claude Code and run `/obsidian-second-brain:obsidian-init` inside your v
 
 No vault yet, another AI tool, or bare command names? See the [full install guide](#install).
 
+**On Grok Bot?** Start with one prompt and no install: [GROK-BOT.md](GROK-BOT.md).
+
 <p align="center">
   <em>If this helps you, a <a href="https://github.com/eugeniughelbur/obsidian-second-brain">star</a> helps other people find it.</em>
 </p>
@@ -796,6 +798,8 @@ The **Pi build emits a native [Pi](https://pi.dev) package**: prompt templates u
 Obsidian Second Brain turns what's on your mind into linked notes in your Obsidian vault, keeps your daily notes, and answers your questions from your own notes with links back to the source.
 
 Start from the official Obsidian Second Brain bot template: https://x.ai/bot/Oj_doyprowDl817Yk5Rbh
+
+To try it with no setup first, paste the starter prompt from [GROK-BOT.md](GROK-BOT.md) into a Grok Bot chat.
 
 ### Grok Bot / Sand
 
