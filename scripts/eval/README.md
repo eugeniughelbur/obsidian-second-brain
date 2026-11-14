@@ -43,6 +43,9 @@ runs offline).
 - **Misses** - the right note never surfaced; shows which note ranked #1 instead.
 - **Buried** - the right note ranked below #3 (usually because a noisy
   high-mention note or a `raw/` transcript outscored the canonical note).
+- **Semantic fallback** - with `--mode default`, the number of queries served
+  by lexical results because semantic fusion was unavailable, plus the reason
+  counts. JSON output includes the same counts under `summary.semantic_fallbacks`.
 
 The generated cases (`retrieval_cases.jsonl`) contain your private note paths and
 are gitignored. Only `retrieval_cases.example.jsonl` (the format) is committed.
