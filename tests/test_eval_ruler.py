@@ -94,6 +94,125 @@ def test_default_mode_measures_shipped_behavior(vault, monkeypatch):
     assert "shipped default" in label
 
 
+def test_missing_semantic_index_reports_each_query_without_warning(vault, monkeypatch, capsys):
+    monkeypatch.setattr(vault_ops, "_SEMANTIC_FALLBACK_WARNED", False)
+    reasons = []
+
+    for _ in range(2):
+        assert vault_ops._semantic_fuse(
+            "meaning query", [], vault, 5, enabled=True, on_fallback=reasons.append
+        ) is None
+
+    assert reasons == ["semantic index missing", "semantic index missing"]
+    assert capsys.readouterr().err == ""
+
+
+def test_disabled_semantic_search_reports_without_warning(vault, monkeypatch, capsys):
+    monkeypatch.setattr(vault_ops, "_SEMANTIC_ENABLED", False)
+    monkeypatch.setattr(vault_ops, "_SEMANTIC_FALLBACK_WARNED", False)
+    reasons = []
+
+    assert vault_ops._semantic_fuse(
+        "meaning query", [], vault, 5, on_fallback=reasons.append
+    ) is None
+
+    assert reasons == ["disabled by configuration"]
+    assert capsys.readouterr().err == ""
+
+
+def test_live_search_reports_embedding_timeout_and_keeps_lexical_results(
+    vault, monkeypatch, capsys
+):
+    (vault / vault_ops._SEMANTIC_INDEX_FILE).write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        vault_ops,
+        "_load_index_cached",
+        lambda _path: {"notes": {"note.md": {"title": "note", "_unit": [[1.0, 0.0]]}}},
+    )
+    def timeout(*_args, **_kwargs):
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(vault_ops, "_embed_query", timeout)
+    monkeypatch.setattr(vault_ops, "_SEMANTIC_FALLBACK_WARNED", False)
+    reasons = []
+
+    hits = vault_ops.search("zebra facts", on_semantic_fallback=reasons.append)
+
+    assert hits and hits[0]["path"] == "note.md"
+    assert reasons == ["embedding timed out"]
+    assert "warning: semantic search fell back to lexical results (embedding timed out)" \
+        in capsys.readouterr().err
+
+
+def test_semantic_index_without_note_vectors_is_counted(vault, monkeypatch, capsys):
+    (vault / vault_ops._SEMANTIC_INDEX_FILE).write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        vault_ops, "_load_index_cached", lambda _path: {"notes": {"note.md": {}}}
+    )
+    monkeypatch.setattr(vault_ops, "_embed_query", lambda *a, **k: [1.0, 0.0])
+    monkeypatch.setattr(vault_ops, "_SEMANTIC_FALLBACK_WARNED", False)
+    reasons = []
+
+    assert vault_ops._semantic_fuse(
+        "meaning query", [], vault, 5, enabled=True, on_fallback=reasons.append
+    ) is None
+
+    assert reasons == ["semantic index has no usable vectors"]
+    assert capsys.readouterr().err == ""
+
+
+def _reporting_search(reasons_by_query):
+    def fake_search(query, *, limit, on_semantic_fallback=None):
+        reason = reasons_by_query[query]
+        if reason:
+            on_semantic_fallback(reason)
+        return [{"path": "note.md"}]
+
+    return fake_search
+
+
+def test_default_eval_sorts_vault_ops_reasons_into_skipped(tmp_path, monkeypatch, capsys):
+    # The reasons #389 reports when fusion was never attempted on purpose are
+    # `skipped`, not `fallback`: the row is still what its label says.
+    cases = tmp_path / "cases.jsonl"
+    cases.write_text(
+        '{"q":"first query","gold":["note.md"]}\n'
+        '{"q":"second query","gold":["note.md"]}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rev.vault_ops, "search", _reporting_search({
+        "first query": "semantic index missing",
+        "second query": "disabled by configuration",
+    }))
+    assert rev.evaluate(cases, as_json=True, mode="default") == 0
+    summary = json.loads(capsys.readouterr().out)["summary"]
+    assert summary["fusion"] == {
+        "fused": 0, "skipped": 2, "fallback": 0,
+        "skipped_reasons": {
+            "disabled by configuration": 1,
+            "semantic index missing": 1,
+        },
+    }
+
+
+def test_default_eval_refuses_a_reported_semantic_fallback(tmp_path, monkeypatch, capsys):
+    cases = tmp_path / "cases.jsonl"
+    cases.write_text(
+        '{"q":"first query","gold":["note.md"]}\n'
+        '{"q":"second query","gold":["note.md"]}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rev.vault_ops, "search", _reporting_search({
+        "first query": "semantic index missing",
+        "second query": "embedding timed out",
+    }))
+    assert rev.evaluate(cases, as_json=True, mode="default") == 1
+    io = capsys.readouterr()
+    assert io.out == ""
+    assert "1 of 2 queries fell back" in io.err
+    assert "1x embedding timed out" in io.err
+
+
 def test_hybrid_feeds_a_pure_lexical_arm(vault, monkeypatch):
     recorded = {}
 
@@ -181,7 +300,7 @@ def _default_run(vault, monkeypatch, tmp_path, capsys, *, index=True, embed=None
         encoding="utf-8")
     fuse_before = vault_ops._semantic_fuse
     code = rev.evaluate(cases, as_json=True, mode="default")
-    # The tally wraps two vault_ops functions for the run and must put them back.
+    # The tally wraps _semantic_fuse for the run and must put it back.
     assert vault_ops._semantic_fuse is fuse_before
     assert vault_ops._embed_query is embed
     return code, capsys.readouterr()
@@ -207,7 +326,7 @@ def test_default_mode_refuses_a_row_that_fell_back(vault, monkeypatch, tmp_path,
     assert io.out == ""  # no scores under the "lexical + semantic RRF" label
     assert "1 of 2 queries fell back" in io.err
     assert "1 skipped by design" in io.err  # the one-word case is not a failure
-    assert "TimeoutError: timed out" in io.err
+    assert "1x embedding timed out" in io.err
     assert "OBSIDIAN_EMBED_QUERY_TIMEOUT" in io.err
 
 
@@ -217,7 +336,7 @@ def test_default_mode_without_an_index_is_skipped_not_failed(vault, monkeypatch,
     assert code == 0, io.err
     assert json.loads(io.out)["summary"]["fusion"] == {
         "fused": 0, "skipped": 2, "fallback": 0,
-        "skipped_reasons": {"no semantic index": 1, "single-term query": 1},
+        "skipped_reasons": {"semantic index missing": 1, "single-term query": 1},
     }
 
 

@@ -333,3 +333,21 @@ def test_fresh3_ignores_curies_and_url_path_segments(tmp_path):
     hits = rules(report, "FRESH-3")
     assert [h["text"] for h in hits] == [
         "typed pointer 'linear:ABC-123' has no mapping in .freshness.json"]
+
+
+def test_impossible_as_of_date_is_flagged_not_a_crash(tmp_path):
+    """A stamp shaped like a date but not a real one (month 13, Feb 31, month 00) used to
+    raise ValueError and stop the whole run. Now each is a FRESH-2 warning, other notes
+    are still linted, and a real stamp on the same note is still aged."""
+    write(tmp_path, "bad.md",
+          "# Bad\n\n13 open deals (as of 2026-13-05).\n"
+          "7 open tasks (As of 2026-02-31).\n"
+          "4 open deals (as of 2026-00).\n"
+          "9 open deals (as of 2026-05-01).\n")
+    write(tmp_path, "other.md", "# Other\n\nThe pipeline has 13 open deals.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = rules(report, "FRESH-2")
+    assert [(h["file"], h["line"]) for h in hits] == [
+        ("bad.md", 3), ("bad.md", 4), ("bad.md", 5), ("bad.md", 6)]
+    assert [("not a real date" in h["text"]) for h in hits] == [True, True, True, False]
+    assert [h["file"] for h in rules(report, "FRESH-1")] == ["other.md"]

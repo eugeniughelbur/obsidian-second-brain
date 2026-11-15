@@ -45,7 +45,6 @@ import json
 import os
 import re
 import sys
-import time
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -252,18 +251,25 @@ def _split_external_cmd(cmd: str) -> list[str]:
     return parts
 
 
+# Reasons vault_ops.search() reports (through on_semantic_fallback) when fusion
+# was never attempted on purpose. Anything else it reports means fusion was
+# enabled and an index exists, but the semantic arm still returned nothing.
+_SKIPPED_BY_DESIGN = ("disabled by configuration", "semantic index missing")
+
+
 class _FusionTally:
     """Record, per query, whether the shipped default search really fused (#386).
 
     `vault_ops.search` serves pure lexical results whenever `_semantic_fuse`
-    returns None, and nothing in its return value says which happened. This
-    wraps `_semantic_fuse` for the length of a default-mode run and sorts each
-    query into one of three outcomes:
+    returns None, and nothing in its return value says which happened. The
+    reason it gives (the `on_semantic_fallback` callback, #389) says why; this
+    sorts each query of a default-mode run into one of three outcomes:
 
       fused     the semantic arm ran and its ranking was fused in
       skipped   fusion was not attempted, on purpose: a single-term query
-                (search turns fusion off for those), OBSIDIAN_SEARCH_SEMANTIC=0,
-                no semantic index, or a query with no searchable terms
+                (search turns fusion off for those), "disabled by
+                configuration", "semantic index missing", or a query with no
+                searchable terms
       fallback  fusion was enabled and an index exists, but the fuse returned
                 None (slow or missing embedder, empty index, any error)
 
@@ -273,20 +279,21 @@ class _FusionTally:
     def __init__(self) -> None:
         self.outcome: str | None = None
         self.reason: str | None = None
-        self._embed_error: str | None = None
         self._real_fuse = vault_ops._semantic_fuse
-        self._real_embed = vault_ops._embed_query
 
     def install(self) -> None:
         vault_ops._semantic_fuse = self._fuse
-        vault_ops._embed_query = self._embed
 
     def uninstall(self) -> None:
         vault_ops._semantic_fuse = self._real_fuse
-        vault_ops._embed_query = self._real_embed
 
     def start_query(self) -> None:
-        self.outcome, self.reason, self._embed_error = None, None, None
+        self.outcome, self.reason = None, None
+
+    def report(self, reason: str) -> None:
+        """The `on_semantic_fallback` callback: vault_ops names why it fell short."""
+        self.outcome = "skipped" if reason in _SKIPPED_BY_DESIGN else "fallback"
+        self.reason = reason
 
     def search_raised(self, error: Exception) -> None:
         # Not fused, and not skipped on purpose either: the row must not pass.
@@ -298,38 +305,21 @@ class _FusionTally:
             return "skipped", "no searchable terms"
         return self.outcome, self.reason
 
-    def _embed(self, *args: Any, **kwargs: Any) -> Any:
-        started = time.monotonic()
-        try:
-            return self._real_embed(*args, **kwargs)
-        except Exception as e:
-            self._embed_error = (
-                f"query embedding failed after {time.monotonic() - started:.1f}s "
-                f"(limit {vault_ops._EMBED_QUERY_TIMEOUT:g}s): {type(e).__name__}: {e}"
-            )
-            raise
-
     def _fuse(self, query: str, lexical: Any, vault: Path, limit: int,
               enabled: bool | None = None, **kwargs: Any) -> Any:
-        skipped = None
-        if enabled is False:
-            skipped = "single-term query"
-        elif enabled is None and not vault_ops._SEMANTIC_ENABLED:
-            skipped = "OBSIDIAN_SEARCH_SEMANTIC=0"
-        elif not (vault / vault_ops._SEMANTIC_INDEX_FILE).exists():
-            skipped = "no semantic index"
         fused = self._real_fuse(query, lexical, vault, limit, enabled=enabled, **kwargs)
-        if skipped:
-            self.outcome, self.reason = "skipped", skipped
+        if self.outcome is not None:  # vault_ops gave a reason through report()
+            return fused
+        if enabled is False:  # search turned fusion off itself: a single-term query
+            self.outcome, self.reason = "skipped", "single-term query"
         elif fused is not None:
             self.outcome = "fused"
-        else:
-            self.outcome = "fallback"
-            self.reason = self._embed_error or "semantic arm returned nothing"
+        else:  # no reason reported, but the semantic arm still returned nothing
+            self.outcome, self.reason = "fallback", "semantic arm returned nothing"
         return fused
 
 
-def _searcher(mode: str):
+def _searcher(mode: str, on_semantic_fallback=None):
     """Return a (label, fn(query)->results) for the chosen retrieval mode.
 
     Four modes, four TRUE labels (stress-test fix 10/24 - before this, "lexical"
@@ -345,6 +335,11 @@ def _searcher(mode: str):
         return "pure lexical: term-frequency, title-weighted (fusion off)", \
             lambda q: vault_ops.search(q, limit=SEARCH_LIMIT, semantic=False)
     if mode == "default":
+        if on_semantic_fallback is not None:
+            return "shipped default: vault_ops.search (lexical + semantic RRF when available)", \
+                lambda q: vault_ops.search(
+                    q, limit=SEARCH_LIMIT, on_semantic_fallback=on_semantic_fallback
+                )
         return "shipped default: vault_ops.search (lexical + semantic RRF when available)", \
             lambda q: vault_ops.search(q, limit=SEARCH_LIMIT)
     if mode == "external":
@@ -501,11 +496,13 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
         print("Cases file is empty.", file=sys.stderr)
         return 1
 
-    label, search_fn = _searcher(mode)
     # Default mode only: it is the one mode that goes through search()'s
     # silent lexical fallback. lexical forces fusion off; semantic and hybrid
     # call the embedder themselves.
     tally = _FusionTally() if mode == "default" else None
+    label, search_fn = _searcher(
+        mode, on_semantic_fallback=tally.report if tally else None,
+    )
     if tally:
         tally.install()
     try:
@@ -559,7 +556,6 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
     if fusion is not None:
         print(f"  {_fusion_line(fusion)}")
     print(f"  misses (gold not in top {SEARCH_LIMIT}): {len(misses)}   buried (rank>3): {len(buried)}")
-
     if misses:
         print("\nMisses - the right note never surfaced:")
         for x in misses[:15]:

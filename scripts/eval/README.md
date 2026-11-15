@@ -43,6 +43,14 @@ runs offline).
 - **Misses** - the right note never surfaced; shows which note ranked #1 instead.
 - **Buried** - the right note ranked below #3 (usually because a noisy
   high-mention note or a `raw/` transcript outscored the canonical note).
+- **Fusion** - with `--mode default`, every query is sorted into `fused`
+  (the semantic arm ran), `skipped` (fusion was not attempted on purpose:
+  "single-term query", "disabled by configuration", "semantic index missing")
+  or `fallback` (fusion was enabled and an index exists, but the semantic arm
+  returned nothing, for example "embedding timed out"). The reasons are the
+  ones `vault_ops.search` reports through `on_semantic_fallback`. The counts
+  print under MRR and are in `summary.fusion` and per case in `--json`. Any
+  `fallback` query makes the run refuse to report a row.
 
 The generated cases (`retrieval_cases.jsonl`) contain your private note paths and
 are gitignored. Only `retrieval_cases.example.jsonl` (the format) is committed.

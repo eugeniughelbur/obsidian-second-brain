@@ -163,9 +163,13 @@ def parse_frontmatter(lines: list[str]) -> tuple[dict, int]:
     return {}, 0
 
 
-def stamp_date(m: re.Match) -> date:
+def stamp_date(m: re.Match) -> date | None:
+    """The stamp as a date, or None when it is not a real date (2026-13-05, 2026-02-31)."""
     y, mo, d = int(m.group(1)), int(m.group(2)), m.group(3)
-    return date(y, mo, int(d) if d else 28)  # month-only stamps get end-of-month grace
+    try:
+        return date(y, mo, int(d) if d else 28)  # month-only stamps get end-of-month grace
+    except ValueError:
+        return None
 
 
 def load_config(root: Path) -> dict:
@@ -314,7 +318,15 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
 
         as_of = AS_OF.search(stripped)
         if as_of:
-            age = (today - stamp_date(as_of)).days
+            stamp = stamp_date(as_of)
+            if stamp is None:
+                findings.append({
+                    "rule": "FRESH-2", "severity": "warning", "file": rel,
+                    "line": lineno,
+                    "text": f"stamp '{as_of.group(0)}' is not a real date: fix the stamp: {stripped[:120]}",
+                })
+                continue
+            age = (today - stamp).days
             if age > window:
                 findings.append({
                     "rule": "FRESH-2", "severity": "warning", "file": rel,
