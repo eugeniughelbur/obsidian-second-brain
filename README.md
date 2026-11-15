@@ -7,7 +7,7 @@
 <h1 align="center">obsidian-second-brain: AI second brain for Obsidian - persistent memory for Claude Code, Codex, Cursor and Grok Bot</h1>
 
 <p align="center">
-  <b>Your AI second brain for <a href="https://obsidian.md">Obsidian</a>. Free, open source, and plain Markdown you own.</b><br />
+  <b>Your AI second brain for Obsidian. Free, open source, and plain Markdown you own.</b><br />
   Talk to Claude as usual. It saves what matters to your vault and remembers it next time.
 </p>
 
