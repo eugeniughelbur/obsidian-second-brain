@@ -26,8 +26,9 @@
   <img src="https://img.shields.io/github/v/release/eugeniughelbur/obsidian-second-brain?color=green" alt="Release" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT" />
   <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?color=yellow" alt="Stars" />
-  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top"><img src="https://img.shields.io/badge/Substack-The_AI_Operator-FF6719?logo=substack&logoColor=white" alt="Subscribe on Substack" /></a>
 </p>
+
+<p align="center"><b>Free newsletter:</b> what I learn building this, 3 posts a week. <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top-text"><b>Subscribe to The AI Operator &rarr;</b></a></p>
 
 **Claude forgets you when a chat ends. Your Obsidian vault doesn't.** This skill connects the two, so every chat adds to one set of linked notes that the next chat reads.
 
@@ -43,10 +44,10 @@ Your notes stay as Markdown files on your computer. The core commands need no AP
 
 <p align="center">
   <a href="DEMOS.md">
-    <img src="media/obsidian-save.gif" alt="One /obsidian-save command turns a conversation into five cross-linked AI-first notes: a person, a project with the decision, a task, a board card, and the daily note." width="100%" />
+    <img src="media/obsidian-save-explainer.gif" alt="Animated walkthrough: you tell Claude Code about a meeting, type /obsidian-save, and five linked notes land in Obsidian. Then /obsidian-ingest reads a PDF checklist and updates the project and task notes you already have. The graph view connects them, and the next day Claude answers from the vault." width="100%" />
   </a>
   <br />
-  <em>One <code>/obsidian-save</code>, five linked notes. Real footage, made-up vault. <a href="DEMOS.md">More demos &rarr;</a></em>
+  <em>Save a chat, feed it a PDF, and Claude remembers. Animated walkthrough of a made-up example. <a href="DEMOS.md">Real terminal footage &rarr;</a></em>
 </p>
 
 ## Quick start
