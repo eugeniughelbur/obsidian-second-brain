@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -212,7 +214,9 @@ def test_hook_prints_nothing_when_nothing_is_new(sandbox):
     assert "One job" in hook_context("codex")
     assert hook_stdout("codex", "UserPromptSubmit") == ""
     assert "One job" in hook_context("cursor", "sessionStart")
-    # Cursor's fail-closed hooks treat empty stdout as a failure.
+    # Cursor parses hook stdout as JSON. Empty output does not parse, and
+    # setup leaves failClosed at its default of false, so {} stands in for
+    # an empty read on a successful hook.
     assert hook_stdout("cursor", "postToolUse").strip() == "{}"
     run("show", "--agent", "codex", "--new")
     assert "No new records" in run("show", "--agent", "codex", "--new").stdout
@@ -263,6 +267,45 @@ def test_hook_read_leaves_the_rest_unread_for_the_next_event(sandbox):
     ids = sorted(line.split("long job ")[1][:2] for line in seen)
     assert ids == [f"{n:02d}" for n in range(30)]
     assert hook_stdout("claude", "UserPromptSubmit") == ""
+
+
+def test_identical_copies_that_do_not_fit_are_not_promised_again(sandbox):
+    """Printing a line consumes its identical copies, so the note must not offer them."""
+    for _ in range(15):
+        add("codex", "same long job " + "y" * 570)
+    first = hook_context("claude")
+    shown = [line for line in first.splitlines() if "same long job" in line]
+    assert shown and len(shown) < 15
+    promised = 0
+    for line in first.splitlines():
+        if "more unread records were left out to fit the hook size limit" in line:
+            promised = int(line.split()[0])
+    second = hook_stdout("claude", "UserPromptSubmit")
+    if second.strip():
+        follow = json.loads(second)["hookSpecificOutput"]["additionalContext"]
+        arrived = sum(1 for line in follow.splitlines() if "same long job" in line)
+    else:
+        arrived = 0
+    assert promised == arrived == 0
+
+
+def test_pre_change_reader_cursor_still_hides_consumed_lines(sandbox):
+    """A .crew-readers file from before the hook budget is a hash-to-count map."""
+    _, folder = sandbox
+    fixture = Path(__file__).parent / "fixtures" / "crew-pre-change"
+    reader = hashlib.sha256(b"claude:pre-change").hexdigest()
+    cursor = fixture / ".crew-readers" / f"{reader}.json"
+    saved = json.loads(cursor.read_text(encoding="utf-8"))
+    assert saved and all(isinstance(count, int) and count >= 1 for count in saved.values())
+    shutil.copytree(fixture, folder, dirs_exist_ok=True)
+    output = run("show", "--agent", "claude", "--new", "--session", "pre-change").stdout
+    assert "already seen job" not in output
+    assert "Already read lesson" not in output
+    assert "still unread job" in output
+    assert "Still unread lesson" in output
+    again = run("show", "--agent", "claude", "--new", "--session", "pre-change").stdout
+    assert "still unread job" not in again
+    assert "Still unread lesson" not in again
 
 
 def test_codex_hook_stays_under_its_smaller_budget(sandbox):

@@ -472,13 +472,20 @@ def _fit_hook(jobs, lessons, skipped: int, args, budget: int):
     return text, picked_jobs, picked_lessons, deferred_jobs, deferred_lessons
 
 
-def _mark_read(seen: dict, consumed, deferred) -> None:
-    """Advance the cursor for lines that were printed, or counted past --limit.
+def _still_unread(deferred, consumed) -> list:
+    """Copies of a line this read already consumed do not come back next time.
 
-    Identical lines share one hash. Once that text has been printed, further
-    copies of it in this same read are consumed too, so the next read does not
-    repeat it. A hash that was only deferred stays unread.
+    The cursor stores one count per line hash. Printing any copy consumes every
+    copy of that hash in this read, including copies that did not fit. The
+    size-limit note counts only the lines that stay unread, so it does not
+    promise a next read that will be empty.
     """
+    taken = {key for _, key, _ in consumed}
+    return [item for item in deferred if item[1] not in taken]
+
+
+def _mark_read(seen: dict, consumed, deferred) -> None:
+    """Advance the cursor for lines that were printed, or counted past --limit."""
     shown: dict[str, int] = {}
     for _, key, count in consumed:
         shown[key] = max(shown.get(key, 0), count)
@@ -493,8 +500,10 @@ def read_new(folder: Path, args) -> str:
     """Consume this reader's unread records. The caller holds the folder lock.
 
     Kept and dropped lessons never enter the list, so a keep or drop cannot
-    come back as a new line. Hook reads also stay under the host cap, and only
-    the lines actually returned are marked read.
+    come back as a new line. Hook reads also stay under the host cap. A line
+    that does not fit stays unread, except identical copies of a line this
+    read already printed: the cursor is one count per hash, so those copies
+    are consumed with it.
     """
     reader = hashlib.sha256(f"{args.agent}:{args.session}".encode()).hexdigest()
     path = folder / ".crew-readers" / f"{reader}.json"
@@ -522,6 +531,20 @@ def read_new(folder: Path, args) -> str:
         text, picked_jobs, picked_lessons, deferred_jobs, deferred_lessons = _fit_hook(
             window, lessons, len(skipped), args, budget
         )
+        consumed = [*skipped, *picked_jobs, *picked_lessons]
+        deferred = [*deferred_jobs, *deferred_lessons]
+        pending = _still_unread(deferred, consumed)
+        if text and len(pending) != len(deferred):
+            # Rebuild from the lines already rendered. A shortened record lives
+            # in `text`; the picked tuples can still hold the full line.
+            lines = [line[2:] for line in text.split("\n") if line.startswith("> ")]
+            shortened = "1 record was shortened to fit the hook size limit." in text
+            notes = _notes(len(skipped), len(pending), shortened)
+            revised = _render(lines, notes) if lines else ""
+            if len(lines) == 1 and _over_budget(revised, args, budget):
+                revised = _render([_shorten_line(lines[0], notes, args, budget)], notes)
+            if not lines or not _over_budget(revised, args, budget):
+                text = revised
     _mark_read(seen, [*skipped, *picked_jobs, *picked_lessons], [*deferred_jobs, *deferred_lessons])
     # Keep cursors for other dates when --date narrows this read.
     write_json(path, seen)
@@ -826,7 +849,13 @@ def parser() -> argparse.ArgumentParser:
     view = sub.add_parser("show", help="read other agents' records and addressed lessons")
     view.add_argument("--agent", "--for", required=True, choices=AGENTS)
     view.add_argument(
-        "--limit", type=int, default=50, help="maximum job records per read (default 50)"
+        "--limit",
+        type=int,
+        default=50,
+        help=(
+            "plain show caps jobs and lessons at this many each; "
+            "--new caps jobs, and lessons only through the hook budget (default 50)"
+        ),
     )
     view.add_argument("--new", action="store_true", help="consume unread records for this reader")
     view.add_argument("--json", action="store_true", help="Cursor additional_context JSON")
@@ -909,8 +938,10 @@ def main(argv: list[str] | None = None) -> int:
                 )
             output = show(folder, args)
             if args.hook and not output:
-                # Nothing new: inject nothing. Cursor's fail-closed hooks treat
-                # empty stdout as a failure, so they get an empty JSON object.
+                # Nothing new: inject nothing. Cursor parses hook stdout as JSON,
+                # and empty output does not parse. failClosed defaults to false
+                # and setup writes only {"command": ...}, so {} avoids a parse
+                # miss on a successful hook.
                 if args.agent == "cursor":
                     print("{}")
                 return 0
