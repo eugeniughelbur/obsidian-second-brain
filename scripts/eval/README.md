@@ -45,9 +45,9 @@ runs offline).
   high-mention note or a `raw/` transcript outscored the canonical note).
 - **Fusion** - with `--mode default`, every query is sorted into `fused`
   (the semantic arm ran), `skipped` (fusion was not attempted on purpose:
-  "single-term query", "disabled by configuration", "semantic index missing")
+  `single-term query`, `disabled by configuration`, `semantic index missing`)
   or `fallback` (fusion was enabled and an index exists, but the semantic arm
-  returned nothing, for example "embedding timed out"). The reasons are the
+  returned nothing, for example `embedding timed out`). The reasons are the
   ones `vault_ops.search` reports through `on_semantic_fallback`. The counts
   print under MRR and are in `summary.fusion` and per case in `--json`. Any
   `fallback` query makes the run refuse to report a row.
