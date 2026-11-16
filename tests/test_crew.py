@@ -145,6 +145,157 @@ def test_bounded_reads_show_newest_and_count_older(sandbox):
     run("show", "--agent", "codex", "--limit", "0", ok=False)
 
 
+def hook_stdout(agent, event="SessionStart", session="s1", payload_extra=None):
+    payload = {"hook_event_name": event, "session_id": session}
+    if payload_extra:
+        payload.update(payload_extra)
+    return run("show", "--agent", agent, "--new", "--hook", payload=json.dumps(payload)).stdout
+
+
+def hook_context(agent, event="SessionStart", session="s1"):
+    """The text a host would inject for this hook event."""
+    stdout = hook_stdout(agent, event, session).strip()
+    if not stdout:
+        return ""
+    data = json.loads(stdout)
+    if agent == "cursor":
+        return data.get("additional_context", "")
+    return data["hookSpecificOutput"]["additionalContext"]
+
+
+def test_new_read_keeps_jobs_when_lessons_would_fill_the_window(sandbox):
+    """Lessons used to occupy unread[-limit:], so jobs disappeared once lessons >= limit."""
+    for n in range(3):
+        add("codex", f"window job {n}")
+    for n in range(6):
+        lesson("claude", f"window lesson {n}")
+    output = run("show", "--agent", "claude", "--new", "--limit", "2").stdout
+    assert "window job 1" in output and "window job 2" in output
+    assert "window job 0" not in output
+    assert "1 older unread records not shown" in output
+    assert "window lesson 0" in output and "window lesson 5" in output
+
+
+def test_issue_397_hook_read_shows_jobs_under_the_cap(sandbox):
+    """The reported repro: 20 jobs, 60 lessons, 45 dropped, one of the rest kept."""
+    detail = "detail " * 20
+    for n in range(1, 21):
+        run(
+            "add", "--agent", "codex", "--area", "demo", "--did", f"job {n}",
+            "--where", f"notes/job{n}.md",
+        )
+    for n in range(1, 61):
+        run(
+            "lesson", "--from", "codex", "--for", "claude", "--kind", "lesson",
+            "--text", f"Lesson {n}: {detail}", "--evidence", f"notes/l{n}.md",
+        )
+    for n in range(1, 46):
+        run("drop", f"L{n}")
+    run("keep", "L46")
+    stdout = hook_stdout("claude")
+    context = json.loads(stdout)["hookSpecificOutput"]["additionalContext"]
+    lines = [line for line in context.splitlines() if line.startswith("> ")]
+    lessons = [line for line in lines if line.startswith("> Lesson:")]
+    assert lines[0].startswith("> ") and not lines[0].startswith("> Lesson:")
+    assert lines[-1].startswith("> Lesson:")
+    assert len(lines) - len(lessons) == 20
+    assert lessons, "open lessons still show"
+    assert all("| dropped |" not in line and "| kept |" not in line for line in lessons)
+    assert any("Lesson 60:" in line for line in lessons)
+    assert len(context) < 10_000
+    assert len(stdout) < 10_000
+    assert hook_stdout("claude", "UserPromptSubmit", payload_extra={"prompt": "hi"}) == ""
+
+
+def test_hook_prints_nothing_when_nothing_is_new(sandbox):
+    add(text="One job")
+    assert "One job" in hook_context("codex")
+    assert hook_stdout("codex", "UserPromptSubmit") == ""
+    assert "One job" in hook_context("cursor", "sessionStart")
+    # Cursor's fail-closed hooks treat empty stdout as a failure.
+    assert hook_stdout("cursor", "postToolUse").strip() == "{}"
+    run("show", "--agent", "codex", "--new")
+    assert "No new records" in run("show", "--agent", "codex", "--new").stdout
+
+
+def test_status_change_is_not_injected_as_a_new_record(sandbox):
+    ident = lesson("claude", "Promote the parser check")
+    first = hook_context("claude")
+    assert ident in first and "| open |" in first
+    run("keep", ident)
+    assert hook_stdout("claude", "UserPromptSubmit") == ""
+    assert "| kept |" in run("show", "--agent", "claude").stdout
+    assert "Promote the parser check" in run("digest").stdout
+
+
+def test_plain_show_keeps_jobs_and_lists_decided_lessons(sandbox):
+    for n in range(3):
+        add("codex", f"plain job {n}")
+    ids = [lesson("claude", f"plain lesson {n}") for n in range(4)]
+    run("drop", ids[-1])
+    output = run("show", "--agent", "claude", "--limit", "2").stdout
+    assert "plain job 1" in output and "plain job 2" in output
+    assert "plain job 0" not in output
+    assert "plain lesson 3" in output and "| dropped |" in output
+    fresh = run("show", "--agent", "claude", "--new", "--limit", "2").stdout
+    assert "plain job 2" in fresh
+    assert "plain lesson 0" in fresh
+    assert "plain lesson 3" not in fresh
+    assert "| dropped |" not in fresh
+
+
+def test_hook_read_leaves_the_rest_unread_for_the_next_event(sandbox):
+    for n in range(30):
+        add("codex", f"long job {n:02d} " + "y" * 570)
+    seen = []
+    notes = 0
+    for event in ("SessionStart", "UserPromptSubmit", "UserPromptSubmit", "UserPromptSubmit"):
+        stdout = hook_stdout("claude", event)
+        if not stdout.strip():
+            break
+        assert len(stdout) < 10_000
+        context = json.loads(stdout)["hookSpecificOutput"]["additionalContext"]
+        assert len(context) <= 9_000
+        if "hook size limit" in context:
+            notes += 1
+        seen.extend(line for line in context.splitlines() if "long job " in line)
+    assert notes
+    ids = sorted(line.split("long job ")[1][:2] for line in seen)
+    assert ids == [f"{n:02d}" for n in range(30)]
+    assert hook_stdout("claude", "UserPromptSubmit") == ""
+
+
+def test_codex_hook_stays_under_its_smaller_budget(sandbox):
+    for n in range(20):
+        add("claude", f"codex budget {n:02d} " + "y" * 570)
+    stdout = hook_stdout("codex")
+    assert len(stdout) < 10_000
+    context = json.loads(stdout)["hookSpecificOutput"]["additionalContext"]
+    assert len(context) <= 5_000
+    assert "hook size limit" in context
+    assert "codex budget" in context
+
+
+def test_hook_stdout_stays_under_the_cap_when_quotes_expand_json(sandbox):
+    for n in range(15):
+        add("codex", f'{n:02d} ' + '"' * 580)
+    stdout = hook_stdout("claude")
+    assert len(stdout) < 10_000
+    context = json.loads(stdout)["hookSpecificOutput"]["additionalContext"]
+    assert len(context) <= 9_000
+    assert '"' in context
+
+
+def test_open_lesson_stays_in_a_hook_read_full_of_long_jobs(sandbox):
+    for n in range(20):
+        add("codex", f"bulk job {n:02d} " + "y" * 570)
+    lesson("claude", "Keep this open lesson visible")
+    context = hook_context("claude")
+    assert "Keep this open lesson visible" in context
+    assert "bulk job" in context
+    assert len(context) <= 9_000
+
+
 def test_read_across_days_and_digest_does_not_consume(sandbox):
     _, folder = sandbox
     folder.mkdir()
@@ -488,12 +639,16 @@ def test_setup_preserves_kept_lessons_and_existing_cursor_rule(sandbox):
     assert path.read_text(encoding="utf-8") == before
 
 
-def test_all_recipients_and_changed_status_reach_readers(sandbox):
+def test_all_recipients_get_kept_rules_and_decided_lessons_leave_new_reads(sandbox):
     home, _ = sandbox
     ident = lesson(target="all")
     run("show", "--agent", "codex", "--new")
     run("keep", ident)
-    assert "| kept |" in run("show", "--agent", "codex", "--new").stdout
+    # A kept lesson is in the rules file now. --new does not inject it again.
+    second = run("show", "--agent", "codex", "--new").stdout
+    assert ident not in second
+    assert "No new records" in second
+    assert "| kept |" in run("show", "--agent", "codex").stdout
     for path in (
         ".claude/CLAUDE.md",
         ".codex/AGENTS.md",

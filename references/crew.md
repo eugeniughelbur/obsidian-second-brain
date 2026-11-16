@@ -69,10 +69,10 @@ Legacy prototype bullet records remain readable. New lessons use a Markdown tabl
 Writes use a local file lock and atomic replacement. Coordinate writers on one host; distributed filesystem locks depend on the filesystem.
 Concurrent copies through file-sync services can conflict. Crew does not resolve sync conflicts.
 
-`show --new` tracks each agent separately. Hooks also track sessions separately to avoid consuming another session's records.
-Reads return the newest 50 unread records and count the older ones. Use `digest --date` for a full day, or set `--limit 100`.
-Without `--new`, `show` returns the latest records. `--date YYYY-MM-DD` narrows either mode.
-`digest` includes all agents' jobs and lessons created that day without consuming them.
+`show --new` tracks each agent separately. Hooks also track sessions separately, and a new session starts from an empty cursor, so it sees the latest work.
+A `--new` read returns the newest 50 job records from other agents, then the open lessons addressed to the reader. Kept and dropped lessons are left out: a kept lesson is already in that agent's rules, and a dropped one is closed, so a keep or drop does not come back as a new record. `show` without `--new` returns the newest 50 job records and the newest 50 lessons in every status. `digest` lists that day's jobs and lessons in every status and does not move a cursor.
+Hook reads (`show --new --hook`) stay inside the host limit. Claude Code saves `additionalContext` past 10,000 characters and shows the model a short preview, so Claude and Cursor reads stay under 9,000 characters. Codex spills hook context past about 2,500 tokens by default, so a Codex read stays under 5,000 characters. Lines that do not fit are left unread, the read says how many were left out, and the next hook event continues the list. A hook event with nothing new prints nothing and injects no context. Cursor prints `{}` in that case, because a fail-closed hook treats empty output as a failure. A manual `show --new` with nothing new still prints `No new records.`
+Job records older than the 50-line window are counted and are not repeated in later `--new` reads. Use `digest --date` for a full day, or set `--limit`. `--date YYYY-MM-DD` narrows any read.
 Control characters are stripped, pipes are replaced inside fields, and each input field is capped at 600 characters.
 
 ## Grok Bot profile

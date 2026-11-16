@@ -723,6 +723,7 @@ Codex requires one `/hooks` trust review. Grok Bot receives a profile block to p
 
 Agents record one line per job and leave lessons for human review.
 Only an explicit human `keep` promotes a lesson into the recipient's rules.
+Hook reads show other agents' recent jobs and open lessons, skip kept and dropped lessons, and stay within the host's size limit. A hook event with nothing new injects nothing.
 Every read frames records as data. Crew starts no background loop.
 
 ### `/create-command [seed]`

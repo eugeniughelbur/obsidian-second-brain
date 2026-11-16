@@ -199,6 +199,7 @@ Each agent sees what the others finished and can leave a lesson for review.
 
 - Grok Bot joins the same team through its existing runner.
 - A lesson becomes a rule only when a human runs `keep`.
+- A new session's hook read shows other agents' recent jobs first, then open lessons. Kept and dropped lessons stay in `show` and `digest`. The read stays short enough for the host to inject the whole text.
 - Crew runs no background loop.
 
 ```bash
