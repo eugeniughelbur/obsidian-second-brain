@@ -983,6 +983,9 @@ Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, i
 ### Can I add notes from my phone?
 Yes, through the optional Telegram bot. Send a voice note while you walk, and it is transcribed into today's daily note. Photos, PDFs and links are filed too. See [Capture from your phone](#capture-from-your-phone-optional).
 
+### Can I bring in my ChatGPT, Claude.ai or Gemini chats?
+Yes, in two steps. An exporter saves each chat as a Markdown file in a folder outside the vault, then `/obsidian-ingest` turns the chats you pick into notes. A chat is graded `speculation`, the lowest trust grade, so it can add notes but cannot change one you already have without your yes. Setup, settings and limits: see [AI-CHATS.md](AI-CHATS.md).
+
 ### Can I use it in a language other than English?
 Yes: talk to your agent in your own language and keep the vault in English. The agent translates what you say before it writes a note, replies in your language, and searches with English queries. This passes every vault rule, and search quality is measured on English notes, so you stay on the tested path. Put the rule in `<vault>/.claude/CLAUDE.md`, not `_CLAUDE.md`, so an `/obsidian-init` re-run keeps it. [andreanovix](https://github.com/andreanovix) shared a working block in [discussion #307](https://github.com/eugeniughelbur/obsidian-second-brain/discussions/307). Notes in Chinese, Japanese or Korean, command phrases in five languages, and encoding: see [LANGUAGES.md](LANGUAGES.md).
 
