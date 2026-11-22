@@ -539,10 +539,13 @@ def _semantic_fuse(
     query: str, lexical: List[Dict[str, Any]], vault: Path, limit: int,
     enabled: Optional[bool] = None, scanned: Optional[List[str]] = None,
     on_fallback: Optional[Callable[[str], None]] = None,
+    keep_scores: bool = False,
 ) -> Optional[List[Dict[str, Any]]]:
     """Fuse lexical results with local semantic ranking via RRF. Returns None (so the
     caller uses pure lexical) whenever semantic is unavailable or anything fails.
-    enabled overrides the env toggle for this call (None = follow the env)."""
+    enabled overrides the env toggle for this call (None = follow the env).
+    keep_scores leaves the fused "score" on each result and adds "semantic_score",
+    the note's best-chunk cosine (None when the note is outside the semantic top)."""
     active = _SEMANTIC_ENABLED if enabled is None else enabled
     if not active:
         if enabled is None:
@@ -614,8 +617,14 @@ def _semantic_fuse(
             fused.append({"path": p, "title": title.get(p, p), "snippet": snippet.get(p, ""), "score": s})
         fused.sort(key=lambda r: r["score"], reverse=True)
         out = fused[:limit]
-        for r in out:
-            r.pop("score", None)
+        if keep_scores:
+            cosine = {r["path"]: r["score"] for r in sem}
+            for r in out:
+                r["score_kind"] = "fused"
+                r["semantic_score"] = cosine.get(r["path"])
+        else:
+            for r in out:
+                r.pop("score", None)
         return out
     except Exception as exc:
         reason = getattr(exc, "reason", None)
@@ -651,6 +660,7 @@ def _report_semantic_fallback(
 def search(
     query: str, *, limit: int = 6, semantic: Optional[bool] = None,
     on_semantic_fallback: Optional[Callable[[str], None]] = None,
+    with_scores: bool = False,
 ) -> List[Dict[str, Any]]:
     """Bounded keyword search over vault markdown, fused with local semantic search
     when an embedding index + Ollama are available (else pure lexical).
@@ -658,7 +668,13 @@ def search(
     semantic: force fusion on/off for this call. None (the default, what the MCP
     serves) follows OBSIDIAN_SEARCH_SEMANTIC. The eval harness passes False to get
     a genuinely pure lexical ranking - before this switch existed, "--mode lexical"
-    silently measured the fused blend under a false label (stress-test fix 10/24)."""
+    silently measured the fused blend under a false label (stress-test fix 10/24).
+
+    with_scores: keep each result's "score" and tag it with "score_kind":
+    "lexical" (raw term score) or "fused" (RRF score, plus "semantic_score", the
+    note's best-chunk cosine). Off by default, so the MCP output is unchanged.
+    The eval harness turns it on to judge no-answer cases against a threshold.
+    Ranking is identical either way."""
     vault = resolve_vault()
     terms = _query_terms(query)
     if not terms:
@@ -729,16 +745,23 @@ def search(
         )
     scored.sort(key=lambda r: r["score"], reverse=True)
     if on_semantic_fallback is None:
-        fused = _semantic_fuse(query, scored, vault, limit, enabled=semantic, scanned=seen)
+        fused = _semantic_fuse(
+            query, scored, vault, limit, enabled=semantic, scanned=seen,
+            keep_scores=with_scores,
+        )
     else:
         fused = _semantic_fuse(
             query, scored, vault, limit, enabled=semantic, scanned=seen,
-            on_fallback=on_semantic_fallback,
+            on_fallback=on_semantic_fallback, keep_scores=with_scores,
         )
     if fused is not None:
         return _freshness_rerank(fused, vault, current_intent)
-    for r in scored:
-        r.pop("score", None)
+    if with_scores:
+        for r in scored[:limit]:
+            r["score_kind"] = "lexical"
+    else:
+        for r in scored:
+            r.pop("score", None)
     # The pure-lexical fallback gets the same freshness/supersession rerank -
     # it used to skip it entirely, so keyless installs never got the status
     # fade the comment above promises for the lexical arm.
