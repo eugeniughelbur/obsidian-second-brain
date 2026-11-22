@@ -28,6 +28,14 @@ growth: **stable, no regression**. EN paraphrase and EN keyword byte-identical
 (EN paraphrase MRR 0.474, within noise); RU/ES improved slightly (recall@1
 0.250, MRR 0.408). The index tracks vault changes without drift.
 
+Correction (2026-11-22): that re-measure ran on the semantic index built
+2026-07-11, which was never rebuilt. On 2026-07-26 it still held 1,303 of
+1,828 notes (see "O1 resolved" below), so the semantic arm kept seeing the
+2026-07-11 vault. "Stable" came from the stale index, not from the vault. The
+2026-07-26 sweep tables below repeat the 2026-07-11 EN paraphrase numbers, so
+they most likely ran on the same stale index. A fresh index on the 2026-07-27
+vault gives EN paraphrase recall@10 0.714, not 0.771.
+
 ## Re-measured 2026-11-22: the vault more than doubled
 
 These are the current numbers. Same three case sets, same code defaults,
@@ -51,14 +59,23 @@ Where the EN paraphrase drop comes from:
    (frontmatter date, else filename date) and recall@1 climbs back to 0.343
    (12 of 35), MRR to 0.432. The vault grew by 2,426 notes, so the dating is
    close. That recovers 4 of the 5 lost rank-1 cases.
-3. The top-10 loss is still open. With new notes hidden, recall@10 stays
-   at 0.686. `diagnose.py` sorts today's 11 misses as 8 pool, 3 ordering and
-   0 coverage. The chunk cap and every tuning knob match July, so edits to
-   older notes are the likely cause. Not traced yet.
+3. The top-10 loss is vault growth too, and it began in July. `diagnose.py`
+   sorts today's 11 misses as 8 pool, 3 ordering and 0 coverage.
+   - A 2026-07-12 vault copy with a fresh index reproduces the July table
+     exactly: recall@1 0.371, recall@10 0.771, MRR 0.476.
+   - A 2026-07-27 copy gives recall@10 0.714 (25 of 35), with the July code
+     and today's code alike.
+   - Two cases sat at rank 9 on 2026-07-11 and left the top 10 by 2026-07-27.
+   - A third slid from rank 3 to rank 6 to a miss as its answer note was
+     edited and the vault grew.
 
 What it means: ranking gets worse as the vault grows. New notes on the same
-topics push the right note off rank 1. Treat the 2026-07 tables above as
-history, and quote this table as the current state.
+topics push the right note off rank 1, and push borderline cases out of the
+top 10. Treat the 2026-07 tables above as history, and quote this table as
+the current state.
+
+Rebuild the semantic index before every re-measure. A stale index hides this
+slide, as the 2026-07-18 correction above shows.
 
 ## Phase B start vs end (default mode)
 
@@ -90,6 +107,8 @@ freshness re-rank + status fade, 100% index coverage via adaptive splitting.
 ## How to re-measure
 
 ```bash
+# rebuild the index first: a stale index hides vault growth (see the 2026-07-18 correction)
+uv run python scripts/eval/semantic_search.py --path <vault> --build
 # per mode x case set; --generate NEW sets only with --force or a new --cases path
 uv run python scripts/eval/retrieval_eval.py --mode default --cases scripts/eval/retrieval_cases.jsonl --json
 ```
