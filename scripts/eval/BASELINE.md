@@ -12,6 +12,8 @@ content). The three reference sets: 35 English paraphrase questions
 (`--generate --style keyword`), and 16 hand-written Russian/Spanish
 paraphrases. Metrics below were measured on the maintainer's ~2,350-note vault,
 2026-07-11, embedding model `bge-m3`, fusion weight 20.
+The current numbers are in "Re-measured 2026-11-22" below; the first
+table is the 2026-07 reference.
 
 ## Shipped default (`--mode default` - what the MCP serves)
 
@@ -25,6 +27,38 @@ Re-measured 2026-07-18 on the same three case sets after a week of live vault
 growth: **stable, no regression**. EN paraphrase and EN keyword byte-identical
 (EN paraphrase MRR 0.474, within noise); RU/ES improved slightly (recall@1
 0.250, MRR 0.408). The index tracks vault changes without drift.
+
+## Re-measured 2026-11-22: the vault more than doubled
+
+These are the current numbers. Same three case sets, same code defaults,
+`--mode default`. The vault grew from 1,828 scanned notes (2026-07-26) to
+4,254. The index covers 4,226 of them (99%). Every query used the semantic arm.
+
+| case set | recall@1 | recall@5 | recall@10 | MRR | misses |
+|---|---|---|---|---|---|
+| EN paraphrase | 0.229 | 0.543 | 0.686 | 0.365 | 11 |
+| EN keyword | 0.733 | 0.900 | 0.933 | 0.802 | 2 |
+| RU/ES paraphrase | 0.250 | 0.562 | 0.562 | 0.359 | 7 |
+
+Against July, EN paraphrase fell from 13 to 8 cases at rank 1, and from 8 to
+11 misses. EN keyword went from 0 to 2 misses, RU/ES from 6 to 7.
+
+Where the EN paraphrase drop comes from:
+
+1. Not the code. The 2026-07-27 code (`3efeb1e`) on today's vault and
+   index gives the same numbers.
+2. New notes take rank 1. Hide the 2,419 notes dated after 2026-07-26
+   (frontmatter date, else filename date) and recall@1 climbs back to 0.343
+   (12 of 35), MRR to 0.432. The vault grew by 2,426 notes, so the dating is
+   close. That recovers 4 of the 5 lost rank-1 cases.
+3. The top-10 loss is still open. With new notes hidden, recall@10 stays
+   at 0.686. `diagnose.py` sorts today's 11 misses as 8 pool, 3 ordering and
+   0 coverage. The chunk cap and every tuning knob match July, so edits to
+   older notes are the likely cause. Not traced yet.
+
+What it means: ranking gets worse as the vault grows. New notes on the same
+topics push the right note off rank 1. Treat the 2026-07 tables above as
+history, and quote this table as the current state.
 
 ## Phase B start vs end (default mode)
 
@@ -58,6 +92,45 @@ freshness re-rank + status fade, 100% index coverage via adaptive splitting.
 ```bash
 # per mode x case set; --generate NEW sets only with --force or a new --cases path
 uv run python scripts/eval/retrieval_eval.py --mode default --cases scripts/eval/retrieval_cases.jsonl --json
+```
+
+## No-answer cases (2026-11-22)
+
+A case with `"gold": null` asks something the vault cannot answer. It passes
+only if no result scores above a threshold, and it never counts toward recall
+or MRR. The set has 5 hand-written cases in their own gitignored file,
+`retrieval_cases_noanswer.jsonl`:
+
+- 3 near misses that share topic words with real notes
+- 2 topics that appear nowhere in the vault
+
+Both thresholds follow one rule: a no-answer case must score lower than every
+real question's top hit on the EN paraphrase set.
+
+- **lexical, 9.8.** The #1 lexical score on the 35 real questions ran 9.82 to
+  40.01 (median 19.41).
+- **default, 0.48 cosine.** Each fused result is judged on its best-chunk
+  cosine, which ran 0.489 to 0.720 (median 0.616).
+
+The fused RRF score cannot carry a threshold. The #1 hit scored 0.328 to 0.350
+on every real question, and 0.35 is the ceiling. It encodes rank, not
+confidence.
+
+| mode | passed | failed |
+|---|---|---|
+| lexical | 0 | 5 |
+| default | 1 | 4 |
+
+Search never says "not found". On each near miss it returns the note on the
+right topic, and that note scores like a real answer. In lexical mode one near
+miss outscored 32 of the 35 real questions.
+
+The absent topics fared little better. They landed over the lexical line by
+0.132 and 0.282, and the one default pass cleared its line by 0.005. Deciding
+that an answer is missing falls to the agent reading the notes, not to search.
+
+```bash
+uv run python scripts/eval/retrieval_eval.py --mode default --cases scripts/eval/retrieval_cases_noanswer.jsonl --json
 ```
 
 ## Rejected: type weighting on the fused rank (2026-07-26)
