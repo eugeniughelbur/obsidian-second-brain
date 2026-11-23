@@ -95,6 +95,27 @@ def test_fresh4_snapshot_frontmatter_is_exempt(tmp_path):
     assert not report["findings"]
 
 
+def test_frontmatter_values_ignore_quotes_and_trailing_comments(tmp_path):
+    # The template lines in references/freshness-policy.md carry a `# ...` comment.
+    for fm in ("freshness: snapshot   # declares the note's dominant form",
+               "freshness: 'snapshot'",
+               'freshness: "snapshot"  # why'):
+        write(tmp_path, "bank/statement.md",
+              f"---\n{fm}\n---\n# July\n\nBalance: 1234 revenue this month.\n")
+        assert not lint_folder(tmp_path, today=TODAY)["findings"], fm
+
+
+def test_freshness_window_ignores_quotes_and_trailing_comments(tmp_path):
+    claim = "We currently have 5 open tickets (as of 2026-07-01).\n"
+    for fm in ("freshness-window: 14d   # overrides the default for this note",
+               "freshness-window: '14d'",
+               'freshness-window: "14d" # two weeks'):
+        write(tmp_path, "ops.md", f"---\n{fm}\n---\n{claim}")
+        assert not lint_folder(tmp_path, today=TODAY)["findings"], fm
+    write(tmp_path, "ops.md", f"---\nfreshness-window: 7d # tight\n---\n{claim}")
+    assert len(rules(lint_folder(tmp_path, today=TODAY), "FRESH-2")) == 1
+
+
 def test_past_tense_and_code_fences_are_not_current_claims(tmp_path):
     write(tmp_path, "history.md",
           "# Retro\n\nWe had 13 deals back then and reached 100 stars.\n\n"
