@@ -73,6 +73,120 @@ def test_note_age_prefers_updated_over_date(tmp_path):
     assert age < 365, "updated: must win over the ancient date:"
 
 
+def _three_note_vault(tmp_path):
+    """The #408 repro: two notes carry the edge inside `relations:`, one carries
+    only a stale `status:`. The middle note matches the query most, so without
+    the edge it wins on terms alone."""
+    vault = tmp_path / "vault"
+    (vault / "decisions").mkdir(parents=True)
+    (vault / "decisions" / "old.md").write_text(
+        "---\ntype: decision\ndate: 2026-05-01\n"
+        'relations:\n  superseded_by: ["[[new]]"]\nai-first: true\n---\n'
+        "fixed fee 14500 fixed fee 14500 fixed fee 14500\n",
+        encoding="utf-8",
+    )
+    (vault / "decisions" / "new.md").write_text(
+        "---\ntype: decision\ndate: 2026-11-01\n"
+        'relations:\n  supersedes: ["[[old]]"]\nai-first: true\n---\n'
+        "fixed fee 16000\n",
+        encoding="utf-8",
+    )
+    (vault / "decisions" / "old2.md").write_text(
+        "---\ntype: decision\ndate: 2026-05-01\nstatus: superseded\nai-first: true\n---\n"
+        "fixed fee 14500\n",
+        encoding="utf-8",
+    )
+    return vault
+
+
+def test_relations_superseded_by_steps_back(tmp_path):
+    """#408: a note saying `relations.superseded_by` is as stale as one whose
+    `status:` says superseded, and must not outrank the note that replaced it."""
+    vault = _three_note_vault(tmp_path)
+    results = [{"path": "decisions/old.md", "title": "old"},
+               {"path": "decisions/new.md", "title": "new"},
+               {"path": "decisions/old2.md", "title": "old2"}]
+
+    out = vault_ops._freshness_rerank(results, vault, current_intent=False)
+    order = [r["path"] for r in out]
+    assert order.index("decisions/new.md") < order.index("decisions/old.md"), order
+    # The relation-free stale note fades exactly as it did before the change:
+    # both stale shapes land behind the note that still holds.
+    assert order[0] == "decisions/new.md", order
+
+
+def test_relations_supersedes_reverse_edge(tmp_path):
+    """The forward edge inside `relations:` fades its target, like the legacy
+    top-level scalar already did: the old note's status was never updated."""
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "adr-1.md").write_text(
+        "---\ntype: adr\nstatus: accepted\n---\n"
+        "caching caching caching caching caching caching layer\n", encoding="utf-8",
+    )
+    (vault / "adr-2.md").write_text(
+        "---\ntype: adr\nstatus: accepted\n"
+        'relations:\n  supersedes: ["[[adr-1]]"]\n---\ncaching layer\n', encoding="utf-8",
+    )
+    results = [{"path": "adr-1.md", "title": "adr-1"},
+               {"path": "adr-2.md", "title": "adr-2"}]
+
+    out = vault_ops._freshness_rerank(results, vault, current_intent=False)
+    assert [r["path"] for r in out] == ["adr-2.md", "adr-1.md"]
+
+
+def test_supersession_edges_reads_every_documented_shape():
+    """The shapes `references/ai-first-rules.md` Rule 6 documents, plus the
+    legacy scalars, all produce the same edge."""
+    def read(fm: str):
+        return vault_ops._supersession_edges(f"---\n{fm}\n---\n\nbody\n")
+
+    # Inline array inside the block (the rule's own example).
+    assert read('relations:\n  superseded_by: ["[[new]]"]') == (set(), {"new"})
+    # List form, with a vault-relative path; resolves by note stem.
+    assert read("relations:\n  supersedes:\n    - \"[[Knowledge/ADR-006 - Use Redis]]\"") == (
+        {"adr-006 - use redis"}, set(),
+    )
+    # Legacy top-level scalars.
+    assert read('superseded_by: "[[New]]"') == (set(), {"new"})
+    # Inline mapping on one line.
+    assert read('relations: {supersedes: ["[[old]]"], depends_on: ["[[x]]"]}') == ({"old"}, set())
+    # Both directions in one note.
+    assert read('relations:\n  supersedes: ["[[a]]"]\n  superseded_by: ["[[b]]"]') == (
+        {"a"}, {"b"},
+    )
+    # A wikilink alias/heading suffix resolves to the note, not the fragment.
+    assert read('relations:\n  superseded_by: ["[[new#Summary|the new one]]"]') == (set(), {"new"})
+
+
+def test_supersession_edges_ignores_body_prose():
+    """Only frontmatter is a claim. A note that merely talks about being
+    superseded must not fade itself."""
+    text = (
+        "---\ntype: note\ntags: [note]\n---\n\n"
+        "## For future agent\n\nThis note mentions relations.superseded_by: [\"[[x]]\"] "
+        "in prose and supersedes: [[y]] as an example.\n"
+    )
+    assert vault_ops._supersession_edges(text) == (set(), set())
+
+
+def test_supersession_edges_tolerates_no_frontmatter():
+    assert vault_ops._supersession_edges("plain body, supersedes: [[x]]\n") == (set(), set())
+
+
+def test_search_ranks_relations_superseded_note_last(tmp_path, monkeypatch):
+    """End to end through `search()` with the semantic arm forced off, which is
+    the path the issue reported (`OBSIDIAN_SEARCH_SEMANTIC=0`)."""
+    vault = _three_note_vault(tmp_path)
+    monkeypatch.setenv(vault_ops._VAULT_ENV, str(vault))
+
+    results = vault_ops.search("fixed fee decision", limit=5, semantic=False)
+    order = [r["path"] for r in results]
+    assert set(order) == {"decisions/old.md", "decisions/new.md", "decisions/old2.md"}, order
+    assert order[0] == "decisions/new.md", order
+    assert order[-1] == "decisions/old.md", order
+
+
 def test_search_detects_current_intent_tokens(tmp_path, monkeypatch):
     vault = tmp_path / "vault"
     vault.mkdir()
