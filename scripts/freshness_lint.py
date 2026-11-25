@@ -133,6 +133,15 @@ def _strip_obsidian_comments(text: str, in_comment: bool) -> tuple[str, bool]:
     return "".join(visible), in_comment
 
 ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})(?:-(\d{2}))?\b")
+# Month-name dates ("October 9", "9 Oct", "Oct 9th, 2026", "October 2026") scope a
+# heading or line exactly as an ISO date does. A decision log written as
+# "## October 9 - launch plan approved" is history, and matching ISO only made
+# every entry in such a log ring FRESH-1. Capitalized month names only: a
+# lowercase "may" is the modal verb.
+_MONTH = (r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|"
+          r"Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)")
+_DAY = r"(?:3[01]|[12]\d|0?[1-9])(?:st|nd|rd|th)?"
+MONTH_DATE = re.compile(rf"\b(?:{_MONTH}\.?\s+(?:{_DAY}|\d{{4}})|{_DAY}\s+{_MONTH})\b")
 AS_OF = re.compile(r"\bas of\s+(\d{4})-(\d{2})(?:-(\d{2}))?", re.IGNORECASE)
 NUMBER = re.compile(r"(?<![\w./-])\d[\d,.]*(?![\w-])")
 ORDERED_LIST = re.compile(r"^\s*(?:>\s*)?\d+[.)]\s")
@@ -147,6 +156,33 @@ POINTER_IGNORE = {"http", "https", "mailto", "file", "obsidian", "tel", "ftp",
                   # in a home system, so there is nothing to map or refresh.
                   "owl", "rdf", "rdfs", "xsd", "skos", "foaf", "dc", "dcterms",
                   "schema", "prov", "sh", "dbo", "wdt"}
+# A value that is a measurement (12s, 5m28s, 1080p, 24fps, 2x, 10k), not a record id.
+# Hex ids never match: none of these units is made of hex letters only.
+MEASURE = re.compile(r"\d+(?:\.\d+)?(?:ms|fps|px|[smhpxk])(?![a-z])")
+# `key:value` notation for a literal, as in a schema or API note (score:null).
+LITERAL_VALUES = {"null", "none", "true", "false", "nan", "undefined"}
+
+
+def has_date(text: str) -> bool:
+    """True when the text carries a date, ISO (2026-10-09) or month-name (October 9)."""
+    return bool(ISO_DATE.search(text) or MONTH_DATE.search(text))
+
+
+def not_a_pointer(text: str, m: re.Match) -> bool:
+    """True for `word:token` shapes that name no record in a home system.
+
+    Found on a team knowledge repo where every FRESH-3 finding was one of these:
+    a file extension (clip.mp4:12s), a ratio or clock time glued to a word
+    (six4:5/9:16), a measurement (batch:10s1080) and a literal (score:null).
+    """
+    prefix, value = m.group(1), m.group(2)
+    if m.start() and text[m.start() - 1] == ".":
+        return True  # file extension, not a standalone prefix
+    if prefix[-1].isdigit() and value[0].isdigit():
+        return True  # digit:digit is a ratio or a clock time
+    if MEASURE.match(value):
+        return True
+    return value.lower() in LITERAL_VALUES
 
 
 def parse_frontmatter(lines: list[str]) -> tuple[dict, int]:
@@ -261,7 +297,7 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
             level = len(h.group(1))
             if dated_heading_level is not None and level <= dated_heading_level:
                 dated_heading_level = None
-            if ISO_DATE.search(stripped):
+            if has_date(stripped):
                 dated_heading_level = level
             elif example_here and dated_heading_level is None:
                 # An undated heading is not a snapshot: a directive there can
@@ -290,6 +326,8 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
             if pm.group(2).isdigit():
                 continue  # host:port (localhost:8080), not a typed pointer
             if ISO_DATE.fullmatch(pm.group(0)):
+                continue
+            if not_a_pointer(pointer_text, pm):
                 continue
             if prefix not in pointer_types:
                 findings.append({
@@ -334,7 +372,7 @@ def lint_file(path: Path, rel: str, cfg: dict, today: date) -> list[dict]:
                     "text": f"stamp is {age}d old (window {window}d): refresh or convert to pointer: {stripped[:120]}",
                 })
             continue
-        if ISO_DATE.search(stripped):
+        if has_date(stripped):
             continue  # a bare date on the line scopes the claim (lenient snapshot)
         if URL.search(stripped):
             continue  # links out to where truth lives: pointer enough for v1

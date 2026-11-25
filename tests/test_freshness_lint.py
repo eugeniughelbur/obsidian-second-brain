@@ -351,3 +351,42 @@ def test_impossible_as_of_date_is_flagged_not_a_crash(tmp_path):
         ("bad.md", 3), ("bad.md", 4), ("bad.md", 5), ("bad.md", 6)]
     assert [("not a real date" in h["text"]) for h in hits] == [True, True, True, False]
     assert [h["file"] for h in rules(report, "FRESH-1")] == ["other.md"]
+
+
+def test_fresh4_month_name_dated_heading_is_exempt(tmp_path):
+    """A decision log dated "## October 9 - ..." is history, the same as an ISO
+    heading. Matching ISO only made every entry in such a log ring FRESH-1. A
+    capitalized month with no day or year ("March forward") is not a date."""
+    write(tmp_path, "decisions.md",
+          "# Decisions\n\n"
+          "## October 9 - launch plan approved\n\nPipeline at 13 open deals.\n\n"
+          "## 9 Oct\n\nPipeline at 13 open deals.\n\n"
+          "## Oct 9th, 2026\n\nPipeline at 13 open deals.\n\n"
+          "## March forward\n\nPipeline at 13 open deals.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    hits = rules(report, "FRESH-1")
+    assert [h["line"] for h in hits] == [17], report["findings"]
+
+
+def test_month_name_date_on_line_scopes_the_claim(tmp_path):
+    write(tmp_path, "status.md",
+          "# Status\n\nOct 9: pipeline at 13 open deals.\n"
+          "Pipeline at 13 open deals.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert [h["line"] for h in rules(report, "FRESH-1")] == [4]
+
+
+def test_fresh3_ignores_extensions_ratios_measures_and_literals(tmp_path):
+    """Every FRESH-3 finding on a team knowledge repo was one of these shapes. A
+    real unmapped id still rings, including a hex id that starts with a digit."""
+    write(tmp_path, "render.md",
+          "# Render\n\n"
+          "Proofs in six4:5/9:16 formats.\n"
+          "Approved clip.mp4:12s vertical.\n"
+          "Inside the batch:10s1080 folder.\n"
+          "Returns score:null when unassessable.\n"
+          "Tracked in linear:ABC-123 and notion:1a2b3c4d.\n")
+    report = lint_folder(tmp_path, today=TODAY)
+    assert [h["text"] for h in rules(report, "FRESH-3")] == [
+        "typed pointer 'linear:ABC-123' has no mapping in .freshness.json",
+        "typed pointer 'notion:1a2b3c4d' has no mapping in .freshness.json"]
