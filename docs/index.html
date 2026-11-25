@@ -5,6 +5,96 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI second brain for Obsidian - persistent memory for Claude Code, Codex and Grok Bot</title>
 <meta name="description" content="Persistent memory for Claude Code, Codex, Grok Bot and other agents, stored as plain markdown in your Obsidian vault. Crew adds one shared logbook, so your agents know what each other did. 49 commands.">
+<link rel="canonical" href="https://eugeniughelbur.github.io/obsidian-second-brain/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="obsidian-second-brain">
+<meta property="og:title" content="AI second brain for Obsidian - persistent memory for Claude Code, Codex and Grok Bot">
+<meta property="og:description" content="Persistent memory for Claude Code, Codex, Grok Bot and other agents, stored as plain markdown in your Obsidian vault. Crew adds one shared logbook, so your agents know what each other did. 49 commands.">
+<meta property="og:url" content="https://eugeniughelbur.github.io/obsidian-second-brain/">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareSourceCode",
+ "name": "obsidian-second-brain",
+ "description": "Persistent memory for Claude Code, Codex, Grok Bot and other agents, stored as plain markdown in your Obsidian vault. Crew adds one shared logbook, so your agents know what each other did. 49 commands.",
+ "url": "https://eugeniughelbur.github.io/obsidian-second-brain/",
+ "codeRepository": "https://github.com/eugeniughelbur/obsidian-second-brain",
+ "license": "https://opensource.org/licenses/MIT",
+ "programmingLanguage": [
+  "Python",
+  "Shell"
+ ],
+ "author": {
+  "@type": "Person",
+  "name": "Eugeniu Ghelbur",
+  "url": "https://github.com/eugeniughelbur"
+ }
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "How do I give Claude Code long-term memory across sessions?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Install obsidian-second-brain and point it at an Obsidian vault. A session-start hook loads the vault's operating manual, and 49 commands read and write plain markdown notes, so the next session starts with your projects, people and decisions. No vector database is required; local semantic search is optional."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Does it work with Codex, Gemini CLI or Grok Bot, not only Claude?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes. One set of command files compiles to 8 platforms: Claude Code, OpenAI Codex CLI, Google Gemini CLI, OpenCode, Google Antigravity, Nous Research Hermes, Pi and Grok Bot. The notes stay plain markdown, so any agent that can read files can use the same vault."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "How do my AI agents share what each other did?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "The /crew command gives Claude Code, Codex, Cursor and Grok Bot one shared logbook. After every job an agent writes one line: time, agent, area, outcome and evidence. Before the next answer, each agent's hooks show it the lines the others added. It works in any plain folder, with or without Obsidian."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "How is this different from Karpathy's LLM wiki pattern?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "It builds on it. In the LLM wiki pattern an agent maintains a markdown wiki. Here every new source rewrites the existing pages it touches instead of only appending, contradictions are reconciled, and 4 scheduled agents run a morning brief, a nightly consolidation, a weekly review and a vault health check."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Can Grok read my Obsidian notes?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes, through Grok Bot. GROK-BOT.md holds one starter prompt to paste into a Grok Bot chat, with the folder layout and the core note rules, so Grok can save and answer from the same notes. The full skill adds 49 commands, a search index and checks on every note, and you keep the same notes when you move up."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "How do I turn my ChatGPT conversations into Obsidian notes?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Export each chat to a Markdown file with any exporter that writes Markdown, into a folder outside the vault. Then run /obsidian-ingest on one file or on the whole folder in batches. AI-CHATS.md walks through the 2 steps and the 3 exporter settings to change first. It works for Claude.ai and Gemini chats too."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Is it free, and do I need API keys?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "It is free and open source under the MIT license, and your notes stay on your machine. The vault commands need no API keys, and /research falls back to free sources such as Wikipedia, Hacker News and arXiv. A few research commands, such as the X and YouTube readers, need their own keys and say so when one is missing."
+   }
+  }
+ ]
+}
+</script>
 <style>
 :root{--bg:#fff;--fg:#1a1a1a;--dim:#5c5c5c;--line:#e3e3e3;--accent:#4c2889;--card:#fafafa}
 @media(prefers-color-scheme:dark){:root{--bg:#121212;--fg:#e8e8e8;--dim:#9a9a9a;--line:#2c2c2c;--accent:#b191e8;--card:#1a1a1a}}
@@ -99,6 +189,21 @@ table{width:100%;border-collapse:collapse}
 <a class="cmd" href="commands/obsidian-reindex.html" data-s="obsidian-reindex refresh the vault&#x27;s semantic search index and report coverage before and after reindex vault rebuild semantic index refresh semantic search update vault embeddings vault neu indexieren semantischen index neu erstellen semantische suche aktualisieren vault-einbettungen aktualisieren reindexa el vault reconstruye el índice semántico actualiza la búsqueda semántica actualiza los embeddings del vault reindexe o vault reconstrua o índice semântico atualize a busca semântica atualize os embeddings do vault 重建知识库索引 刷新语义搜索 更新笔记向量 重新索引我的知识库"><code>/obsidian-reindex</code><span>Refresh the vault&#x27;s semantic search index and report coverage before and after</span></a>
 <a class="cmd" href="commands/obsidian-retrieval-eval.html" data-s="obsidian-retrieval-eval measure how well vault search finds the right note for a natural-language question - recall@k and mrr, with the concrete failures evaluate retrieval how good is my vault search retrieval eval test vault search quality measure find quality abrufqualität bewerten wie gut ist meine vault-suche retrieval-evaluierung qualität der vault-suche testen suchqualität messen evalúa la búsqueda qué tal funciona la búsqueda de mi vault evaluación de recuperación prueba la calidad de la búsqueda comprueba si encuentra bien mis notas avalie a recuperação quão boa é a busca do meu vault avaliação de recuperação teste a qualidade da busca do vault meça a qualidade da busca 测试知识库搜索效果 评估检索质量 看看我的笔记好不好找 测量语义搜索召回率 检查搜索能不能找到正确笔记"><code>/obsidian-retrieval-eval</code><span>Measure how well vault search finds the right note for a natural-language question - recall@k and MRR, with the concrete failures</span></a>
 <a class="cmd" href="commands/obsidian-visualize.html" data-s="obsidian-visualize generate a visual canvas map of your vault - see the shape of your second brain and how knowledge connects visualize vault vault map canvas of vault show me the vault shape vault visualisieren vault-karte vault als canvas zeige mir die struktur meines vaults visualiza el vault mapa del vault canvas del vault muéstrame la forma de mi vault visualize o vault mapa do vault canvas do vault mostre a forma do vault 把知识库可视化 生成知识图谱画布 画出我的笔记关系 看看知识库的整体结构"><code>/obsidian-visualize</code><span>Generate a visual canvas map of your vault - see the shape of your second brain and how knowledge connects</span></a>
+<h2>Common questions</h2>
+<h3>How do I give Claude Code long-term memory across sessions?</h3>
+<p>Install obsidian-second-brain and point it at an Obsidian vault. A session-start hook loads the vault&#x27;s operating manual, and 49 commands read and write plain markdown notes, so the next session starts with your projects, people and decisions. No vector database is required; local semantic search is optional. <a href="https://github.com/eugeniughelbur/obsidian-second-brain#install">Details</a></p>
+<h3>Does it work with Codex, Gemini CLI or Grok Bot, not only Claude?</h3>
+<p>Yes. One set of command files compiles to 8 platforms: Claude Code, OpenAI Codex CLI, Google Gemini CLI, OpenCode, Google Antigravity, Nous Research Hermes, Pi and Grok Bot. The notes stay plain markdown, so any agent that can read files can use the same vault. <a href="https://github.com/eugeniughelbur/obsidian-second-brain#does-this-work-with-codex-cli-gemini-cli-or-opencode">Details</a></p>
+<h3>How do my AI agents share what each other did?</h3>
+<p>The /crew command gives Claude Code, Codex, Cursor and Grok Bot one shared logbook. After every job an agent writes one line: time, agent, area, outcome and evidence. Before the next answer, each agent&#x27;s hooks show it the lines the others added. It works in any plain folder, with or without Obsidian. <a href="https://github.com/eugeniughelbur/obsidian-second-brain#crew-one-logbook-for-all-your-agents">Details</a></p>
+<h3>How is this different from Karpathy&#x27;s LLM wiki pattern?</h3>
+<p>It builds on it. In the LLM wiki pattern an agent maintains a markdown wiki. Here every new source rewrites the existing pages it touches instead of only appending, contradictions are reconciled, and 4 scheduled agents run a morning brief, a nightly consolidation, a weekly review and a vault health check. <a href="https://github.com/eugeniughelbur/obsidian-second-brain#how-this-extends-karpathys-llm-wiki">Details</a></p>
+<h3>Can Grok read my Obsidian notes?</h3>
+<p>Yes, through Grok Bot. GROK-BOT.md holds one starter prompt to paste into a Grok Bot chat, with the folder layout and the core note rules, so Grok can save and answer from the same notes. The full skill adds 49 commands, a search index and checks on every note, and you keep the same notes when you move up. <a href="https://github.com/eugeniughelbur/obsidian-second-brain/blob/main/GROK-BOT.md">Details</a></p>
+<h3>How do I turn my ChatGPT conversations into Obsidian notes?</h3>
+<p>Export each chat to a Markdown file with any exporter that writes Markdown, into a folder outside the vault. Then run /obsidian-ingest on one file or on the whole folder in batches. AI-CHATS.md walks through the 2 steps and the 3 exporter settings to change first. It works for Claude.ai and Gemini chats too. <a href="https://github.com/eugeniughelbur/obsidian-second-brain/blob/main/AI-CHATS.md">Details</a></p>
+<h3>Is it free, and do I need API keys?</h3>
+<p>It is free and open source under the MIT license, and your notes stay on your machine. The vault commands need no API keys, and /research falls back to free sources such as Wikipedia, Hacker News and arXiv. A few research commands, such as the X and YouTube readers, need their own keys and say so when one is missing. <a href="https://github.com/eugeniughelbur/obsidian-second-brain#do-i-need-api-keys-to-use-this">Details</a></p>
 <script>
 const q=document.getElementById('q');
 q.addEventListener('input',()=>{const v=q.value.toLowerCase().trim();

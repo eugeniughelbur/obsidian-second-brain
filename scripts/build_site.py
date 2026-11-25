@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import json
 import re
 import sys
 from pathlib import Path
@@ -34,6 +35,58 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 COMMANDS = REPO_ROOT / "commands"
 REPO_URL = "https://github.com/eugeniughelbur/obsidian-second-brain"
+SITE_URL = "https://eugeniughelbur.github.io/obsidian-second-brain/"
+AUTHOR = {"@type": "Person", "name": "Eugeniu Ghelbur", "url": "https://github.com/eugeniughelbur"}
+
+# Questions people ask AI assistants about this problem, each answered in a
+# short block that an answer engine can quote whole: the direct answer first,
+# one concrete number, one link to where the claim lives. Same claims as the
+# README; written as answers rather than as feature names. `{n}` is the live
+# command count, so the page cannot drift from commands/.
+FAQ = [
+    ("How do I give Claude Code long-term memory across sessions?",
+     "Install obsidian-second-brain and point it at an Obsidian vault. A session-start "
+     "hook loads the vault's operating manual, and {n} commands read and write plain "
+     "markdown notes, so the next session starts with your projects, people and "
+     "decisions. No vector database is required; local semantic search is optional.",
+     f"{REPO_URL}#install"),
+    ("Does it work with Codex, Gemini CLI or Grok Bot, not only Claude?",
+     "Yes. One set of command files compiles to 8 platforms: Claude Code, OpenAI Codex "
+     "CLI, Google Gemini CLI, OpenCode, Google Antigravity, Nous Research Hermes, Pi and "
+     "Grok Bot. The notes stay plain markdown, so any agent that can read files can use "
+     "the same vault.",
+     f"{REPO_URL}#does-this-work-with-codex-cli-gemini-cli-or-opencode"),
+    ("How do my AI agents share what each other did?",
+     "The /crew command gives Claude Code, Codex, Cursor and Grok Bot one shared "
+     "logbook. After every job an agent writes one line: time, agent, area, outcome and "
+     "evidence. Before the next answer, each agent's hooks show it the lines the others "
+     "added. It works in any plain folder, with or without Obsidian.",
+     f"{REPO_URL}#crew-one-logbook-for-all-your-agents"),
+    ("How is this different from Karpathy's LLM wiki pattern?",
+     "It builds on it. In the LLM wiki pattern an agent maintains a markdown wiki. Here "
+     "every new source rewrites the existing pages it touches instead of only appending, "
+     "contradictions are reconciled, and 4 scheduled agents run a morning brief, a "
+     "nightly consolidation, a weekly review and a vault health check.",
+     f"{REPO_URL}#how-this-extends-karpathys-llm-wiki"),
+    ("Can Grok read my Obsidian notes?",
+     "Yes, through Grok Bot. GROK-BOT.md holds one starter prompt to paste into a Grok "
+     "Bot chat, with the folder layout and the core note rules, so Grok can save and "
+     "answer from the same notes. The full skill adds {n} commands, a search index and "
+     "checks on every note, and you keep the same notes when you move up.",
+     f"{REPO_URL}/blob/main/GROK-BOT.md"),
+    ("How do I turn my ChatGPT conversations into Obsidian notes?",
+     "Export each chat to a Markdown file with any exporter that writes Markdown, into "
+     "a folder outside the vault. Then run /obsidian-ingest on one file or on the whole "
+     "folder in batches. AI-CHATS.md walks through the 2 steps and the 3 exporter "
+     "settings to change first. It works for Claude.ai and Gemini chats too.",
+     f"{REPO_URL}/blob/main/AI-CHATS.md"),
+    ("Is it free, and do I need API keys?",
+     "It is free and open source under the MIT license, and your notes stay on your "
+     "machine. The vault commands need no API keys, and /research falls back to free "
+     "sources such as Wikipedia, Hacker News and arXiv. A few research commands, such as "
+     "the X and YouTube readers, need their own keys and say so when one is missing.",
+     f"{REPO_URL}#do-i-need-api-keys-to-use-this"),
+]
 
 CATEGORIES = [
     ("vault", "Vault management",
@@ -126,8 +179,19 @@ table{width:100%;border-collapse:collapse}
 """
 
 
-def page(title: str, description: str, body: str, depth: int = 0) -> str:
+def _ld(data: dict) -> str:
+    """Structured data (schema.org JSON-LD) that search and answer engines read
+    to know what a page is about. Inert: the browser never executes it. `</` is
+    escaped so a description can never close the tag early."""
+    payload = json.dumps(data, ensure_ascii=False, indent=1).replace("</", "<\\/")
+    return f'<script type="application/ld+json">\n{payload}\n</script>\n'
+
+
+def page(title: str, description: str, body: str, depth: int = 0,
+         path: str = "index.html", structured: list[dict] | None = None) -> str:
     up = "../" * depth
+    url = SITE_URL + ("" if path == "index.html" else path)
+    ld = "".join(_ld(d) for d in structured or [])
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -135,7 +199,13 @@ def page(title: str, description: str, body: str, depth: int = 0) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(description)}">
-<style>{CSS}</style>
+<link rel="canonical" href="{url}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="obsidian-second-brain">
+<meta property="og:title" content="{html.escape(title)}">
+<meta property="og:description" content="{html.escape(description)}">
+<meta property="og:url" content="{url}">
+{ld}<style>{CSS}</style>
 </head>
 <body>
 <div class="wrap">
@@ -164,6 +234,10 @@ def render_index(cmds: list[dict]) -> str:
         '<input type="search" id="q" placeholder="Filter commands..." '
         'aria-label="Filter commands">',
     ]
+    faq = ["<h2>Common questions</h2>"]
+    for q, a, link in FAQ:
+        faq.append(f"<h3>{html.escape(q)}</h3>")
+        faq.append(f'<p>{html.escape(a.format(n=len(cmds)))} <a href="{link}">Details</a></p>')
     for key, heading, blurb in CATEGORIES:
         group = by_cat.get(key, [])
         if not group:
@@ -178,6 +252,7 @@ def render_index(cmds: list[dict]) -> str:
                 f'<code>/{html.escape(c["name"])}</code>'
                 f'<span>{html.escape(c["description"])}</span></a>'
             )
+    parts.extend(faq)
     # The only script on the site, and it degrades to a full list without it.
     parts.append("""<script>
 const q=document.getElementById('q');
@@ -212,8 +287,47 @@ def render_command(c: dict) -> str:
     return "\n".join(parts)
 
 
+def render_sitemap(paths: list[str]) -> str:
+    """No <lastmod>: it would change on every build and break --check, and
+    crawlers re-read a small sitemap anyway."""
+    urls = "".join(
+        f"<url><loc>{html.escape(SITE_URL + ('' if p == 'index.html' else p))}</loc></url>\n"
+        for p in paths
+    )
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"{urls}</urlset>\n")
+
+
 def build(out: Path, cmds: list[dict]) -> dict[str, str]:
     """Return the whole site as {relative path: contents}, writing nothing."""
+    index_description = (
+        "Persistent memory for Claude Code, Codex, Grok Bot and other agents, stored "
+        "as plain markdown in your Obsidian vault. Crew adds one shared logbook, so "
+        f"your agents know what each other did. {len(cmds)} commands."
+    )
+    structured = [
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareSourceCode",
+            "name": "obsidian-second-brain",
+            "description": index_description,
+            "url": SITE_URL,
+            "codeRepository": REPO_URL,
+            "license": "https://opensource.org/licenses/MIT",
+            "programmingLanguage": ["Python", "Shell"],
+            "author": AUTHOR,
+        },
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {"@type": "Question", "name": q,
+                 "acceptedAnswer": {"@type": "Answer", "text": a.format(n=len(cmds))}}
+                for q, a, _ in FAQ
+            ],
+        },
+    ]
     files = {
         # GitHub Pages runs Jekyll by default, which would try to process these
         # and skip anything it thinks is a draft. This turns that off.
@@ -226,19 +340,26 @@ def build(out: Path, cmds: list[dict]) -> dict[str, str]:
         "index.html": page(
             "AI second brain for Obsidian - persistent memory for "
             "Claude Code, Codex and Grok Bot",
-            "Persistent memory for Claude Code, Codex, Grok Bot and other agents, stored "
-            "as plain markdown in your Obsidian vault. Crew adds one shared logbook, so "
-            f"your agents know what each other did. {len(cmds)} commands.",
+            index_description,
             render_index(cmds),
+            structured=structured,
         ),
     }
     for c in cmds:
-        files[f"commands/{c['name']}.html"] = page(
+        rel = f"commands/{c['name']}.html"
+        files[rel] = page(
             f"/{c['name']} - obsidian-second-brain",
             c["description"],
             render_command(c),
             depth=1,
+            path=rel,
         )
+    # The repo's llms.txt, served from the site too, where tools that read the
+    # convention look for it. Copied, not rewritten, so the two never disagree.
+    files["llms.txt"] = (REPO_ROOT / "llms.txt").read_text(encoding="utf-8")
+    files["sitemap.xml"] = render_sitemap(
+        [p for p in files if p.endswith(".html")]
+    )
     return files
 
 
