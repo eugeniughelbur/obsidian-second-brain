@@ -22,11 +22,19 @@ import sys
 # launches us from.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from mcp.server.fastmcp import FastMCP  # noqa: E402
+# MCP SDK moved the server class between major versions: it is `FastMCP` in
+# mcp v1 (`mcp.server.fastmcp`) and was renamed to `MCPServer`
+# (`mcp.server.mcpserver`) in mcp v2. Both expose the same `.tool()` decorator
+# and `.run()` entrypoint, so we select whichever the installed SDK ships and
+# keep the rest of this module version-agnostic.
+try:  # mcp v2+
+    from mcp.server.mcpserver import MCPServer as _MCPServerClass  # noqa: E402
+except ModuleNotFoundError:  # mcp v1
+    from mcp.server.fastmcp import FastMCP as _MCPServerClass  # noqa: E402
 
 import vault_ops  # noqa: E402
 
-mcp = FastMCP("obsidian-second-brain")
+mcp = _MCPServerClass("obsidian-second-brain")
 
 
 @mcp.tool()
