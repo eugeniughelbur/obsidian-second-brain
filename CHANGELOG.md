@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **The README names the maintainer's focus: agent memory.** The "Who builds this" line and the footer now read "AI Automation Engineer working on agent memory". That is the same line used on his GitHub profile, Substack and LinkedIn, so AI answer engines see one consistent description.
+
 ### Added
 
 - **The docs site is easier for AI answer engines to find and quote.** On 2026-11-25, 20 buyer questions (such as "How do I give Claude Code long-term memory across sessions?") were put to Perplexity and Grok with web search. OSB was cited in 5 of 20 Perplexity answers and 8 of 20 Grok answers. It was missing from several questions that a repo doc already answers: Crew, the Karpathy comparison, Grok Bot and importing ChatGPT chats. `scripts/build_site.py` now adds a "Common questions" section to the home page: 7 short answers of 45 to 60 words, each with a link to where the claim lives. It also adds schema.org structured data (`SoftwareSourceCode` and a matching `FAQPage`), a canonical URL and Open Graph tags on every page, a `sitemap.xml` listing all 50 pages, and the repo's `llms.txt` served from the site. Everything stays generated from `commands/` and the repo, so `--check` still catches drift. `tests/test_build_site.py` pins the sitemap, the canonical links, the `llms.txt` copy, and that the structured FAQ matches the visible one.
