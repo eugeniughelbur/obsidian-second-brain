@@ -159,6 +159,16 @@ def test_site_serves_the_repo_llms_txt():
         (REPO_ROOT / "llms.txt").read_text(encoding="utf-8")
 
 
+def test_site_serves_the_bing_ownership_file():
+    """Bing looks for BingSiteAuth.xml at the site root. If the file goes missing,
+    Bing drops the site's verification and stops reporting how it is indexed."""
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring((DOCS / "BingSiteAuth.xml").read_text(encoding="utf-8"))
+    assert root.tag == "users"
+    assert [u.text for u in root.findall("user")] == [build_site.BING_SITE_AUTH]
+
+
 @pytest.mark.parametrize("path", sorted(DOCS.rglob("*.html")), ids=lambda p: p.name)
 def test_every_page_names_its_canonical_url(path):
     rel = path.relative_to(DOCS).as_posix()

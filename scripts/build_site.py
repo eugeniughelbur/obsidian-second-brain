@@ -37,6 +37,10 @@ COMMANDS = REPO_ROOT / "commands"
 REPO_URL = "https://github.com/eugeniughelbur/obsidian-second-brain"
 SITE_URL = "https://eugeniughelbur.github.io/obsidian-second-brain/"
 AUTHOR = {"@type": "Person", "name": "Eugeniu Ghelbur", "url": "https://github.com/eugeniughelbur"}
+# Bing Webmaster Tools ownership token. Bing reads it from BingSiteAuth.xml at the
+# site root to confirm the maintainer owns the site. It is public by design: it
+# proves control of the site, it grants no access to anything.
+BING_SITE_AUTH = "C497F8E66AA32D3CDE6D809D49978D58"
 
 # Questions people ask AI assistants about this problem, each answered in a
 # short block that an answer engine can quote whole: the direct answer first,
@@ -357,6 +361,11 @@ def build(out: Path, cmds: list[dict]) -> dict[str, str]:
     # The repo's llms.txt, served from the site too, where tools that read the
     # convention look for it. Copied, not rewritten, so the two never disagree.
     files["llms.txt"] = (REPO_ROOT / "llms.txt").read_text(encoding="utf-8")
+    # Bing feeds ChatGPT search and Copilot, so the site is registered there.
+    files["BingSiteAuth.xml"] = (
+        '<?xml version="1.0"?>\n<users>\n'
+        f"\t<user>{BING_SITE_AUTH}</user>\n</users>\n"
+    )
     files["sitemap.xml"] = render_sitemap(
         [p for p in files if p.endswith(".html")]
     )
