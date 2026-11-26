@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- **The README names the maintainer's focus: agent memory.** The "Who builds this" line and the footer now read "AI Automation Engineer working on agent memory". That is the same line used on his GitHub profile, Substack and LinkedIn, so AI answer engines see one consistent description.
+- **One description of the maintainer everywhere: "AI Automation Engineer working on agent memory".** The README's "Who builds this" paragraph, its footers, the author credit in 171 files (`scripts/stamp_credit.py` ROLES) and `llms.txt` now use the same line as his GitHub profile, Substack and LinkedIn. The README paragraph also names the range of the work: agents, tooling, client deployments, teaching and memory research. AI answer engines see one consistent description.
 
 ### Added
 

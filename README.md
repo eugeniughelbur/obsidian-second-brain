@@ -97,7 +97,7 @@ You take notes in Obsidian. Hundreds of files. They just sit there. You make the
 
 ## Who builds this
 
-I'm Eugeniu Ghelbur, an AI Automation Engineer working on agent memory. I built this for my own vault, and I still run my work on it every day. I review and merge every change myself, and close to 50 people have shipped fixes so far ([see who](#contributors)).
+I'm Eugeniu Ghelbur, an AI Automation Engineer working on agent memory. I build AI agents and the tools around them, deploy them for clients, teach people to use them, and research how agents remember. I built this for my own vault, and I still run my work on it every day. I review and merge every change myself, and close to 50 people have shipped fixes so far ([see who](#contributors)).
 
 I write up what I learn 3 times a week on [The AI Operator](https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=who-builds-this), and post shorter notes on [X](https://x.com/eugeniu_ghelbur) and [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/).
 
@@ -1112,7 +1112,7 @@ Prefer GitHub? [GitHub Sponsors](https://github.com/sponsors/eugeniughelbur) wor
 <tr>
 <td align="center" width="700">
 
-Built by **Eugeniu Ghelbur**, AI Automation Engineer, AI Tooling Engineer, AI Educator
+Built by **Eugeniu Ghelbur**, AI Automation Engineer working on agent memory
 
 *If this skill helped you, the best thanks is following along.*
 
