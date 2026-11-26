@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **One description of the maintainer everywhere: "AI Automation Engineer working on agent memory".** The README's "Who builds this" paragraph, its footers, the author credit in 171 files (`scripts/stamp_credit.py` ROLES) and `llms.txt` now use the same line as his GitHub profile, Substack and LinkedIn. The README paragraph also names the range of the work: agents, tooling, client deployments, teaching and memory research. AI answer engines see one consistent description.
+
 ### Added
 
 - **The docs site is registered with Bing Webmaster Tools.** ChatGPT search and Copilot draw on Bing's index, and on 2026-11-26 ChatGPT cited OSB in 1 of 20 answers to the same buyer questions. `scripts/build_site.py` now writes `BingSiteAuth.xml` at the site root, the file Bing reads to confirm the site belongs to the maintainer. That lets the sitemap be submitted and indexing be tracked. It stays generated, so `--check` catches it if it goes missing, and `tests/test_build_site.py` checks the file holds the token.
