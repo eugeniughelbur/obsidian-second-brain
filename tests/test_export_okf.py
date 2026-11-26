@@ -201,3 +201,26 @@ def test_only_withdrawn_knowledge_exports_as_deprecated(tmp_path):
     assert "status:" not in _exported(vault, "Knowledge/Cited.md"), (
         "a plain note gained a status; stable is the spec default and silence says it"
     )
+
+
+def test_a_title_that_looks_like_a_date_or_number_stays_text(tmp_path):
+    """A daily note named 2026-01-05.md has no title of its own, so the file
+    name is used. Written bare, YAML read it back as a date, and a note headed
+    `# No` or `# 2026` came back as False or an integer. OKF `title` is text."""
+    import yaml
+
+    vault = tmp_path / "vault"
+    (vault / "Daily").mkdir(parents=True)
+    (vault / "Daily" / "2026-01-05.md").write_text(
+        "---\ntype: daily\ndate: 2026-01-05\n---\n\nWent for a run.\n", encoding="utf-8"
+    )
+    (vault / "No.md").write_text("---\ntype: concept\ntags: ['2026']\n---\n# No\n\nText.\n", encoding="utf-8")
+    assert _run_export(vault).returncode == 0
+
+    def front(rel):
+        text = (vault / "_export" / "okf" / rel).read_text(encoding="utf-8")
+        return yaml.safe_load(text.split("---\n")[1])
+
+    assert front("Daily/2026-01-05.md")["title"] == "2026-01-05"
+    assert front("No.md")["title"] == "No"
+    assert front("No.md")["tags"] == ["2026"]
