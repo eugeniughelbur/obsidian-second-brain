@@ -1415,6 +1415,60 @@ def test_recall_hook_contract(tmp_path):
     assert any(e.get("abstained") is True for e in entries)
 
 
+def _load_recall_hook():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "obsidian_recall_hook", REPO_ROOT / "hooks" / "obsidian-recall.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_recall_brief_caps_one_subject_and_leads_with_its_canonical_note():
+    """One subject cannot fill every recall slot.
+
+    In the 2026-11-26 Connectors test all 4 slots went to notes about one
+    project (meeting, review, project page, daily log). The note on the person
+    who owns its reviews ranked 6th and never reached the agent, which trusted
+    the list and stopped searching. The cap frees slots for the next subjects,
+    and the note named after the subject goes first inside its share.
+    """
+    hook = _load_recall_hook()
+    ptoks = {"tideglass", "schema", "review"}
+    ranked = [{"path": p} for p in [
+        "wiki/meetings/2026-02-27 - Tideglass sync.md",
+        "Research/tideglass-landscape-review.md",
+        "wiki/projects/Tideglass.md",
+        "wiki/daily/2026-02-28-tideglass.md",
+        "wiki/daily/2026-01-06-tideglass.md",
+        "wiki/entities/Ilva Rennard.md",
+        "wiki/projects/Hollowmere.md",
+    ]]
+    picked = [r["path"] for r in hook._diversify(ranked, ptoks)]
+
+    assert len(picked) == hook.MAX_NOTES
+    assert picked[0] == "wiki/projects/Tideglass.md"
+    assert sum("tideglass" in p.lower() for p in picked) == hook.MAX_PER_SUBJECT
+    assert "wiki/entities/Ilva Rennard.md" in picked
+
+
+def test_recall_brief_still_fills_when_only_one_subject_ranks():
+    """With nothing else ranked, the cap must not leave slots empty."""
+    hook = _load_recall_hook()
+    ranked = [{"path": f"wiki/daily/2026-0{i}-01-tideglass.md"} for i in range(1, 7)]
+    picked = hook._diversify(ranked, {"tideglass"})
+    assert len(picked) == hook.MAX_NOTES
+    assert picked == ranked[: hook.MAX_NOTES]
+
+
+def test_recall_brief_says_it_is_a_starting_point():
+    """A list that looks complete ends the agent's search; the header says it is not."""
+    hook = _load_recall_hook()
+    assert "starting point" in hook.HEADER
+    assert "search the vault" in hook.HEADER
+    assert "not instructions" in hook.HEADER
+
+
 def test_recall_hook_abstention_gate_is_cjk_aware(tmp_path):
     """Regression for #192: the gate must not abstain on a CJK prompt whose top
     hit is genuinely relevant.
