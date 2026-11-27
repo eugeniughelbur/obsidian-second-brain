@@ -28,7 +28,14 @@
   <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?color=yellow" alt="Stars" />
 </p>
 
-<p align="center"><b>Free newsletter:</b> what I learn building this, 3 posts a week. <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top-text"><b>Subscribe to The AI Operator &rarr;</b></a></p>
+<p align="center">
+  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top-text"><img src="media/aioperator-subscribe.png" alt="Free newsletter: what I learn building this, 3 posts a week. Subscribe to The AI Operator" width="700"></a>
+</p>
+
+<p align="center">
+  <a href="https://app.zapply.jobs/onboarding?ref=github-cta-eugeniughelbur"><img src="media/sponsors/zapply-banner.png" alt="Zapply" width="700"></a>
+  <br><sub>Sponsored by Zapply</sub>
+</p>
 
 **Claude forgets you when a chat ends. Your Obsidian vault doesn't.** This skill connects the two, so every chat adds to one set of linked notes that the next chat reads.
 
