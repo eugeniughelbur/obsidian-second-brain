@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Author: Eugeniu Ghelbur (AI Automation Engineer working on agent memory), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 # =============================================================================
 # adapters/hermes/adapter.sh - Nous Research Hermes Agent platform adapter
@@ -383,6 +383,8 @@ cp -R dist/hermes/skills/. ~/.hermes/skills/obsidian-second-brain/
 cp -R dist/hermes/references ~/.hermes/skills/obsidian-second-brain/references
 cp -R dist/hermes/scripts    ~/.hermes/skills/obsidian-second-brain/scripts
 cp -R dist/hermes/integrations ~/.hermes/skills/obsidian-second-brain/integrations
+mkdir -p ~/.hermes/skills/obsidian-second-brain/hooks
+cp dist/hermes/hooks/validate-ai-first.sh ~/.hermes/skills/obsidian-second-brain/hooks/validate-ai-first.sh
 cp dist/hermes/pyproject.toml ~/.hermes/skills/obsidian-second-brain/pyproject.toml
 ```
 

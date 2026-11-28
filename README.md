@@ -28,7 +28,14 @@
   <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?color=yellow" alt="Stars" />
 </p>
 
-<p align="center"><b>Free newsletter:</b> what I learn building this, 3 posts a week. <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top-text"><b>Subscribe to The AI Operator &rarr;</b></a></p>
+<p align="center">
+  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top-text"><img src="media/aioperator-subscribe.png" alt="Free newsletter: what I learn building this, 3 posts a week. Subscribe to The AI Operator" width="700"></a>
+</p>
+
+<p align="center">
+  <a href="https://app.zapply.jobs/onboarding?ref=github-cta-eugeniughelbur"><img src="media/sponsors/zapply-banner.png" alt="Zapply" width="700"></a>
+  <br><sub>Sponsored by Zapply</sub>
+</p>
 
 **Claude forgets you when a chat ends. Your Obsidian vault doesn't.** This skill connects the two, so every chat adds to one set of linked notes that the next chat reads.
 
@@ -97,7 +104,7 @@ You take notes in Obsidian. Hundreds of files. They just sit there. You make the
 
 ## Who builds this
 
-I'm Eugeniu Ghelbur, an AI automation engineer. I built this for my own vault, and I still run my work on it every day. I review and merge every change myself, and close to 50 people have shipped fixes so far ([see who](#contributors)).
+I'm Eugeniu Ghelbur, an AI Automation Engineer working on agent memory. I build AI agents and the tools around them, deploy them for clients, teach people to use them, and research how agents remember. I built this for my own vault, and I still run my work on it every day. I review and merge every change myself, and close to 50 people have shipped fixes so far ([see who](#contributors)).
 
 I write up what I learn 3 times a week on [The AI Operator](https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=who-builds-this), and post shorter notes on [X](https://x.com/eugeniu_ghelbur) and [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/).
 
@@ -255,7 +262,7 @@ Shared agent memory isn't new. What Crew adds is the three parts above.
 </p>
 
 <p align="center">
-  Built by <a href="https://github.com/eugeniughelbur"><strong>Eugeniu Ghelbur</strong></a> &middot; AI Automation Engineer, AI Tooling Engineer, AI Educator<br />
+  Built by <a href="https://github.com/eugeniughelbur"><strong>Eugeniu Ghelbur</strong></a> &middot; AI Automation Engineer working on agent memory<br />
   <em>building in public &middot; sharing what works</em>
 </p>
 
@@ -921,7 +928,7 @@ Two ways to provide the embedding model:
 
 **Keep it current.** The index does not update itself, and a note that is not in it can only be found by literal word match - which on a query in another language means it cannot be found at all. Re-run `--build` regularly; it is incremental, so only new and changed notes re-embed. `/obsidian-health` reports coverage, and search warns on stderr once the index falls more than 5% behind (tune with `OBSIDIAN_INDEX_STALE_WARN_PCT`).
 
-Knobs: `OBSIDIAN_SEARCH_SEMANTIC=0` disables the layer entirely. `OBSIDIAN_EMBED_MAX_CHUNKS=<n>` raises the per-note embedding cap from the default 8 chunks (~9,600 characters); a long-form vault of research dossiers or book-length notes embeds more of each note at the cost of a slower build, and text past the cap is not embedded. A value below 1 or one that is not a number falls back to 8 and says so on stderr, because the cap is applied as a slice: `0` would embed nothing and drop the note from the index. `OBSIDIAN_RRF_LEX_DEPTH=<n>` caps how many lexical results get a vote in the hybrid fusion (default 25, which caps nothing); lower it to 5-10 when a tail of term-frequency matches pushes an exact match out of the top results (#262). The index file is large and regenerable - gitignore it.
+Knobs: `OBSIDIAN_SEARCH_SEMANTIC=0` disables the layer entirely. `OBSIDIAN_EMBED_MAX_CHUNKS=<n>` raises the per-note embedding cap from the default 8 chunks (~9,600 characters); a long-form vault of research dossiers or book-length notes embeds more of each note at the cost of a slower build, and text past the cap is not embedded. A value below 1 or one that is not a number falls back to 8 and says so on stderr, because the cap is applied as a slice: `0` would embed nothing and drop the note from the index. `OBSIDIAN_RRF_LEX_DEPTH=<n>` caps how many lexical results get a vote in the hybrid fusion (default 25, which caps nothing); lower it to 5-10 when a tail of term-frequency matches pushes an exact match out of the top results (#262). `OBSIDIAN_EMBED_QUERY_TIMEOUT=<seconds>` sets how long search waits for the query embedding before it serves lexical results (default 10); raise it on a loaded machine or when the model is slow to load cold (#386). The index file is large and regenerable - gitignore it.
 
 ### Capture from your phone (optional)
 
@@ -1112,7 +1119,7 @@ Prefer GitHub? [GitHub Sponsors](https://github.com/sponsors/eugeniughelbur) wor
 <tr>
 <td align="center" width="700">
 
-Built by **Eugeniu Ghelbur**, AI Automation Engineer, AI Tooling Engineer, AI Educator
+Built by **Eugeniu Ghelbur**, AI Automation Engineer working on agent memory
 
 *If this skill helped you, the best thanks is following along.*
 

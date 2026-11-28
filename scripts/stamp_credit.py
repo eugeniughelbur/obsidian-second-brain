@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Author: Eugeniu Ghelbur (AI Automation Engineer working on agent memory), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Stamp an author credit into every file that can travel on its own.
 
@@ -44,7 +44,7 @@ GITHUB_URL = "https://github.com/eugeniughelbur"
 EMAIL = "e.ghelbur@gmail.com"
 UTM = "?utm_source=github&utm_medium=file-credit"
 
-ROLES = "AI Automation Engineer, AI Tooling Engineer, AI Educator"
+ROLES = "AI Automation Engineer working on agent memory"
 
 MD_MARKER = "<!-- author-credit -->"
 MD_FOOTER = (

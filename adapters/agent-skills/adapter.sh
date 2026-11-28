@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Author: Eugeniu Ghelbur (AI Automation Engineer working on agent memory), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 # =============================================================================
 # adapters/agent-skills/adapter.sh - unified Agent Skills adapter
@@ -154,7 +154,8 @@ _ask_emit_core() {
   if [[ -d "$src/scripts" ]]; then
     mkdir -p "$dst/scripts"
     cp -R "$src/scripts/." "$dst/scripts/"
-    copy_vault_ops "$src" "$dst"  # see adapters/lib.sh (#332)
+    copy_vault_ops "$src" "$dst"      # see adapters/lib.sh (#332)
+    copy_validate_hook "$src" "$dst"  # see adapters/lib.sh (#421)
   fi
   [[ -f "$src/pyproject.toml" ]] && cp "$src/pyproject.toml" "$dst/pyproject.toml"
 
