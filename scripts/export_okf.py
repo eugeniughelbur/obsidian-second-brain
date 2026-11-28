@@ -218,10 +218,15 @@ def _nfc(s: str) -> str:
 
 
 def _reads_as_non_string(s: str) -> bool:
-    """True when a plain (unquoted) YAML scalar `s` would not load as the string `s`."""
+    """True when a plain (unquoted) YAML scalar `s` would not load as the string `s`.
+
+    This asks PyYAML, so the guarantee is that PyYAML reads the value back as text.
+    A calendar-invalid date such as `2026-02-30` matches the timestamp pattern and
+    then raises ValueError, so it is quoted as well.
+    """
     try:
         return yaml.safe_load(s) != s
-    except yaml.YAMLError:
+    except (yaml.YAMLError, ValueError):
         return True
 
 

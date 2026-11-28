@@ -215,6 +215,8 @@ def test_a_title_that_looks_like_a_date_or_number_stays_text(tmp_path):
         "---\ntype: daily\ndate: 2026-01-05\n---\n\nWent for a run.\n", encoding="utf-8"
     )
     (vault / "No.md").write_text("---\ntype: concept\ntags: ['2026']\n---\n# No\n\nText.\n", encoding="utf-8")
+    # A typo'd daily note: not a real date, so YAML raises instead of loading it.
+    (vault / "Daily" / "2026-02-30.md").write_text("Typo day.\n", encoding="utf-8")
     assert _run_export(vault).returncode == 0
 
     def front(rel):
@@ -222,5 +224,6 @@ def test_a_title_that_looks_like_a_date_or_number_stays_text(tmp_path):
         return yaml.safe_load(text.split("---\n")[1])
 
     assert front("Daily/2026-01-05.md")["title"] == "2026-01-05"
+    assert front("Daily/2026-02-30.md")["title"] == "2026-02-30"
     assert front("No.md")["title"] == "No"
     assert front("No.md")["tags"] == ["2026"]
