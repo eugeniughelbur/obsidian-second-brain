@@ -273,6 +273,115 @@ def test_standalone_search_runs_from_built_tree(built, platform, tmp_path):
 
 
 @pytest.mark.parametrize("platform", PLATFORMS)
+def test_check_notes_ships_validator_without_claude_hook_registrations(built, platform):
+    """Every build that ships scripts/check_notes.py must also ship
+    hooks/validate-ai-first.sh beside it, without leaking Claude Code's hook
+    registration files to non-Claude builds (#421)."""
+    tree = built / platform
+    scripts = list(tree.rglob("check_notes.py"))
+    assert scripts, f"{platform} did not ship check_notes.py"
+
+    for script in scripts:
+        hooks_dir = script.resolve().parents[1] / "hooks"
+        assert (hooks_dir / "validate-ai-first.sh").is_file(), (
+            f"{platform} ships {script.relative_to(tree).as_posix()} "
+            "without hooks/validate-ai-first.sh beside it"
+        )
+        if platform != "claude-code":
+            for claude_only in (
+                "hooks.json",
+                "load_vault_context.sh",
+                "load_vault_context.py",
+                "obsidian-bg-agent.sh",
+                "obsidian-recall.py",
+            ):
+                assert not (hooks_dir / claude_only).exists(), (
+                    f"{platform} leaked Claude-only hook file {claude_only}"
+                )
+
+
+@pytest.mark.skipif(BASH == "bash", reason="needs bash on PATH for the hook")
+@pytest.mark.parametrize("platform", PLATFORMS)
+def test_check_notes_flags_bad_note_from_built_tree(built, platform, tmp_path):
+    """Running check_notes.py from every built tree must catch a missing-frontmatter
+    note rather than silently passing (#421)."""
+    import json
+    import os
+    import sys
+
+    scripts = list((built / platform).rglob("check_notes.py"))
+    assert scripts, f"{platform} did not ship check_notes.py"
+
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "bare.md").write_text("# Bare\n\nNo frontmatter.\n", encoding="utf-8")
+    clean_env = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in {"AI_FIRST_SKIP_CHECKS", "OBSIDIAN_VAULT_PATH"}
+    }
+    clean_env["OBSIDIAN_ENV_FILE"] = str(tmp_path / "missing.env")
+
+    for script in scripts:
+        result = subprocess.run(
+            [sys.executable, str(script), "--path", str(vault), "bare.md"],
+            cwd=tmp_path,
+            env=clean_env,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            check=False, timeout=15,
+        )
+        assert result.returncode == 1, result.stdout + result.stderr
+        payload = json.loads(result.stdout)
+        assert payload["failed"] and payload["failed"][0]["path"] == "bare.md"
+        assert "frontmatter" in " ".join(payload["failed"][0]["issues"]).lower()
+
+
+@pytest.mark.skipif(BASH == "bash", reason="needs bash on PATH for the hook")
+def test_hermes_install_instructions_ship_validator_and_run_check_notes(built, tmp_path):
+    """Hermes INSTALL.md Option A copies directories individually; following those
+    exact copy steps must include hooks/validate-ai-first.sh so check_notes.py
+    works from a fresh install (#421)."""
+    import json
+    import os
+    import shutil
+    import sys
+
+    hermes = built / "hermes"
+    install_doc = (hermes / "INSTALL.md").read_text(encoding="utf-8")
+    assert "hooks/validate-ai-first.sh" in install_doc
+
+    installed = tmp_path / "installed-hermes"
+    installed.mkdir()
+    for name in ("references", "scripts", "integrations"):
+        shutil.copytree(hermes / name, installed / name)
+    (installed / "hooks").mkdir()
+    shutil.copy2(hermes / "hooks/validate-ai-first.sh", installed / "hooks/validate-ai-first.sh")
+    shutil.copy2(hermes / "pyproject.toml", installed / "pyproject.toml")
+
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "bare.md").write_text("# Bare\n\nNo frontmatter.\n", encoding="utf-8")
+    clean_env = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in {"AI_FIRST_SKIP_CHECKS", "OBSIDIAN_VAULT_PATH"}
+    }
+    clean_env["OBSIDIAN_ENV_FILE"] = str(tmp_path / "missing.env")
+
+    result = subprocess.run(
+        [sys.executable, str(installed / "scripts/check_notes.py"), "--path", str(vault), "bare.md"],
+        cwd=tmp_path,
+        env=clean_env,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        check=False, timeout=15,
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["failed"] and payload["failed"][0]["path"] == "bare.md"
+    assert "frontmatter" in " ".join(payload["failed"][0]["issues"]).lower()
+
+
+@pytest.mark.parametrize("platform", PLATFORMS)
 def test_skill_title_is_not_the_shared_rules_heading(built: Path, platform: str) -> None:
     """A picker that titles a skill from its first body H1 must not show the
     embedded write spec's heading.

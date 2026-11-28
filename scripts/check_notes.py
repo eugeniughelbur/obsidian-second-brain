@@ -80,32 +80,83 @@ def fix_chars(path: Path) -> int:
     return changed
 
 
+def _resolve_bash() -> str:
+    """Return a runnable bash executable path or raise FileNotFoundError."""
+    candidate = Path(BASH)
+    if candidate.is_file():
+        return str(candidate)
+    found = shutil.which(BASH)
+    if found:
+        return found
+    raise FileNotFoundError(
+        f"bash executable not found ({BASH!r}); cannot run AI-first validator hook {HOOK}"
+    )
+
+
+def _require_validator_env() -> str:
+    """Verify the hook script and its required CLI tools are present before running."""
+    if not HOOK.is_file():
+        raise FileNotFoundError(
+            f"AI-first validator hook not found at {HOOK}; cannot validate notes"
+        )
+    bash = _resolve_bash()
+    if not shutil.which("jq"):
+        raise FileNotFoundError(
+            "jq not found on PATH; required by AI-first validator hook"
+        )
+    return bash
+
+
 def hook_issues(vault: Path, note: Path) -> list:
     """The hook's warning lines for one note, or [] when it passes."""
-    result = subprocess.run(
-        [BASH, str(HOOK)],
-        input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(note)}}),
-        env=dict(os.environ, OBSIDIAN_VAULT_PATH=str(vault)),
-        capture_output=True, text=True,
+    bash = _require_validator_env()
+    env = dict(
+        os.environ,
+        OBSIDIAN_VAULT_PATH=str(vault),
+        OBSIDIAN_CHECK_NOTES_STRICT="1",
+        OBSIDIAN_PYTHON=sys.executable,
     )
+    result = subprocess.run(
+        [bash, str(HOOK)],
+        input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(note)}}),
+        env=env,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip() or "no output"
+        raise RuntimeError(
+            f"AI-first validator hook exited with status {result.returncode}: {detail}"
+        )
     if not result.stdout.strip():
         return []
     try:
-        msg = json.loads(result.stdout)["systemMessage"]
-    except (ValueError, KeyError):
-        return [result.stdout.strip()]
+        payload = json.loads(result.stdout)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"AI-first validator hook emitted invalid JSON: {result.stdout.strip()}"
+        ) from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("systemMessage"), str):
+        raise RuntimeError(
+            f"AI-first validator hook emitted unexpected payload: {result.stdout.strip()}"
+        )
+    msg = payload["systemMessage"]
     lines = [ln.strip() for ln in msg.splitlines()]
     return [ln.lstrip("- ").strip() for ln in lines if ln.startswith("-")] or [msg]
 
 
 def changed_notes(vault: Path) -> list:
     """Markdown files git reports as modified, added, or untracked in the vault."""
-    out = subprocess.run(
+    result = subprocess.run(
         ["git", "-C", str(vault), "-c", "core.quotepath=false",
          "status", "--porcelain", "-z", "--untracked-files=all"],
-        capture_output=True, text=True,
-    ).stdout
-    entries = iter(out.split("\0"))
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip() or "no output"
+        raise RuntimeError(
+            f"git status failed in {vault} (exit {result.returncode}): {detail}"
+        )
+    entries = iter(result.stdout.split("\0"))
     paths = []
     for entry in entries:
         code, rel = entry[:2], entry[3:]
@@ -114,6 +165,14 @@ def changed_notes(vault: Path) -> list:
         if "D" not in code and code.strip() and rel.endswith(".md"):
             paths.append(rel)
     return paths
+
+
+def _abort(msg: str, fixed: list[str] | None = None) -> int:
+    if fixed:
+        print(f"error: {msg} (already fixed before abort: {', '.join(fixed)})", file=sys.stderr)
+    else:
+        print(f"error: {msg}", file=sys.stderr)
+    return 2
 
 
 def main() -> int:
@@ -125,24 +184,61 @@ def main() -> int:
     args = ap.parse_args()
 
     vault = Path(args.path).expanduser().resolve()
-    rels = list(args.files) + (changed_notes(vault) if args.changed else [])
-    notes = []
-    for rel in dict.fromkeys(rels):
+    try:
+        _require_validator_env()
+    except (OSError, RuntimeError) as exc:
+        return _abort(str(exc))
+
+    notes: list[Path] = []
+    for rel in dict.fromkeys(args.files):
         p = Path(rel) if Path(rel).is_absolute() else vault / rel
-        if p.suffix == ".md" and p.is_file():
-            notes.append(p.resolve())
+        if not p.is_file():
+            return _abort(f"note not found: {rel}")
+        resolved = p.resolve()
+        if not resolved.is_relative_to(vault):
+            return _abort(f"note resolves outside vault ({vault}): {rel}")
+        if resolved.suffix == ".md":
+            notes.append(resolved)
+
+    if args.changed:
+        try:
+            dirty = changed_notes(vault)
+        except (OSError, RuntimeError) as exc:
+            return _abort(str(exc))
+        for rel in dict.fromkeys(dirty):
+            p = vault / rel
+            if not p.is_file():
+                continue
+            resolved = p.resolve()
+            if not resolved.is_relative_to(vault):
+                return _abort(f"note resolves outside vault ({vault}): {rel}")
+            if resolved.suffix == ".md":
+                notes.append(resolved)
+
+    notes = list(dict.fromkeys(notes))
 
     fixed, failed = [], []
     for note in notes:
-        shown = note.relative_to(vault).as_posix() if note.is_relative_to(vault) else str(note)
+        shown = note.relative_to(vault).as_posix()
+        try:
+            issues = hook_issues(vault, note)
+        except (OSError, RuntimeError) as exc:
+            return _abort(str(exc), fixed)
+
         if args.fix:
             try:
-                if fix_chars(note):
-                    fixed.append(shown)
+                changed = fix_chars(note)
             except NoteChangedError:
                 failed.append({"path": shown, "issues": ["changed on disk during fix, re-run"]})
                 continue
-        issues = hook_issues(vault, note)
+            except OSError as exc:
+                return _abort(f"failed to fix {shown}: {exc}", fixed)
+            if changed:
+                fixed.append(shown)
+                try:
+                    issues = hook_issues(vault, note)
+                except (OSError, RuntimeError) as exc:
+                    return _abort(str(exc), fixed)
         if issues:
             failed.append({"path": shown, "issues": issues})
 

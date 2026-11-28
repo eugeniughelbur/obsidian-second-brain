@@ -190,14 +190,15 @@ If you keep your vault outside git and want to work from subfolders, run
 `git init` in the vault root once. Reported by @Palo-Alto-AI-Research-Lab on
 codex-cli 0.144.4 (issue #171).
 
-## Write-time validation hook (not included)
+## Write-time validation hook (not wired automatically)
 
-This build ships no `hooks/` directory. The write-time AI-first validator
-(`validate-ai-first.sh`) is wired only in the Claude Code build. If your host
-exposes a post-write hook, wire it yourself from the source repo:
+This build does not register a Claude Code post-write hook (`hooks.json` is not
+included). The write-time AI-first validator (`.codex/hooks/validate-ai-first.sh`)
+is shipped solely as the runtime dependency invoked by `.codex/scripts/check_notes.py`.
+If your host exposes a post-write hook, wire it yourself from the source repo:
 `hooks/validate-ai-first.hook.yaml` is the platform-neutral spec and
-`hooks/validate-ai-first.sh` the implementation. Without it, the AI-first rule
-is enforced by the skill instructions alone.
+`hooks/validate-ai-first.sh` the implementation. Without host hook wiring, the
+AI-first rule is enforced by the skill instructions and `check_notes.py`.
 
 Skills run in your current session - no `codex exec` wrapper, no per-command
 startup, and writes honor your session's approval/sandbox mode.

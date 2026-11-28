@@ -383,6 +383,8 @@ cp -R dist/hermes/skills/. ~/.hermes/skills/obsidian-second-brain/
 cp -R dist/hermes/references ~/.hermes/skills/obsidian-second-brain/references
 cp -R dist/hermes/scripts    ~/.hermes/skills/obsidian-second-brain/scripts
 cp -R dist/hermes/integrations ~/.hermes/skills/obsidian-second-brain/integrations
+mkdir -p ~/.hermes/skills/obsidian-second-brain/hooks
+cp dist/hermes/hooks/validate-ai-first.sh ~/.hermes/skills/obsidian-second-brain/hooks/validate-ai-first.sh
 cp dist/hermes/pyproject.toml ~/.hermes/skills/obsidian-second-brain/pyproject.toml
 ```
 
