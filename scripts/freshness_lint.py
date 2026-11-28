@@ -149,6 +149,23 @@ POINTER_IGNORE = {"http", "https", "mailto", "file", "obsidian", "tel", "ftp",
                   "schema", "prov", "sh", "dbo", "wdt"}
 
 
+def _scalar(raw: str) -> str:
+    """A frontmatter value without its YAML quotes or trailing `# comment`.
+
+    A quoted value ends at its closing quote, so a `#` inside the quotes stays;
+    a bare value ends at the first ` #`. The documented template line
+    `freshness-window: 7d   # overrides the default` must read as `7d`.
+    """
+    raw = raw.strip()
+    if raw.startswith("#"):
+        return ""
+    if raw[:1] in ("'", '"'):
+        end = raw.find(raw[0], 1)
+        if end != -1 and (not raw[end + 1:].strip() or raw[end + 1:].lstrip()[:1] == "#"):
+            return raw[1:end]
+    return re.split(r"\s#", raw, maxsplit=1)[0].strip().strip('"')
+
+
 def parse_frontmatter(lines: list[str]) -> tuple[dict, int]:
     """Return (frontmatter dict-ish, index of first body line)."""
     if not lines or lines[0].strip() != "---":
@@ -159,7 +176,7 @@ def parse_frontmatter(lines: list[str]) -> tuple[dict, int]:
             return fm, i + 1
         m = re.match(r"^([A-Za-z][A-Za-z0-9_-]*):\s*(.*)$", line)
         if m:
-            fm[m.group(1).strip().lower()] = m.group(2).strip().strip('"')
+            fm[m.group(1).strip().lower()] = _scalar(m.group(2))
     return {}, 0
 
 
