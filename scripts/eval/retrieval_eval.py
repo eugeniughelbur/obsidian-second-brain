@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Author: Eugeniu Ghelbur (AI Automation Engineer working on agent memory), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Retrieval-quality eval harness for the vault.
 
@@ -24,6 +24,15 @@ Two modes:
             including which note DID rank #1 when the gold note lost, so the
             "noisy high-mention note floats above the canonical note" failure
             mode is visible, not just a number.
+
+No-answer cases: a case with "gold": null asks a question the vault has no
+answer for. It passes only if no result scores above a threshold, so it tests
+whether search admits "not found" or serves a wrong note with confidence.
+--mode lexical judges the raw lexical score (--no-answer-threshold); --mode
+default judges each fused result's embedding cosine
+(--no-answer-cosine-threshold), or the lexical score when a query fell back to
+lexical. These cases are reported on their own and never count toward recall
+or MRR. The semantic, hybrid and external modes do not judge them.
 
 Usage:
     uv run python scripts/eval/retrieval_eval.py --generate 30
@@ -75,6 +84,19 @@ import vault_ops  # noqa: E402  (depends on sys.path insert above)
 DEFAULT_CASES = REPO_ROOT / "scripts" / "eval" / "retrieval_cases.jsonl"
 RECALL_KS = (1, 3, 5, 10)
 SEARCH_LIMIT = 10
+# A no-answer case ("gold": null) passes only when no result's raw lexical
+# score goes above this line. Calibrated 2026-11-22 on the maintainer's vault:
+# the #1 lexical score on 35 answerable paraphrase questions ran 9.82 to 40.01
+# (median 19.41), so 9.8 sits just under the weakest real question. A
+# no-answer question passes only if search's best match is weaker than every
+# real question's best match. Lexical scale only; re-calibrate per vault.
+NO_ANSWER_THRESHOLD = 9.8
+# The same rule for --mode default, on the embedding scale: a fused result is
+# judged on its best-chunk cosine. Same calibration run: the best cosine on the
+# 35 answerable questions ran 0.489 to 0.720 (median 0.616), so 0.48 sits just
+# under the weakest real question. The fused RRF score itself is useless here:
+# the #1 hit scored 0.328 to 0.350 on every question (0.35 is the ceiling).
+NO_ANSWER_COSINE_THRESHOLD = 0.48
 
 # Folders that hold real, answerable knowledge notes (skip raw sources, exports, config).
 _KNOWLEDGE_HINTS = ("wiki/", "Knowledge/", "Ideas/", "Projects/", "Research/", "concepts/")
@@ -213,6 +235,42 @@ def _rank_of_gold(results: list[dict[str, Any]], gold: list[str]) -> int:
     return 0
 
 
+def _judged_score(r: dict[str, Any]) -> tuple[str, float] | None:
+    """The score a no-answer case is judged on, with its scale. A fused result
+    is judged on its embedding cosine, because the fused RRF score is built from
+    rank positions alone and the #1 hit gets nearly the same value on every query."""
+    if r.get("score_kind") == "fused":
+        cos = r.get("semantic_score")
+        return ("cosine", float(cos)) if isinstance(cos, (int, float)) else None
+    s = r.get("score")
+    return ("lexical", float(s)) if isinstance(s, (int, float)) else None
+
+
+def _judge_no_answer(
+    case: dict[str, Any], results: list[dict[str, Any]], judged: bool,
+    thresholds: dict[str, float],
+) -> dict[str, Any]:
+    """Score one "gold": null case. passed is None when the mode has no
+    comparable score; otherwise True only if no result scores above the
+    threshold for its scale (an empty result list counts as admitting "not found")."""
+    scored = [js for js in (_judged_score(r) for r in results) if js is not None]
+    top = _judged_score(results[0]) if results else None
+    passed: bool | None = None
+    if judged:
+        passed = all(value <= thresholds[scale] for scale, value in scored)
+    # One query's results share one scale: all fused, or all lexical on fallback.
+    best = max((value for _, value in scored), default=None)
+    return {
+        "q": case["q"],
+        "top_hit": results[0]["path"] if results else None,
+        "scale": top[0] if top else None,
+        "top_score": round(top[1], 3) if top else None,
+        "max_score": round(best, 3) if best is not None else None,
+        "passed": passed,
+        "title": case.get("title", ""),
+    }
+
+
 def _split_external_cmd(cmd: str) -> list[str]:
     r"""Split RETRIEVAL_EVAL_EXTERNAL_CMD into argv.
 
@@ -332,16 +390,18 @@ def _searcher(mode: str, on_semantic_fallback=None):
       hybrid    single RRF of pure lexical + semantic
     """
     if mode == "lexical":
+        # with_scores keeps the raw score for no-answer judging; ranking is unchanged.
         return "pure lexical: term-frequency, title-weighted (fusion off)", \
-            lambda q: vault_ops.search(q, limit=SEARCH_LIMIT, semantic=False)
+            lambda q: vault_ops.search(q, limit=SEARCH_LIMIT, semantic=False, with_scores=True)
     if mode == "default":
         if on_semantic_fallback is not None:
             return "shipped default: vault_ops.search (lexical + semantic RRF when available)", \
                 lambda q: vault_ops.search(
-                    q, limit=SEARCH_LIMIT, on_semantic_fallback=on_semantic_fallback
+                    q, limit=SEARCH_LIMIT, on_semantic_fallback=on_semantic_fallback,
+                    with_scores=True,
                 )
         return "shipped default: vault_ops.search (lexical + semantic RRF when available)", \
-            lambda q: vault_ops.search(q, limit=SEARCH_LIMIT)
+            lambda q: vault_ops.search(q, limit=SEARCH_LIMIT, with_scores=True)
     if mode == "external":
         # Benchmark ANY external retrieval engine on the same cases: point
         # RETRIEVAL_EVAL_EXTERNAL_CMD at a command that takes the query as its
@@ -414,15 +474,22 @@ def _searcher(mode: str, on_semantic_fallback=None):
                                    limit=SEARCH_LIMIT)
 
 
-def _score_cases(cases: list[dict[str, Any]], search_fn: Any,
-                 tally: _FusionTally | None = None) -> list[dict[str, Any]]:
+def _score_cases(
+    cases: list[dict[str, Any]], search_fn: Any, tally: _FusionTally | None = None,
+    judge_no_answer: bool = False, thresholds: dict[str, float] | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Run every case. Returns (ranked cases, "gold": null cases). Both kinds
+    go through the fusion tally, so a fallback on a no-answer query is caught too."""
     per_case: list[dict[str, Any]] = []
+    no_answer: list[dict[str, Any]] = []
     for c in cases:
         if tally:
             tally.start_query()
+        search_failed = False
         try:
             results = search_fn(c["q"])
         except Exception as e:
+            search_failed = True
             # One bad case must not discard every case already scored. In
             # semantic/hybrid mode embed() uses the full (1,3,8,15) retry ladder
             # at 120s per attempt, so a slow backend can burn ~10 minutes here
@@ -431,20 +498,28 @@ def _score_cases(cases: list[dict[str, Any]], search_fn: Any,
             results = []
             if tally:
                 tally.search_raised(e)
-        rank = _rank_of_gold(results, c.get("gold", []))
-        top = results[0]["path"] if results else None
-        per_case.append({
-            "q": c["q"],
-            "gold": c.get("gold", []),
-            "rank": rank,
-            "top_hit": top,
-            "title": c.get("title", ""),
-        })
+        if "gold" in c and c["gold"] is None:
+            entry = _judge_no_answer(c, results, judge_no_answer, thresholds or {})
+            if search_failed and judge_no_answer:
+                # A crashed search returned nothing; that is not "admitted not found".
+                entry["passed"] = False
+            no_answer.append(entry)
+        else:
+            rank = _rank_of_gold(results, c.get("gold", []))
+            top = results[0]["path"] if results else None
+            entry = {
+                "q": c["q"],
+                "gold": c.get("gold", []),
+                "rank": rank,
+                "top_hit": top,
+                "title": c.get("title", ""),
+            }
+            per_case.append(entry)
         if tally:
-            per_case[-1]["fusion"], reason = tally.result()
+            entry["fusion"], reason = tally.result()
             if reason:
-                per_case[-1]["fusion_reason"] = reason
-    return per_case
+                entry["fusion_reason"] = reason
+    return per_case, no_answer
 
 
 def _fusion_summary(per_case: list[dict[str, Any]]) -> dict[str, Any]:
@@ -483,7 +558,11 @@ def _fallback_error(fusion: dict[str, Any], n: int, per_case: list[dict[str, Any
     return "\n".join(lines)
 
 
-def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
+def evaluate(
+    cases_path: Path, as_json: bool, mode: str = "lexical",
+    no_answer_threshold: float = NO_ANSWER_THRESHOLD,
+    no_answer_cosine_threshold: float = NO_ANSWER_COSINE_THRESHOLD,
+) -> int:
     if not cases_path.exists():
         print(
             f"No cases file at {cases_path}.\n"
@@ -503,10 +582,14 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
     label, search_fn = _searcher(
         mode, on_semantic_fallback=tally.report if tally else None,
     )
+    judge_no_answer = mode in ("lexical", "default")
+    thresholds = {"lexical": no_answer_threshold}
+    if mode == "default":
+        thresholds["cosine"] = no_answer_cosine_threshold
     if tally:
         tally.install()
     try:
-        per_case = _score_cases(cases, search_fn, tally)
+        per_case, no_answer = _score_cases(cases, search_fn, tally, judge_no_answer, thresholds)
     finally:
         if tally:
             tally.uninstall()
@@ -514,15 +597,18 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
     n = len(per_case)
     fusion = None
     if tally:
-        fusion = _fusion_summary(per_case)
+        every_query = per_case + no_answer
+        fusion = _fusion_summary(every_query)
         if fusion["fallback"]:
             # A default row with fallbacks is part lexical under a fused label.
             # Refuse to report it: in #342 a whole pass came out lexical and
             # was caught only because one score looked wrong.
-            print(_fallback_error(fusion, n, per_case), file=sys.stderr)
+            print(_fallback_error(fusion, len(every_query), every_query), file=sys.stderr)
             return 1
-    recall = {k: sum(1 for x in per_case if 0 < x["rank"] <= k) / n for k in RECALL_KS}
-    mrr = sum((1.0 / x["rank"]) if x["rank"] else 0.0 for x in per_case) / n
+    # A file of only no-answer cases leaves nothing to rank; report zeros, not a crash.
+    d = n or 1
+    recall = {k: sum(1 for x in per_case if 0 < x["rank"] <= k) / d for k in RECALL_KS}
+    mrr = sum((1.0 / x["rank"]) if x["rank"] else 0.0 for x in per_case) / d
     misses = [x for x in per_case if x["rank"] == 0]
     buried = [x for x in per_case if x["rank"] > 3]
 
@@ -536,6 +622,14 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
     }
     if fusion is not None:
         summary["fusion"] = fusion
+    if no_answer:
+        summary["no_answer"] = {
+            "cases": len(no_answer),
+            "thresholds": thresholds if judge_no_answer else None,
+            "passed": sum(1 for x in no_answer if x["passed"] is True),
+            "failed": sum(1 for x in no_answer if x["passed"] is False),
+            "judged": judge_no_answer,
+        }
 
     if as_json:
         # Force UTF-8 stdout: on Windows a pipe defaults to cp1252, which cannot
@@ -544,7 +638,10 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
             sys.stdout.reconfigure(encoding="utf-8")
         except (AttributeError, ValueError):
             pass
-        print(json.dumps({"summary": summary, "cases": per_case}, ensure_ascii=False, indent=2))
+        payload: dict[str, Any] = {"summary": summary, "cases": per_case}
+        if no_answer:
+            payload["no_answer_cases"] = no_answer
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
     print(f"\nRetrieval eval - {n} cases  (engine: {summary['search']})")
@@ -567,6 +664,20 @@ def evaluate(cases_path: Path, as_json: bool, mode: str = "lexical") -> int:
         for x in buried[:10]:
             print(f"  rank {x['rank']}: {x['gold'][0] if x['gold'] else '?'}  (Q: {x['q'][:48]})")
             print(f"           #1 was: {x['top_hit']}")
+    if no_answer:
+        if judge_no_answer:
+            na = summary["no_answer"]
+            lines = ", ".join(f"{scale} {value}" for scale, value in thresholds.items())
+            print(f"\nNo-answer cases - pass only if no result scores above ({lines}): "
+                  f"{na['passed']} passed, {na['failed']} failed")
+        else:
+            print(f"\nNo-answer cases - not judged in --mode {mode} (only lexical and "
+                  "default modes have a score to compare):")
+        for x in no_answer:
+            verdict = {True: "PASS", False: "FAIL", None: "n/a"}[x["passed"]]
+            best = f"{x['max_score']:.3f}" if x["max_score"] is not None else "-"
+            print(f"  {verdict:4}  best {x['scale'] or '-'} {best:>7}  Q: {x['q'][:52]}")
+            print(f"        #1 was: {x['top_hit']}")
     print()
     return 0
 
@@ -588,6 +699,15 @@ def main() -> int:
                          "default (exactly what the shipped MCP serves), semantic "
                          "(local embeddings), or hybrid (pure lexical + semantic, "
                          "single RRF). semantic/hybrid need Ollama.")
+    ap.add_argument("--no-answer-threshold", type=float, default=NO_ANSWER_THRESHOLD,
+                    help="Raw lexical score line for \"gold\": null cases: one passes only "
+                         f"if no result scores above it (default {NO_ANSWER_THRESHOLD}). "
+                         "Used in --mode lexical, and in --mode default when a query "
+                         "falls back to lexical.")
+    ap.add_argument("--no-answer-cosine-threshold", type=float,
+                    default=NO_ANSWER_COSINE_THRESHOLD,
+                    help="Embedding cosine line for \"gold\": null cases in --mode default "
+                         f"(default {NO_ANSWER_COSINE_THRESHOLD}).")
     ap.add_argument("--force", action="store_true",
                     help="Allow --generate to overwrite an existing cases file")
     args = ap.parse_args()
@@ -602,7 +722,8 @@ def main() -> int:
             )
             return 1
         return generate(args.generate, args.cases, args.style)
-    return evaluate(args.cases, args.json, args.mode)
+    return evaluate(args.cases, args.json, args.mode, args.no_answer_threshold,
+                    args.no_answer_cosine_threshold)
 
 
 if __name__ == "__main__":

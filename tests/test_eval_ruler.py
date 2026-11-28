@@ -69,28 +69,33 @@ def test_semantic_toggle_reaches_fuse(vault, monkeypatch):
 def test_lexical_mode_is_pure(vault, monkeypatch):
     recorded = {}
 
-    def fake_search(q, *, limit, semantic=None):
+    def fake_search(q, *, limit, semantic=None, with_scores=False):
         recorded["semantic"] = semantic
+        recorded["with_scores"] = with_scores
         return []
 
     monkeypatch.setattr(rev.vault_ops, "search", fake_search)
     label, fn = rev._searcher("lexical")
     fn("anything")
     assert recorded["semantic"] is False
+    # Raw scores ride along so "gold": null cases can be judged; ranking is unchanged.
+    assert recorded["with_scores"] is True
     assert "pure lexical" in label
 
 
 def test_default_mode_measures_shipped_behavior(vault, monkeypatch):
     recorded = {}
 
-    def fake_search(q, *, limit, semantic=None):
+    def fake_search(q, *, limit, semantic=None, with_scores=False):
         recorded["semantic"] = semantic
+        recorded["with_scores"] = with_scores
         return []
 
     monkeypatch.setattr(rev.vault_ops, "search", fake_search)
     label, fn = rev._searcher("default")
     fn("anything")
     assert recorded["semantic"] is None
+    assert recorded["with_scores"] is True
     assert "shipped default" in label
 
 
@@ -162,7 +167,7 @@ def test_semantic_index_without_note_vectors_is_counted(vault, monkeypatch, caps
 
 
 def _reporting_search(reasons_by_query):
-    def fake_search(query, *, limit, on_semantic_fallback=None):
+    def fake_search(query, *, limit, on_semantic_fallback=None, with_scores=False):
         reason = reasons_by_query[query]
         if reason:
             on_semantic_fallback(reason)
@@ -387,3 +392,141 @@ def test_query_embedding_timeout_follows_the_env(monkeypatch):
                 assert importlib.reload(vault_ops)._EMBED_QUERY_TIMEOUT == 10
     finally:
         importlib.reload(vault_ops)
+
+
+# --------------------------------------------------------------------------- #
+# No-answer cases ("gold": null): questions the vault cannot answer. Before
+# this support existed, a null gold crashed the harness with a TypeError.
+# --------------------------------------------------------------------------- #
+def _eval_json(tmp_path, monkeypatch, capsys, cases, fake, mode="lexical"):
+    path = tmp_path / "cases.jsonl"
+    path.write_text("".join(json.dumps(c) + "\n" for c in cases), encoding="utf-8")
+    monkeypatch.setattr(rev.vault_ops, "search", fake)
+    assert rev.evaluate(path, as_json=True, mode=mode) == 0
+    return json.loads(capsys.readouterr().out)
+
+
+def _lexical(score, path="other.md"):
+    return [{"path": path, "score": score, "score_kind": "lexical"}]
+
+
+def test_no_answer_case_fails_when_a_result_scores_above_the_line(
+    tmp_path, monkeypatch, capsys
+):
+    def fake(q, *, limit, semantic=None, with_scores=False):
+        return _lexical(20.0, "note.md") if q == "answerable" else _lexical(12.0)
+
+    out = _eval_json(tmp_path, monkeypatch, capsys, [
+        {"q": "answerable", "gold": ["note.md"]},
+        {"q": "unanswerable", "gold": None},
+    ], fake)
+
+    # The no-answer case never counts toward recall or MRR.
+    assert out["summary"]["cases"] == 1
+    assert out["summary"]["recall_at"]["1"] == 1.0
+    assert out["summary"]["no_answer"] == {
+        "cases": 1, "thresholds": {"lexical": rev.NO_ANSWER_THRESHOLD},
+        "passed": 0, "failed": 1, "judged": True,
+    }
+    assert out["no_answer_cases"][0]["top_hit"] == "other.md"
+    assert out["no_answer_cases"][0]["max_score"] == 12.0
+
+
+def test_no_answer_case_passes_at_the_line_or_with_no_results(
+    tmp_path, monkeypatch, capsys
+):
+    def fake(q, *, limit, semantic=None, with_scores=False):
+        return _lexical(rev.NO_ANSWER_THRESHOLD) if q == "weak" else []
+
+    out = _eval_json(tmp_path, monkeypatch, capsys, [
+        {"q": "weak", "gold": None},
+        {"q": "empty", "gold": None},
+    ], fake)
+
+    assert [c["passed"] for c in out["no_answer_cases"]] == [True, True]
+
+
+def test_no_answer_case_fails_when_search_crashes(tmp_path, monkeypatch, capsys):
+    def fake(q, *, limit, semantic=None, with_scores=False):
+        raise RuntimeError("backend down")
+
+    out = _eval_json(tmp_path, monkeypatch, capsys, [{"q": "x", "gold": None}], fake)
+
+    # An empty list from a crash is not search admitting "not found".
+    assert out["no_answer_cases"][0]["passed"] is False
+
+
+def test_default_mode_judges_no_answer_on_cosine_not_fused_score(
+    tmp_path, monkeypatch, capsys
+):
+    # The fused RRF score is rank-derived, so 0.33 would sit under the 0.48
+    # cosine line and pass. The cosine (0.60) is what must decide.
+    def fake(q, *, limit, on_semantic_fallback=None, with_scores=False):
+        return [
+            {"path": "a.md", "score": 0.33, "score_kind": "fused", "semantic_score": 0.60},
+            {"path": "b.md", "score": 0.30, "score_kind": "fused", "semantic_score": None},
+        ]
+
+    out = _eval_json(tmp_path, monkeypatch, capsys, [{"q": "x", "gold": None}], fake,
+                     mode="default")
+
+    case = out["no_answer_cases"][0]
+    assert case["passed"] is False
+    assert case["scale"] == "cosine"
+    assert case["max_score"] == 0.6
+
+
+def test_default_mode_refuses_a_row_when_a_no_answer_query_fell_back(
+    tmp_path, monkeypatch, capsys
+):
+    # A no-answer query that fell back is judged on the lexical scale under a
+    # fused label, so it must stop the row like a ranked query does.
+    cases = tmp_path / "cases.jsonl"
+    cases.write_text(
+        '{"q":"first query","gold":["note.md"]}\n'
+        '{"q":"second query","gold":null}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rev.vault_ops, "search", _reporting_search({
+        "first query": None,
+        "second query": "embedding timed out",
+    }))
+    assert rev.evaluate(cases, as_json=True, mode="default") == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "1 of 2 queries fell back" in captured.err
+
+
+def test_search_with_scores_keeps_the_lexical_score(vault):
+    hits = vault_ops.search("zebra", semantic=False, with_scores=True)
+    assert hits[0]["score"] > 0
+    assert hits[0]["score_kind"] == "lexical"
+
+
+def test_fused_search_with_scores_carries_the_cosine(vault, monkeypatch):
+    (vault / vault_ops._SEMANTIC_INDEX_FILE).write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        vault_ops, "_load_index_cached",
+        lambda _path: {"notes": {"note.md": {"title": "note", "_unit": [[1.0, 0.0]]}}},
+    )
+    monkeypatch.setattr(vault_ops, "_embed_query", lambda *a, **k: [0.6, 0.8])
+
+    hits = vault_ops.search("zebra facts", semantic=True, with_scores=True)
+
+    assert hits[0]["score_kind"] == "fused"
+    assert hits[0]["semantic_score"] == pytest.approx(0.6)
+
+
+def test_guard_search_output_carries_no_scores_by_default(vault, monkeypatch):
+    # Guard, passes before and after: the MCP output must stay score-free.
+    lexical = vault_ops.search("zebra", semantic=False)
+    assert lexical and not {"score", "score_kind"} & set(lexical[0])
+
+    (vault / vault_ops._SEMANTIC_INDEX_FILE).write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        vault_ops, "_load_index_cached",
+        lambda _path: {"notes": {"note.md": {"title": "note", "_unit": [[1.0, 0.0]]}}},
+    )
+    monkeypatch.setattr(vault_ops, "_embed_query", lambda *a, **k: [0.6, 0.8])
+    fused = vault_ops.search("zebra facts", semantic=True)
+    assert fused and not {"score", "score_kind", "semantic_score"} & set(fused[0])

@@ -723,6 +723,7 @@ Codex requires one `/hooks` trust review. Grok Bot receives a profile block to p
 
 Agents record one line per job and leave lessons for human review.
 Only an explicit human `keep` promotes a lesson into the recipient's rules.
+Hook reads show other agents' recent jobs and open lessons, skip kept and dropped lessons, and stay within the host's size limit. A hook event with nothing new injects nothing.
 Every read frames records as data. Crew starts no background loop.
 
 ### `/create-command [seed]`
@@ -1398,4 +1399,4 @@ The default install path (`scripts/setup.sh`) writes `OBSIDIAN_VAULT_PATH` into 
 
 ---
 
-From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.
+From [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain), created by Eugeniu Ghelbur (AI Automation Engineer working on agent memory). Questions or consulting: [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/) or [e.ghelbur@gmail.com](mailto:e.ghelbur@gmail.com). More: [The AI Operator](https://theaioperator.io/?utm_source=github&utm_medium=file-credit) | [X](https://x.com/eugeniu_ghelbur) | [GitHub](https://github.com/eugeniughelbur). MIT license.

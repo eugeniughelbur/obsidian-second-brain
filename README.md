@@ -7,7 +7,7 @@
 <h1 align="center">obsidian-second-brain: AI second brain for Obsidian - persistent memory for Claude Code, Codex, Cursor and Grok Bot</h1>
 
 <p align="center">
-  <b>Your AI second brain for <a href="https://obsidian.md">Obsidian</a>. Free, open source, and plain Markdown you own.</b><br />
+  <b>Your AI second brain for Obsidian. Free, open source, and plain Markdown you own.</b><br />
   Talk to Claude as usual. It saves what matters to your vault and remembers it next time.
 </p>
 
@@ -26,7 +26,15 @@
   <img src="https://img.shields.io/github/v/release/eugeniughelbur/obsidian-second-brain?color=green" alt="Release" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT" />
   <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?color=yellow" alt="Stars" />
-  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top"><img src="https://img.shields.io/badge/Substack-The_AI_Operator-FF6719?logo=substack&logoColor=white" alt="Subscribe on Substack" /></a>
+</p>
+
+<p align="center">
+  <a href="https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=top-text"><img src="media/aioperator-subscribe.png" alt="Free newsletter: what I learn building this, 3 posts a week. Subscribe to The AI Operator" width="700"></a>
+</p>
+
+<p align="center">
+  <a href="https://app.zapply.jobs/onboarding?ref=github-cta-eugeniughelbur"><img src="media/sponsors/zapply-banner.png" alt="Zapply" width="700"></a>
+  <br><sub>Sponsored by Zapply</sub>
 </p>
 
 **Claude forgets you when a chat ends. Your Obsidian vault doesn't.** This skill connects the two, so every chat adds to one set of linked notes that the next chat reads.
@@ -43,10 +51,10 @@ Your notes stay as Markdown files on your computer. The core commands need no AP
 
 <p align="center">
   <a href="DEMOS.md">
-    <img src="media/obsidian-save.gif" alt="One /obsidian-save command turns a conversation into five cross-linked AI-first notes: a person, a project with the decision, a task, a board card, and the daily note." width="100%" />
+    <img src="media/obsidian-save-explainer.gif" alt="Animated walkthrough: you tell Claude Code about a meeting, type /obsidian-save, and five linked notes land in Obsidian. Then /obsidian-ingest reads a PDF checklist and updates the project and task notes you already have. The graph view connects them, and the next day Claude answers from the vault." width="100%" />
   </a>
   <br />
-  <em>One <code>/obsidian-save</code>, five linked notes. Real footage, made-up vault. <a href="DEMOS.md">More demos &rarr;</a></em>
+  <em>Save a chat, feed it a PDF, and Claude remembers. Animated walkthrough of a made-up example. <a href="DEMOS.md">Real terminal footage &rarr;</a></em>
 </p>
 
 ## Quick start
@@ -96,9 +104,11 @@ You take notes in Obsidian. Hundreds of files. They just sit there. You make the
 
 ## Who builds this
 
-I'm Eugeniu Ghelbur, an AI automation engineer. I built this for my own vault, and I still run my work on it every day. I review and merge every change myself, and close to 50 people have shipped fixes so far ([see who](#contributors)).
+I'm Eugeniu Ghelbur, an AI Automation Engineer working on agent memory. I build AI agents and the tools around them, deploy them for clients, teach people to use them, and research how agents remember. I built this for my own vault, and I still run my work on it every day. I review and merge every change myself, and close to 50 people have shipped fixes so far ([see who](#contributors)).
 
-I write up what I learn twice a week on [The AI Operator](https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=who-builds-this), and post shorter notes on [X](https://x.com/eugeniu_ghelbur) and [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/).
+I write up what I learn 3 times a week on [The AI Operator](https://theaioperator.io/subscribe?utm_source=github&utm_medium=readme&utm_campaign=who-builds-this), and post shorter notes on [X](https://x.com/eugeniu_ghelbur) and [LinkedIn](https://www.linkedin.com/in/eugeniu-ghelbur/).
+
+Not a coder? [The Vault](https://theaioperator.io/s/vault?utm_source=github&utm_medium=readme&utm_campaign=vault) has 7 ready-made AI tools for paid readers, including Claude memory and an Obsidian folder set up for AI. Each one takes 10 minutes or less, with no code.
 
 ---
 
@@ -196,6 +206,7 @@ Each agent sees what the others finished and can leave a lesson for review.
 
 - Grok Bot joins the same team through its existing runner.
 - A lesson becomes a rule only when a human runs `keep`.
+- A new session's hook read shows other agents' recent jobs first, then open lessons. Kept and dropped lessons stay in `show` and `digest`. The read stays short enough for the host to inject the whole text.
 - Crew runs no background loop.
 
 ```bash
@@ -251,7 +262,7 @@ Shared agent memory isn't new. What Crew adds is the three parts above.
 </p>
 
 <p align="center">
-  Built by <a href="https://github.com/eugeniughelbur"><strong>Eugeniu Ghelbur</strong></a> &middot; AI Automation Engineer, AI Tooling Engineer, AI Educator<br />
+  Built by <a href="https://github.com/eugeniughelbur"><strong>Eugeniu Ghelbur</strong></a> &middot; AI Automation Engineer working on agent memory<br />
   <em>building in public &middot; sharing what works</em>
 </p>
 
@@ -979,6 +990,9 @@ Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, i
 ### Can I add notes from my phone?
 Yes, through the optional Telegram bot. Send a voice note while you walk, and it is transcribed into today's daily note. Photos, PDFs and links are filed too. See [Capture from your phone](#capture-from-your-phone-optional).
 
+### Can I bring in my ChatGPT, Claude.ai or Gemini chats?
+Yes, in two steps. An exporter saves each chat as a Markdown file in a folder outside the vault, then `/obsidian-ingest` turns the chats you pick into notes. A chat is graded `speculation`, the lowest trust grade, so it can add notes but cannot change one you already have without your yes. Setup, settings and limits: see [AI-CHATS.md](AI-CHATS.md).
+
 ### Can I use it in a language other than English?
 Yes: talk to your agent in your own language and keep the vault in English. The agent translates what you say before it writes a note, replies in your language, and searches with English queries. This passes every vault rule, and search quality is measured on English notes, so you stay on the tested path. Put the rule in `<vault>/.claude/CLAUDE.md`, not `_CLAUDE.md`, so an `/obsidian-init` re-run keeps it. [andreanovix](https://github.com/andreanovix) shared a working block in [discussion #307](https://github.com/eugeniughelbur/obsidian-second-brain/discussions/307). Notes in Chinese, Japanese or Korean, command phrases in five languages, and encoding: see [LANGUAGES.md](LANGUAGES.md).
 
@@ -1105,7 +1119,7 @@ Prefer GitHub? [GitHub Sponsors](https://github.com/sponsors/eugeniughelbur) wor
 <tr>
 <td align="center" width="700">
 
-Built by **Eugeniu Ghelbur**, AI Automation Engineer, AI Tooling Engineer, AI Educator
+Built by **Eugeniu Ghelbur**, AI Automation Engineer working on agent memory
 
 *If this skill helped you, the best thanks is following along.*
 
