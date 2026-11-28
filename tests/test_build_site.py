@@ -68,7 +68,11 @@ def test_the_generator_refuses_to_write_an_empty_site(tmp_path, monkeypatch):
 # --- self-containment -------------------------------------------------------
 
 RESOURCE_RE = re.compile(r'(?:src|href)\s*=\s*"([^"]+)"')
-ALLOWED_EXTERNAL_PREFIX = "https://github.com/eugeniughelbur/obsidian-second-brain"
+# The repo, and the site's own address (canonical links point at it).
+ALLOWED_EXTERNAL_PREFIX = (
+    "https://github.com/eugeniughelbur/obsidian-second-brain",
+    "https://eugeniughelbur.github.io/obsidian-second-brain/",
+)
 
 
 @pytest.mark.parametrize("path", sorted(DOCS.rglob("*.html")), ids=lambda p: p.name)
@@ -131,3 +135,57 @@ def test_index_links_resolve():
     assert len(links) >= 40, f"index lists only {len(links)} commands"
     missing = [x for x in links if not (DOCS / x).is_file()]
     assert not missing, f"index links to pages that do not exist: {missing}"
+
+
+# --- discoverability: what crawlers and answer engines read ------------------
+
+SITE_URL = "https://eugeniughelbur.github.io/obsidian-second-brain/"
+LD_RE = re.compile(r'<script type="application/ld\+json">\n(.*?)\n</script>', re.S)
+
+
+def test_sitemap_lists_every_page():
+    sitemap = (DOCS / "sitemap.xml").read_text(encoding="utf-8")
+    listed = set(re.findall(r"<loc>([^<]+)</loc>", sitemap))
+    pages = {
+        SITE_URL + ("" if p.name == "index.html" and p.parent == DOCS else
+                    p.relative_to(DOCS).as_posix())
+        for p in DOCS.rglob("*.html")
+    }
+    assert listed == pages, f"sitemap drifted: missing {pages - listed}, extra {listed - pages}"
+
+
+def test_site_serves_the_repo_llms_txt():
+    assert (DOCS / "llms.txt").read_text(encoding="utf-8") == \
+        (REPO_ROOT / "llms.txt").read_text(encoding="utf-8")
+
+
+def test_site_serves_the_bing_ownership_file():
+    """Bing looks for BingSiteAuth.xml at the site root. If the file goes missing,
+    Bing drops the site's verification and stops reporting how it is indexed."""
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring((DOCS / "BingSiteAuth.xml").read_text(encoding="utf-8"))
+    assert root.tag == "users"
+    assert [u.text for u in root.findall("user")] == [build_site.BING_SITE_AUTH]
+
+
+@pytest.mark.parametrize("path", sorted(DOCS.rglob("*.html")), ids=lambda p: p.name)
+def test_every_page_names_its_canonical_url(path):
+    rel = path.relative_to(DOCS).as_posix()
+    want = SITE_URL + ("" if rel == "index.html" else rel)
+    assert f'<link rel="canonical" href="{want}">' in path.read_text(encoding="utf-8")
+
+
+def test_index_structured_data_parses_and_matches_the_visible_faq():
+    import json
+
+    index = (DOCS / "index.html").read_text(encoding="utf-8")
+    blocks = [json.loads(b) for b in LD_RE.findall(index)]
+    types = {b["@type"] for b in blocks}
+    assert {"SoftwareSourceCode", "FAQPage"} <= types
+    faq = next(b for b in blocks if b["@type"] == "FAQPage")
+    visible = re.findall(r"<h3>([^<]+)</h3>", index)
+    # Structured answers must be the ones a reader sees, not hidden extras.
+    assert [q["name"] for q in faq["mainEntity"]] == [
+        __import__("html").unescape(v) for v in visible
+    ]

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Author: Eugeniu Ghelbur (AI Automation Engineer working on agent memory), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 # =============================================================================
 # validate-ai-first.sh - Enforce the AI-first vault rule on Write/Edit
@@ -48,6 +48,17 @@
 #   0 = pass (silent), or warn via JSON on stdout (write is NOT reverted)
 # =============================================================================
 
+# In strict CLI mode (OBSIDIAN_CHECK_NOTES_STRICT=1, set by scripts/check_notes.py),
+# missing dependencies or setup errors must exit 2 instead of silently passing.
+strict_abort() {
+  local msg="$1"
+  if [[ "${OBSIDIAN_CHECK_NOTES_STRICT:-0}" == "1" ]]; then
+    printf 'AI-first hook: %s\n' "$msg" >&2
+    exit 2
+  fi
+  exit 0
+}
+
 # Warn via Claude Code hook JSON (systemMessage + additionalContext). stderr
 # is mirrored for logs; exit 0 so the host parses stdout.
 emit_ai_first_warning() {
@@ -61,7 +72,7 @@ emit_ai_first_warning() {
       hookEventName: "PostToolUse",
       additionalContext: $msg
     }
-  }'
+  }' || strict_abort "jq failed to encode warning JSON."
   exit 0
 }
 
@@ -102,6 +113,14 @@ osb_python() {
     return 0
   fi
   return 1
+}
+
+run_python() {
+  if [[ -n "$EXPLICIT_PYTHON" ]]; then
+    "$EXPLICIT_PYTHON" "$@"
+  else
+    $PYTHON "$@"
+  fi
 }
 
 # Compare paths in one form: forward slashes and a lowercase drive letter (the
@@ -152,6 +171,10 @@ path_key() {
 
 INPUT=$(cat)
 
+if ! command -v jq >/dev/null 2>&1; then
+  strict_abort "jq is required to validate notes but was not found on PATH."
+fi
+
 # Write/Edit: tool_input.file_path. VS Code create_file: tool_input.filePath.
 # NotebookEdit: tool_input.notebook_path - an .ipynb, so the .md gate below
 # drops it; it is read here so a notebook write is not mistaken for an unknown
@@ -173,6 +196,10 @@ FILE=$(printf '%s' "$INPUT" | jq -r '
 # stderr and exit 1 (non-blocking; the write stands) instead of exiting 0 and
 # looking exactly like "not a vault file" (#171).
 if [[ -z "$FILE" ]]; then
+  if [[ "${OBSIDIAN_CHECK_NOTES_STRICT:-0}" == "1" ]]; then
+    printf 'AI-first hook: could not parse file path from input payload.\n' >&2
+    exit 2
+  fi
   TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // ""' 2>/dev/null)
   [[ -z "$TOOL" ]] && exit 0
   # Top-level scalar keys count too: a host that puts file_path beside
@@ -253,9 +280,16 @@ WARNINGS=()
 # `command -v python3` passes on the Windows Store stub, which runs nothing, so
 # the three checks were skipped without a word and a note carrying an em-dash or
 # an sk- key passed silently on every Windows install (#269).
-PYTHON=$(osb_python) || PYTHON=""
-if [[ -z "$PYTHON" ]]; then
+EXPLICIT_PYTHON=""
+PYTHON=""
+if [[ -n "${OBSIDIAN_PYTHON:-}" ]] && "$OBSIDIAN_PYTHON" -c "import sys" >/dev/null 2>&1; then
+  EXPLICIT_PYTHON="$OBSIDIAN_PYTHON"
+else
+  PYTHON=$(osb_python) || PYTHON=""
+fi
+if [[ -z "$EXPLICIT_PYTHON" && -z "$PYTHON" ]]; then
   printf 'AI-first hook: no working Python found (tried python3, python, py -3, uv run), so checks 5-7 (substitution characters, secrets, tag syntax) did NOT run on %s.\n' "$BASENAME" >&2
+  [[ "${OBSIDIAN_CHECK_NOTES_STRICT:-0}" == "1" ]] && exit 2
 fi
 
 # A note saved with CRLF line endings (a Windows editor, git autocrlf) would fail
@@ -267,14 +301,14 @@ READ_FILE="$FILE"
 HAS_BOM=0
 [[ "$(head -c 3 "$FILE" 2>/dev/null | od -An -tx1 | tr -d ' \n')" == "efbbbf" ]] && HAS_BOM=1
 if [[ "$HAS_BOM" == 1 ]] || grep -q $'\r' "$FILE" 2>/dev/null; then
-  CR_FREE=$(mktemp "${TMPDIR:-/tmp}/ai-first.XXXXXX" 2>/dev/null) || exit 0
+  CR_FREE=$(mktemp "${TMPDIR:-/tmp}/ai-first.XXXXXX" 2>/dev/null) || strict_abort "failed to create temporary copy for $BASENAME."
   trap 'rm -f "$CR_FREE"' EXIT
   # A copy that failed halfway is not worth validating: silence beats a false
   # warning raised against the original.
   if [[ "$HAS_BOM" == 1 ]]; then
-    tail -c +4 "$FILE" | tr -d '\r' > "$CR_FREE" || exit 0
+    tail -c +4 "$FILE" | tr -d '\r' > "$CR_FREE" || strict_abort "failed to strip BOM/CRLF for $BASENAME."
   else
-    tr -d '\r' < "$FILE" > "$CR_FREE" || exit 0
+    tr -d '\r' < "$FILE" > "$CR_FREE" || strict_abort "failed to strip CRLF for $BASENAME."
   fi
   READ_FILE="$CR_FREE"
 fi
@@ -329,12 +363,12 @@ if check_enabled 4 && ! printf '%s\n' "$BODY" | grep -qE "$PREAMBLE_RE" ; then
 fi
 
 # ── Check 5: non-ASCII substitution characters ───────────────────────────────
-if check_enabled 5 && [[ -n "$PYTHON" ]]; then
+if check_enabled 5 && [[ -n "$EXPLICIT_PYTHON" || -n "$PYTHON" ]]; then
   # The Python scans read the real file: Python's text mode handles CRLF on its
   # own, and the mktemp path is a shell path (/tmp/...) that a native Windows
   # Python cannot open when the shell does not convert arguments, which would
   # have silently disabled these two checks.
-  NON_ASCII_HITS=$($PYTHON - "$FILE" <<'PYEOF'
+  NON_ASCII_HITS=$(run_python - "$FILE" <<'PYEOF'
 import re
 import sys
 
@@ -415,8 +449,8 @@ fi
 # ── Check 6: secrets never belong in a vault note ────────────────────────────
 # High-precision patterns only (a false positive here trains people to ignore
 # the hook). Catches real key material, not the word "password" in prose.
-if check_enabled 6 && [[ -n "$PYTHON" ]]; then
-  SECRET_HITS=$($PYTHON - "$FILE" <<'PYEOF'
+if check_enabled 6 && [[ -n "$EXPLICIT_PYTHON" || -n "$PYTHON" ]]; then
+  SECRET_HITS=$(run_python - "$FILE" <<'PYEOF'
 import re
 import sys
 
@@ -456,10 +490,10 @@ fi
 # `/` for nesting, and must contain at least one non-numeric character. `33`,
 # `2.0`, `q3 2026` are all silently broken in the UI. Same rule as
 # scripts/vault_health.py check_tag_syntax - keep the two in step.
-if check_enabled 7 && [[ -n "$PYTHON" ]]; then
+if check_enabled 7 && [[ -n "$EXPLICIT_PYTHON" || -n "$PYTHON" ]]; then
   # The script arrives on stdin (python3 -), so the frontmatter goes in via the
   # environment - piping it would be swallowed by the heredoc.
-  TAG_HITS=$(AI_FIRST_FRONTMATTER="$FRONTMATTER" $PYTHON - <<'PYEOF'
+  TAG_HITS=$(AI_FIRST_FRONTMATTER="$FRONTMATTER" run_python - <<'PYEOF'
 import os
 import re
 

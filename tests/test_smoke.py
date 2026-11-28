@@ -240,6 +240,10 @@ def test_agent_skills_build_generates_spec_compliant_tree():
     assert (core / "pyproject.toml").is_file()
     assert (core / "references/ai-first-rules.md").is_file()
     assert (core / "scripts").is_dir()
+    assert (core / "hooks/validate-ai-first.sh").is_file()
+    # Only the validator script ships; Claude Code hook registrations must not leak.
+    for claude_only in ("hooks.json", "load_vault_context.sh", "obsidian-bg-agent.sh"):
+        assert not (core / "hooks" / claude_only).exists()
 
     # Calendar depends on a Claude-only MCP and is excluded from this build.
     assert not (skills_dir / "obsidian-calendar").exists()
@@ -311,6 +315,10 @@ def test_grok_bot_build_generates_mcp_backed_skills():
     assert (core / "pyproject.toml").is_file()
     assert (core / "references/ai-first-rules.md").is_file()
     assert (core / "scripts").is_dir()
+    assert (core / "hooks/validate-ai-first.sh").is_file()
+    # Only the validator script ships; Claude Code hook registrations must not leak.
+    for claude_only in ("hooks.json", "load_vault_context.sh", "obsidian-bg-agent.sh"):
+        assert not (core / "hooks" / claude_only).exists()
 
     # Calendar depends on a Claude-only MCP and is excluded from this build.
     assert not (skills_dir / "obsidian-calendar").exists()

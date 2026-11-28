@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Author: Eugeniu Ghelbur (AI Automation Engineer working on agent memory), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 # /// script
 # requires-python = ">=3.10"
@@ -217,6 +217,19 @@ def _nfc(s: str) -> str:
     return unicodedata.normalize("NFC", s)
 
 
+def _reads_as_non_string(s: str) -> bool:
+    """True when a plain (unquoted) YAML scalar `s` would not load as the string `s`.
+
+    This asks PyYAML, so the guarantee is that PyYAML reads the value back as text.
+    A calendar-invalid date such as `2026-02-30` matches the timestamp pattern and
+    then raises ValueError, so it is quoted as well.
+    """
+    try:
+        return yaml.safe_load(s) != s
+    except (yaml.YAMLError, ValueError):
+        return True
+
+
 def yaml_val(v, *, flow: bool = False):
     """Render a value for OKF frontmatter (lists inline, strings quoted if needed).
 
@@ -239,7 +252,11 @@ def yaml_val(v, *, flow: bool = False):
         return "[" + ", ".join(yaml_val(x, flow=True) for x in v) + "]"
     s = str(v)
     unsafe = ':#"' + (",]" if flow else "")
-    if s == "" or s != s.strip() or (s[0] in _YAML_LEAD) or any(c in s for c in unsafe):
+    # A text value that YAML reads back as a number, date, bool or null ("2026",
+    # "2026-01-05", "No", "1.10") must be quoted too, or a daily note's title
+    # comes back from the bundle as a date and a "No" note's as False.
+    if (s == "" or s != s.strip() or (s[0] in _YAML_LEAD) or any(c in s for c in unsafe)
+            or (isinstance(v, str) and _reads_as_non_string(s))):
         return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
     return s
 

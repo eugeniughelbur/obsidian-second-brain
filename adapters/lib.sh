@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
+# Author: Eugeniu Ghelbur (AI Automation Engineer working on agent memory), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 # =============================================================================
 # adapters/lib.sh - Shared helpers for platform adapters
@@ -348,6 +348,7 @@ copy_scripts_with_project() {
   cp -R "$src/." "$dst/"
   cp "$src/../pyproject.toml" "$(dirname "$dst")/pyproject.toml"
   copy_vault_ops "$src/.." "$(dirname "$dst")"
+  copy_validate_hook "$src/.." "$(dirname "$dst")"
 }
 
 # copy_vault_ops <src-root> <dst-root>
@@ -362,6 +363,22 @@ copy_vault_ops() {
   [[ -f "$src" ]] || return 0
   mkdir -p "$dst"
   cp "$src" "$dst/vault_ops.py"
+}
+
+# copy_validate_hook <src-root> <dst-root>
+# scripts/check_notes.py shells out to hooks/validate-ai-first.sh beside it.
+# A build that ships scripts/ without that validator leaves check_notes.py
+# without its runtime dependency (#421). Copies only the validator script,
+# not Claude Code's hook registration files.
+copy_validate_hook() {
+  local src="$1/hooks/validate-ai-first.sh"
+  local dst="$2/hooks"
+  if [[ ! -f "$src" ]]; then
+    echo "error: required validator hook missing at $src" >&2
+    return 1
+  fi
+  mkdir -p "$dst"
+  cp "$src" "$dst/validate-ai-first.sh"
 }
 
 # copy_references_rewritten <src-refs-dir> <dst-refs-dir> <platform_dir>
