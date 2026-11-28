@@ -150,6 +150,8 @@ _WIKILINK_TARGET_RE = re.compile(r"\[\[([^\]|#]+)")
 # style, list or inline array, plus the legacy scalars), so a note the health
 # lint accepts as a typed edge is a note the rerank honours.
 _EDGE_KEY_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*):[ \t]*(.*)$")
+# One relation type's array inside an inline `relations: {...}` mapping.
+_INLINE_EDGE_RE = r"(?:^|[{{,])\s*{key}:\s*\[(.*?)\](?=\s*[,}}]|\s*$)"
 # Frontmatter budget for the edge scan. Frontmatter precedes the body, so this
 # bounds the read without dropping a realistic `relations:` block; the body is
 # never scanned, which keeps a `superseded_by:` mentioned in prose inert.
@@ -225,9 +227,12 @@ def _supersession_edges(text: str) -> tuple[set, set]:
                 key = None if raw.strip() else name
             elif name == "relations" and raw.strip():
                 # Inline mapping: relations: {supersedes: ["[[A]]"], ...}
-                for subs in re.findall(r"(?:^|[{,])\s*supersedes:\s*\[([^\]]*)\]", raw):
+                # The array ends at the `]` before a `,` or `}`, not at the
+                # first `]`, which would close the first wikilink and drop
+                # every target after it.
+                for subs in re.findall(_INLINE_EDGE_RE.format(key="supersedes"), raw):
                     supersedes |= targets(subs)
-                for subs in re.findall(r"(?:^|[{,])\s*superseded_by:\s*\[([^\]]*)\]", raw):
+                for subs in re.findall(_INLINE_EDGE_RE.format(key="superseded_by"), raw):
                     superseded_by |= targets(subs)
             continue
         body = line.strip()

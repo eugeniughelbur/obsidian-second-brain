@@ -159,6 +159,14 @@ def test_supersession_edges_reads_every_documented_shape():
     assert read('relations:\n  superseded_by: ["[[new#Summary|the new one]]"]') == (set(), {"new"})
 
 
+def test_inline_mapping_reads_every_target_in_an_array():
+    """The array ends at the `]` before `,` or `}`. Ending at the first `]`
+    closed the first wikilink and dropped every target after it."""
+    text = ('---\nrelations: {supersedes: ["[[a]]", "[[b]]"], '
+            'superseded_by: ["[[c]]", "[[d]]"]}\n---\n\nbody\n')
+    assert vault_ops._supersession_edges(text) == ({"a", "b"}, {"c", "d"})
+
+
 def test_supersession_edges_ignores_body_prose():
     """Only frontmatter is a claim. A note that merely talks about being
     superseded must not fade itself."""
