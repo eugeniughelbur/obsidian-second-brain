@@ -139,6 +139,23 @@ _STATUS_RE = re.compile(r"(?m)^status:\s*['\"]?([A-Za-z0-9_-]+)")
 # set only (both notes compete on the same query), so it stays O(results).
 _SUPERSEDES_RE = re.compile(r"(?m)^supersedes:\s*(.+)$")
 _WIKILINK_TARGET_RE = re.compile(r"\[\[([^\]|#]+)")
+# Typed-edge supersession (#408). A note states "I replace that one" either as
+# the legacy top-level `supersedes:` scalar or as a `relations:` block - and it
+# states "I was replaced" as `relations.superseded_by:`. The rerank read only the
+# scalar, so a note whose own frontmatter said it had been superseded kept
+# ranking above the note that replaced it, which is the exact stale-answer
+# failure the freshness policy exists to prevent. `vault_ops.py` ships standalone
+# inside the MCP server, so this parse is local instead of importing
+# scripts/link_graph.py; it reads the same shapes that graph parser does (block
+# style, list or inline array, plus the legacy scalars), so a note the health
+# lint accepts as a typed edge is a note the rerank honours.
+_EDGE_KEY_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*):[ \t]*(.*)$")
+# One relation type's array inside an inline `relations: {...}` mapping.
+_INLINE_EDGE_RE = r"(?:^|[{{,])\s*{key}:\s*\[(.*?)\](?=\s*[,}}]|\s*$)"
+# Frontmatter budget for the edge scan. Frontmatter precedes the body, so this
+# bounds the read without dropping a realistic `relations:` block; the body is
+# never scanned, which keeps a `superseded_by:` mentioned in prose inert.
+_EDGE_SCAN_CHARS = 4000
 _DATE_RE_FM = re.compile(r"(?m)^(?:updated|date):\s*['\"]?(\d{4})-(\d{2})-(\d{2})")
 _CURRENT_INTENT = {"current", "currently", "now", "today", "still", "latest", "actual"}
 _STATUS_FADE = float(os.environ.get("OBSIDIAN_SEARCH_STATUS_FADE") or "0.6")
@@ -160,26 +177,113 @@ def _note_age_days(text: str, md: Path) -> float:
         return 0.0
 
 
+def _supersession_edges(text: str) -> tuple[set, set]:
+    """Read a note's typed supersession claims out of its frontmatter.
+
+    Returns (supersedes, superseded_by), each a set of lowercased note stems a
+    wikilink points at. Only frontmatter is read, so a `superseded_by:` word in
+    the body is not a claim.
+
+    Both storage shapes are honoured because the vault accepts both: the legacy
+    top-level scalars (`supersedes: "[[A]]"`, `superseded_by: "[[B]]"`) and the
+    `relations:` block from Rule 6 in references/ai-first-rules.md, as either an
+    inline array or a list:
+
+        relations:
+          supersedes: ["[[Knowledge/ADR-006]]"]
+          superseded_by:
+            - "[[ADR-008]]"
+
+    A target counts by its note stem, the same key the rerank already compares
+    paths with, so a vault-relative path in the link resolves. A `relations:`
+    key outside the two supersession types produces an edge the freshness rerank
+    does not act on; the typed-edge lint still validates it."""
+    fm_lines, _, had_fm = _split_frontmatter(text[:_EDGE_SCAN_CHARS])
+    if not had_fm:
+        return set(), set()
+
+    def targets(raw: str) -> set:
+        return {PurePosixPath(t.strip()).stem.lower()
+                for t in _WIKILINK_TARGET_RE.findall(raw) if t.strip()}
+
+    supersedes: set = set()
+    superseded_by: set = set()
+    sinks = {"supersedes": supersedes, "superseded_by": superseded_by}
+    key: Optional[str] = None          # the relation type currently collecting
+    for line in fm_lines:
+        if not line.strip():
+            continue
+        if line[:1] not in (" ", "\t"):
+            # A column-0 key ends any open block and may open a new one.
+            m = _EDGE_KEY_RE.match(line)
+            key = None
+            if not m:
+                continue
+            name, raw = m.group(1), m.group(2)
+            if name in sinks:
+                # Scalar or inline array; a bare key starts a list block whose
+                # items the indented branch below collects.
+                sinks[name] |= targets(raw)
+                key = None if raw.strip() else name
+            elif name == "relations" and raw.strip():
+                # Inline mapping: relations: {supersedes: ["[[A]]"], ...}
+                # The array ends at the `]` before a `,` or `}`, not at the
+                # first `]`, which would close the first wikilink and drop
+                # every target after it.
+                for subs in re.findall(_INLINE_EDGE_RE.format(key="supersedes"), raw):
+                    supersedes |= targets(subs)
+                for subs in re.findall(_INLINE_EDGE_RE.format(key="superseded_by"), raw):
+                    superseded_by |= targets(subs)
+            continue
+        body = line.strip()
+        if body.startswith("-"):
+            if key in sinks:
+                sinks[key] |= targets(body)
+            continue
+        m = _EDGE_KEY_RE.match(body)
+        if not m:
+            continue
+        key = m.group(1)               # a relation type inside `relations:`
+        if key in sinks:
+            sinks[key] |= targets(m.group(2))
+    return supersedes, superseded_by
+
+
 def _freshness_rerank(results, vault: Path, current_intent: bool):
     """Post-fusion re-rank: the semantic arm knows nothing about time or status,
     so fusion happily served a superseded note above the one that still holds for
     a "what is current now" query. Reads only the top results' frontmatter heads
     (cheap): stale-status notes step back always (their own metadata says they
     no longer hold); recency reorders only when the query asks about the
-    present. Rank-derived base scores keep this a reorder, never a rewrite."""
-    # Pass 1: read heads once; collect every note some OTHER candidate claims
-    # to supersede (by wikilink target stem, lowercased).
+    present. Rank-derived base scores keep this a reorder, never a rewrite.
+
+    Supersession is read from both ends (#408): the note that replaces another
+    fades its target even when the target's own status was never updated, and a
+    note whose own frontmatter says `relations.superseded_by` steps back for the
+    same reason a stale `status:` does."""
+    # Pass 1: read the frontmatter window once per candidate; collect every note
+    # some OTHER candidate claims to supersede (by wikilink target stem,
+    # lowercased), and every note that says another note replaced it.
     heads: list[str] = []
     superseded_targets: set = set()
+    self_superseded: set = set()
     for r in results:
         try:
-            head = (vault / r["path"]).read_text(encoding="utf-8-sig", errors="ignore")[:400]
+            text = (vault / r["path"]).read_text(
+                encoding="utf-8-sig", errors="ignore")[:_EDGE_SCAN_CHARS]
         except OSError:
-            head = ""
+            text = ""
+        head = text[:400]
         heads.append(head)
         for line in _SUPERSEDES_RE.findall(head):
             for target in _WIKILINK_TARGET_RE.findall(line):
                 superseded_targets.add(PurePosixPath(target.strip()).stem.lower())
+        if not text:
+            continue
+        supersedes, superseded_by = _supersession_edges(text)
+        superseded_targets |= supersedes
+        if superseded_by:
+            self_superseded.add(PurePosixPath(r["path"]).stem.lower())
 
     rescored = []
     for i, (r, head) in enumerate(zip(results, heads, strict=True)):
@@ -187,9 +291,14 @@ def _freshness_rerank(results, vault: Path, current_intent: bool):
         sm = _STATUS_RE.search(head)
         if sm and sm.group(1).lower() in _STALE_STATUSES:
             weight *= _STATUS_FADE
+        stem = PurePosixPath(r["path"]).stem.lower()
         # Reverse edge: a candidate that another candidate supersedes steps
         # back even when its own status was never updated.
-        if superseded_targets and PurePosixPath(r["path"]).stem.lower() in superseded_targets:
+        if superseded_targets and stem in superseded_targets:
+            weight *= _STATUS_FADE
+        # Own edge: `relations.superseded_by` is the note saying it no longer
+        # holds - the same admission `status: superseded` makes.
+        if stem in self_superseded:
             weight *= _STATUS_FADE
         if current_intent and head:
             weight *= _freshness_weight(_note_age_days(head, vault / r["path"]), True)
