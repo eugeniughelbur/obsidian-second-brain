@@ -19,7 +19,7 @@ This spec is storage-agnostic. It applies to any folder of markdown that an AI t
 Deals live in the CRM. Invoices are issued monthly.
 ```
 
-**2. Snapshot.** A dated observation. Snapshots never go stale because they claim what was true on a date, not what is true now. Anything inside a dated note (daily note, log entry, monthly tracker) or under a dated heading is automatically a snapshot.
+**2. Snapshot.** A dated observation. Snapshots never go stale because they claim what was true on a date, not what is true now. Anything inside a dated note (daily note, log entry, monthly tracker) or under a dated heading is automatically a snapshot. A heading or line is dated when it carries an ISO date (`2026-10-09`, `2026-10`) or a month-name date (`October 9`, `9 Oct`, `Oct 9th, 2026`, `October 2026`). Month names count only when capitalized, because a lowercase "may" is a verb.
 
 ```markdown
 2026-07-13: pipeline at 13 open deals.
@@ -52,7 +52,7 @@ The reference checker is [scripts/freshness_lint.py](../scripts/freshness_lint.p
 
 - **FRESH-1 (error):** a quantitative present-tense claim about a volatile noun (counts, balances, totals, statuses) outside a dated container must carry an `as of` stamp or be rewritten as a pointer. A line that *quotes* the illegal form as an example - a policy doc, teaching material - carries `<!-- freshness: example -->` on that line: FRESH-1 is suppressed for that line only, invisible when rendered, greppable in source. FRESH-2 and FRESH-3 on the same line still fire - the directive says "this claim is quotation", not "skip this line". No block form: fences and blockquotes are the whole-region exemptions. Place the directive at the end of the line - a comment before a `#` stops markdown treating the line as a heading, which would break dated-heading detection.
 - **FRESH-2 (warning):** a stamp older than the freshness window (default 7 days; configurable per folder) flags the line: refresh the observation or convert it to a pointer. A stamp that is not a real date (`2026-13-05`, `2026-02-31`) is flagged too, so it can be fixed. Nothing is deleted; stale lines fade in search and surface in health reports.
-- **FRESH-3 (error):** a pointer must have a resolvable target: a URL, or a typed id the folder's config maps to one (`linear:TICKET-123`, `crm:pipeline/main`).
+- **FRESH-3 (error):** a pointer must have a resolvable target: a URL, or a typed id the folder's config maps to one (`linear:TICKET-123`, `crm:pipeline/main`). Four shapes only look like `word:token` and never ring. They are a file extension (`clip.mp4:12s`), a ratio or clock time glued to a word (`six4:5/9:16`), a measurement (`batch:10s`, `5m28s`, `1080p`) and a literal value (`score:null`, `enabled:true`).
 - **FRESH-4 (exempt):** dated containers are immutable history. The lint never touches a snapshot.
 - **FRESH-5 (warning):** a `freshness: example` directive that suppressed nothing is an unused suppression - remove it before it accumulates as cargo cult. Duplicate directives on one line warn the same way. The directive is recognized only where FRESH-1 could apply: backticked it is documentation, inside a code fence or `%%` comment it is invisible, in frontmatter or a FRESH-4 snapshot container it is inert - none of those suppress, and none warn.
 
